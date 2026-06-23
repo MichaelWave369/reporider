@@ -80,7 +80,15 @@ export const CreateRepoPanel = ({ plan, safetyReport }: CreateRepoPanelProps) =>
     setPhase('idle');
     setError(null);
     setResult(null);
-  }, [plan.name, plan.description, plan.stack, plan.visibility, safetyReport.status]);
+  }, [
+    plan.name,
+    plan.description,
+    plan.stack,
+    plan.visibility,
+    plan.files.length,
+    plan.issues.length,
+    safetyReport.status,
+  ]);
 
   const stages = useMemo(() => buildStages(phase, result, safetyReport), [phase, result, safetyReport]);
   const canRide = phase !== 'running' && safetyReport.status !== 'blocked';
