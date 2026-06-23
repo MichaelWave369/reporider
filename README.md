@@ -14,11 +14,19 @@ The goal is simple:
 - Phone-first project capture flow
 - Repo plan preview model
 - Safety scan placeholder for generated files
+- Mock create-repo ride flow
+- GitHub write boundary model
 - Receipt ledger model for every meaningful action
 - Product spec and architecture docs
 - GitHub issue/PR templates
 - Basic CI typecheck workflow
 - MIT license
+
+## Current mode
+
+RepoRider currently runs in **mock write mode**.
+
+That means the app can simulate the full ride from approval to repo creation without requesting a GitHub token, creating a real repository, pushing files, or opening issues. This lets us safely build the UX before live OAuth and GitHub writes exist.
 
 ## Core flow
 
@@ -26,8 +34,9 @@ The goal is simple:
 2. **Shape** — RepoRider turns it into a structured project brief.
 3. **Plan** — user reviews repo name, visibility, stack, files, and next issues.
 4. **Guard** — safety checks catch secrets, dangerous file names, and risky defaults.
-5. **Commit** — approved starter files are pushed to GitHub.
-6. **Receipt** — every action gets a human-readable audit trail.
+5. **Approve** — human approval unlocks the ride.
+6. **Create** — approved starter files are pushed to GitHub once live mode exists.
+7. **Receipt** — every action gets a human-readable audit trail.
 
 ## MVP scope
 
@@ -56,6 +65,7 @@ npm run typecheck
 
 - [Product Spec](docs/PRODUCT_SPEC.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [GitHub Write Boundary](docs/GITHUB_WRITE_BOUNDARY.md)
 
 ## Product principle
 
