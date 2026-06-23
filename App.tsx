@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CreateRepoPanel } from './src/components/CreateRepoPanel';
@@ -12,9 +13,11 @@ const starterIdea =
   'Create a private repo for a simple camping checklist app. Use React Native, add a README, and create starter issues.';
 
 export default function App() {
-  const repoPlan = buildRepoPlan(starterIdea);
-  const safetyReport = scanRepoPlan(repoPlan);
-  const receipts = createSeedReceipts(repoPlan, safetyReport);
+  const [idea, setIdea] = useState(starterIdea);
+
+  const repoPlan = useMemo(() => buildRepoPlan(idea), [idea]);
+  const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
+  const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -28,7 +31,7 @@ export default function App() {
           </Text>
         </View>
 
-        <IdeaCapture initialIdea={starterIdea} />
+        <IdeaCapture idea={idea} onIdeaChange={setIdea} />
         <RepoPlanCard plan={repoPlan} safetyReport={safetyReport} />
         <CreateRepoPanel plan={repoPlan} safetyReport={safetyReport} />
         <ReceiptTimeline receipts={receipts} />
