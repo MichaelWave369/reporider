@@ -337,6 +337,9 @@ export const applyStarterFileDrafts = (
     content: drafts[preview.path] ?? preview.content,
   }));
 
+export const buildStarterFileApprovalFingerprint = (preview: StarterFilePreview) =>
+  `${preview.path}::${preview.content.length}::${preview.content}`;
+
 export const buildStarterFileDiff = (
   generatedContent: string,
   draftContent: string,
