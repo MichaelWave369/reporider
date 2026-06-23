@@ -1,4 +1,4 @@
-import { buildStarterFilePreviews } from '../starterFilePreview';
+import { buildStarterFilePreviews, summarizeStarterFileDrafts } from '../starterFilePreview';
 import { buildStarterIssuePreviews, summarizeStarterIssueDrafts } from '../starterIssuePreview';
 import type { GithubCreateRepoRequest, GithubCreateRepoResult, Receipt } from '../../types';
 
@@ -42,14 +42,28 @@ export const createMockGitHubRepository = async ({
   const repositoryUrl = `https://github.com/reporider-demo/${plan.name}`;
   const generatedPreviews = buildStarterFilePreviews(plan);
   const starterPreviews = starterFiles ?? generatedPreviews;
-  const generatedContentByPath = new Map(generatedPreviews.map((file) => [file.path, file.content]));
-  const editedFiles = starterPreviews.filter((file) => generatedContentByPath.get(file.path) !== file.content);
+  const fileSummary = summarizeStarterFileDrafts(generatedPreviews, starterPreviews);
   const createdFiles = starterPreviews.map((file) => file.path);
   const generatedIssues = buildStarterIssuePreviews(plan);
   const reviewedIssues = starterIssues ?? generatedIssues;
   const issueSummary = summarizeStarterIssueDrafts(generatedIssues, reviewedIssues);
   const openedIssues = reviewedIssues.map((issue) => issue.title);
   const previewCharacterCount = starterPreviews.reduce((total, file) => total + file.content.length, 0);
+  const issueCharacterCount = reviewedIssues.reduce(
+    (total, issue) => total + issue.title.length + issue.body.length + issue.labels.join(',').length,
+    0,
+  );
+  const receipts = [
+    receipt('mock-auth-boundary', 'GitHub auth boundary checked', 'No token was requested. Mock mode kept the ride local.', 'completed'),
+    receipt('mock-file-approvals-verified', 'Starter file approvals verified', `${starterPreviews.length} reviewed file drafts were approved before mock creation.`, 'approved'),
+    receipt('mock-issue-approvals-verified', 'Starter issue approvals verified', `${reviewedIssues.length} reviewed issue drafts were approved before mock creation.`, 'approved'),
+    receipt('mock-repo-created', 'Repository creation simulated', `Prepared ${repositoryUrl} as a ${plan.visibility} ${plan.stack} repo.`, 'completed'),
+    receipt('mock-file-drafts-reviewed', 'Starter file drafts reviewed', `${starterPreviews.length} files reviewed; ${fileSummary.editedCount} file drafts changed by the rider before approval.`, 'completed'),
+    receipt('mock-issue-drafts-reviewed', 'Starter issue drafts reviewed', `${reviewedIssues.length} issues reviewed; ${issueSummary.editedCount} issue drafts changed by the rider before approval.`, 'completed'),
+    receipt('mock-file-previews-prepared', 'Starter file previews prepared', `${starterPreviews.length} files and ${previewCharacterCount} approved draft characters were prepared from the reviewed plan.`, 'completed'),
+    receipt('mock-files-created', 'Starter files simulated', `${createdFiles.length} reviewed files queued for first commit.`, 'completed'),
+    receipt('mock-issues-created', 'Starter issues simulated', `${openedIssues.length} reviewed roadmap issues queued after repo creation.`, 'completed'),
+  ];
 
   return {
     mode: 'mock',
@@ -57,16 +71,16 @@ export const createMockGitHubRepository = async ({
     defaultBranch: 'main',
     createdFiles,
     openedIssues,
-    receipts: [
-      receipt('mock-auth-boundary', 'GitHub auth boundary checked', 'No token was requested. Mock mode kept the ride local.', 'completed'),
-      receipt('mock-file-approvals-verified', 'Starter file approvals verified', `${starterPreviews.length} reviewed file drafts were approved before mock creation.`, 'approved'),
-      receipt('mock-issue-approvals-verified', 'Starter issue approvals verified', `${reviewedIssues.length} reviewed issue drafts were approved before mock creation.`, 'approved'),
-      receipt('mock-repo-created', 'Repository creation simulated', `Prepared ${repositoryUrl} as a ${plan.visibility} ${plan.stack} repo.`, 'completed'),
-      receipt('mock-file-drafts-reviewed', 'Starter file drafts reviewed', `${starterPreviews.length} files reviewed; ${editedFiles.length} file drafts changed by the rider before approval.`, 'completed'),
-      receipt('mock-issue-drafts-reviewed', 'Starter issue drafts reviewed', `${reviewedIssues.length} issues reviewed; ${issueSummary.editedCount} issue drafts changed by the rider before approval.`, 'completed'),
-      receipt('mock-file-previews-prepared', 'Starter file previews prepared', `${starterPreviews.length} files and ${previewCharacterCount} approved draft characters were prepared from the reviewed plan.`, 'completed'),
-      receipt('mock-files-created', 'Starter files simulated', `${createdFiles.length} reviewed files queued for first commit.`, 'completed'),
-      receipt('mock-issues-created', 'Starter issues simulated', `${openedIssues.length} reviewed roadmap issues queued after repo creation.`, 'completed'),
-    ],
+    receipts,
+    summary: {
+      approvedFileCount: starterPreviews.length,
+      approvedIssueCount: reviewedIssues.length,
+      editedFileCount: fileSummary.editedCount,
+      editedIssueCount: issueSummary.editedCount,
+      receiptCount: receipts.length,
+      totalFileDraftCharacters: previewCharacterCount,
+      totalIssueDraftCharacters: issueCharacterCount,
+      writeArtifactCount: createdFiles.length + openedIssues.length,
+    },
   };
 };
