@@ -12,8 +12,8 @@ import { SavedDraftSlotsCard } from './src/components/SavedDraftSlotsCard';
 import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard';
 import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
 import { buildRepoPlan } from './src/lib/repoPlanner';
-import { scanRepoPlan } from './src/lib/safetyScan';
 import { createSeedReceipts } from './src/lib/receiptLedger';
+import { scanRepoPlan } from './src/lib/safetyScan';
 import {
   applyStarterFileDrafts,
   buildStarterFileApprovalFingerprint,
@@ -42,15 +42,14 @@ import type {
 const starterIdea =
   'Create a private repo for a simple camping checklist app. Use React Native, add a README, and create starter issues.';
 
-const createStarterPlanKey = (plan: RepoPlan) =>
-  JSON.stringify({
-    name: plan.name,
-    description: plan.description,
-    visibility: plan.visibility,
-    stack: plan.stack,
-    files: plan.files,
-    issues: plan.issues,
-  });
+const createStarterPlanKey = (plan: RepoPlan) => JSON.stringify({
+  name: plan.name,
+  description: plan.description,
+  visibility: plan.visibility,
+  stack: plan.stack,
+  files: plan.files,
+  issues: plan.issues,
+});
 
 const buildRideHistoryId = (result: GithubCreateRepoResult, completedAt: string) =>
   `${result.repositoryUrl}:${completedAt}:${result.summary.writeArtifactCount}:${result.summary.receiptCount}`;
@@ -68,38 +67,20 @@ export default function App() {
   const [planOverrides, setPlanOverrides] = useState<RepoPlanOverrides>({});
   const [rideHistory, setRideHistory] = useState<RideHistoryEntry[]>([]);
   const [savedDraftSlots, setSavedDraftSlots] = useState<SavedDraftSlot[]>([]);
-  const [starterFileDraftState, setStarterFileDraftState] = useState<{
-    drafts: StarterFileDraftMap;
-    planKey: string;
-  }>({ drafts: {}, planKey: '' });
-  const [starterFileApprovalState, setStarterFileApprovalState] = useState<{
-    approvals: StarterFileApprovalMap;
-    planKey: string;
-  }>({ approvals: {}, planKey: '' });
-  const [starterIssueDraftState, setStarterIssueDraftState] = useState<{
-    drafts: StarterIssueDraftMap;
-    planKey: string;
-  }>({ drafts: {}, planKey: '' });
-  const [starterIssueApprovalState, setStarterIssueApprovalState] = useState<{
-    approvals: StarterIssueApprovalMap;
-    planKey: string;
-  }>({ approvals: {}, planKey: '' });
+  const [starterFileDraftState, setStarterFileDraftState] = useState<{ drafts: StarterFileDraftMap; planKey: string }>({ drafts: {}, planKey: '' });
+  const [starterFileApprovalState, setStarterFileApprovalState] = useState<{ approvals: StarterFileApprovalMap; planKey: string }>({ approvals: {}, planKey: '' });
+  const [starterIssueDraftState, setStarterIssueDraftState] = useState<{ drafts: StarterIssueDraftMap; planKey: string }>({ drafts: {}, planKey: '' });
+  const [starterIssueApprovalState, setStarterIssueApprovalState] = useState<{ approvals: StarterIssueApprovalMap; planKey: string }>({ approvals: {}, planKey: '' });
 
   const suggestedPlan = useMemo(() => buildRepoPlan(idea), [idea]);
   const repoPlan = useMemo(() => buildRepoPlan(idea, planOverrides), [idea, planOverrides]);
   const starterPlanKey = useMemo(() => createStarterPlanKey(repoPlan), [repoPlan]);
-  const starterFileDrafts = starterFileDraftState.planKey === starterPlanKey
-    ? starterFileDraftState.drafts
-    : {};
-  const starterFileApprovals = starterFileApprovalState.planKey === starterPlanKey
-    ? starterFileApprovalState.approvals
-    : {};
-  const starterIssueDrafts = starterIssueDraftState.planKey === starterPlanKey
-    ? starterIssueDraftState.drafts
-    : {};
-  const starterIssueApprovals = starterIssueApprovalState.planKey === starterPlanKey
-    ? starterIssueApprovalState.approvals
-    : {};
+
+  const starterFileDrafts = starterFileDraftState.planKey === starterPlanKey ? starterFileDraftState.drafts : {};
+  const starterFileApprovals = starterFileApprovalState.planKey === starterPlanKey ? starterFileApprovalState.approvals : {};
+  const starterIssueDrafts = starterIssueDraftState.planKey === starterPlanKey ? starterIssueDraftState.drafts : {};
+  const starterIssueApprovals = starterIssueApprovalState.planKey === starterPlanKey ? starterIssueApprovalState.approvals : {};
+
   const generatedStarterFiles = useMemo(() => buildStarterFilePreviews(repoPlan), [repoPlan]);
   const reviewedStarterFiles = useMemo(
     () => applyStarterFileDrafts(generatedStarterFiles, starterFileDrafts),
@@ -110,20 +91,19 @@ export default function App() {
     () => applyStarterIssueDrafts(generatedStarterIssues, starterIssueDrafts),
     [generatedStarterIssues, starterIssueDrafts],
   );
+
   const approvedStarterFileCount = useMemo(
-    () => reviewedStarterFiles.filter(
-      (file) => starterFileApprovals[file.path] === buildStarterFileApprovalFingerprint(file),
-    ).length,
+    () => reviewedStarterFiles.filter((file) => starterFileApprovals[file.path] === buildStarterFileApprovalFingerprint(file)).length,
     [reviewedStarterFiles, starterFileApprovals],
   );
   const approvedStarterIssueCount = useMemo(
-    () => reviewedStarterIssues.filter(
-      (issue, index) => starterIssueApprovals[starterIssueKeyForIndex(index)] === buildStarterIssueApprovalFingerprint(issue, index),
-    ).length,
+    () => reviewedStarterIssues.filter((issue, index) => (
+      starterIssueApprovals[starterIssueKeyForIndex(index)] === buildStarterIssueApprovalFingerprint(issue, index)
+    )).length,
     [reviewedStarterIssues, starterIssueApprovals],
   );
-  const allStarterFilesApproved = reviewedStarterFiles.length > 0
-    && approvedStarterFileCount === reviewedStarterFiles.length;
+
+  const allStarterFilesApproved = reviewedStarterFiles.length > 0 && approvedStarterFileCount === reviewedStarterFiles.length;
   const allStarterIssuesApproved = reviewedStarterIssues.length === approvedStarterIssueCount;
   const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
@@ -158,26 +138,16 @@ export default function App() {
     resetReviewState();
   };
 
-  const handleSaveCurrentDraftSlot = () => {
-    saveDraftSnapshotSlot(buildCurrentDraftSnapshot());
-  };
-
-  const handleSaveImportedPreviewSlot = (snapshot: RideDraftSnapshot) => {
-    saveDraftSnapshotSlot(snapshot);
+  const handleDuplicateSavedDraftSlot = (slot: SavedDraftSlot) => {
+    const duplicateLabel = slot.label ? `${slot.label} copy` : 'Draft copy';
+    saveDraftSnapshotSlot(slot.draftSnapshot, duplicateLabel);
   };
 
   const handleRenameSavedDraftSlot = (slotId: string, nextLabel: string) => {
     const normalizedLabel = normalizeSavedDraftLabel(nextLabel);
-
     setSavedDraftSlots((currentSlots) => currentSlots.map((slot) => (
-      slot.id === slotId
-        ? { ...slot, label: normalizedLabel }
-        : slot
+      slot.id === slotId ? { ...slot, label: normalizedLabel } : slot
     )));
-  };
-
-  const handleRestoreSavedDraftSlot = (slot: SavedDraftSlot) => {
-    restoreDraftSnapshot(slot.draftSnapshot);
   };
 
   const handleDeleteSavedDraftSlot = (slotId: string) => {
@@ -199,14 +169,6 @@ export default function App() {
     ].slice(0, 5));
   };
 
-  const handleRestoreRideDraft = (entry: RideHistoryEntry) => {
-    if (!entry.draftSnapshot) {
-      return;
-    }
-
-    restoreDraftSnapshot(entry.draftSnapshot);
-  };
-
   const handleIdeaChange = (nextIdea: string) => {
     setIdea(nextIdea);
     setPlanOverrides({});
@@ -226,23 +188,12 @@ export default function App() {
   const resetStarterFileDraft = (path: string) => {
     const nextDrafts = { ...starterFileDrafts };
     delete nextDrafts[path];
-
-    setStarterFileDraftState({
-      planKey: starterPlanKey,
-      drafts: nextDrafts,
-    });
-  };
-
-  const resetAllStarterFileDrafts = () => {
-    setStarterFileDraftState({ drafts: {}, planKey: starterPlanKey });
+    setStarterFileDraftState({ planKey: starterPlanKey, drafts: nextDrafts });
   };
 
   const approveStarterFile = (path: string) => {
     const file = reviewedStarterFiles.find((candidate) => candidate.path === path);
-
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     setStarterFileApprovalState({
       planKey: starterPlanKey,
@@ -276,23 +227,12 @@ export default function App() {
   const resetStarterIssueDraft = (index: number) => {
     const nextDrafts = { ...starterIssueDrafts };
     delete nextDrafts[starterIssueKeyForIndex(index)];
-
-    setStarterIssueDraftState({
-      planKey: starterPlanKey,
-      drafts: nextDrafts,
-    });
-  };
-
-  const resetAllStarterIssueDrafts = () => {
-    setStarterIssueDraftState({ drafts: {}, planKey: starterPlanKey });
+    setStarterIssueDraftState({ planKey: starterPlanKey, drafts: nextDrafts });
   };
 
   const approveStarterIssue = (index: number) => {
     const issue = reviewedStarterIssues[index];
-
-    if (!issue) {
-      return;
-    }
+    if (!issue) return;
 
     setStarterIssueApprovalState({
       planKey: starterPlanKey,
@@ -320,9 +260,7 @@ export default function App() {
         <View style={styles.hero}>
           <Text style={styles.kicker}>RepoRider</Text>
           <Text style={styles.title}>Catch the idea. Forge the repo. Ride the build.</Text>
-          <Text style={styles.subtitle}>
-            A mobile-first GitHub creation assistant for builders away from the desk.
-          </Text>
+          <Text style={styles.subtitle}>A mobile-first GitHub creation assistant for builders away from the desk.</Text>
         </View>
 
         <IdeaCapture idea={idea} onIdeaChange={handleIdeaChange} />
@@ -336,11 +274,12 @@ export default function App() {
         <SavedDraftSlotsCard
           onClearSlots={() => setSavedDraftSlots([])}
           onDeleteSlot={handleDeleteSavedDraftSlot}
+          onDuplicateSlot={handleDuplicateSavedDraftSlot}
           onImportSnapshot={restoreDraftSnapshot}
           onRenameSlot={handleRenameSavedDraftSlot}
-          onRestoreSlot={handleRestoreSavedDraftSlot}
-          onSaveCurrentDraft={handleSaveCurrentDraftSlot}
-          onSaveImportPreview={handleSaveImportedPreviewSlot}
+          onRestoreSlot={(slot) => restoreDraftSnapshot(slot.draftSnapshot)}
+          onSaveCurrentDraft={() => saveDraftSnapshotSlot(buildCurrentDraftSnapshot())}
+          onSaveImportPreview={saveDraftSnapshotSlot}
           slots={savedDraftSlots}
         />
         <RepoPlanCard plan={repoPlan} safetyReport={safetyReport} />
@@ -351,7 +290,7 @@ export default function App() {
           onApproveAllFiles={approveAllStarterFiles}
           onApproveFile={approveStarterFile}
           onDraftContentChange={updateStarterFileDraft}
-          onResetAllDrafts={resetAllStarterFileDrafts}
+          onResetAllDrafts={() => setStarterFileDraftState({ drafts: {}, planKey: starterPlanKey })}
           onResetFileDraft={resetStarterFileDraft}
         />
         <StarterIssuePreviewCard
@@ -361,7 +300,7 @@ export default function App() {
           onApproveAllIssues={approveAllStarterIssues}
           onApproveIssue={approveStarterIssue}
           onIssueChange={updateStarterIssueDraft}
-          onResetAllIssues={resetAllStarterIssueDrafts}
+          onResetAllIssues={() => setStarterIssueDraftState({ drafts: {}, planKey: starterPlanKey })}
           onResetIssue={resetStarterIssueDraft}
         />
         <ApprovalReceiptPreviewCard
@@ -386,7 +325,7 @@ export default function App() {
         <RideHistoryCard
           history={rideHistory}
           onClearHistory={() => setRideHistory([])}
-          onRestoreDraft={handleRestoreRideDraft}
+          onRestoreDraft={(entry) => entry.draftSnapshot && restoreDraftSnapshot(entry.draftSnapshot)}
         />
         <ReceiptTimeline receipts={receipts} />
       </ScrollView>
