@@ -13,6 +13,7 @@ type SavedDraftSlotsCardProps = {
   onImportSnapshot: (snapshot: RideDraftSnapshot) => void;
   onRestoreSlot: (slot: SavedDraftSlot) => void;
   onSaveCurrentDraft: () => void;
+  onSaveImportPreview: (snapshot: RideDraftSnapshot) => void;
 };
 
 const countLines = (content: string) => content.split('\n').length;
@@ -39,6 +40,7 @@ export const SavedDraftSlotsCard = ({
   onImportSnapshot,
   onRestoreSlot,
   onSaveCurrentDraft,
+  onSaveImportPreview,
   slots,
 }: SavedDraftSlotsCardProps) => {
   const [exportExpanded, setExportExpanded] = useState(false);
@@ -75,7 +77,19 @@ export const SavedDraftSlotsCard = ({
 
     setImportPreview(result.draftSnapshot);
     setImportStatus('success');
-    setImportMessage('Import preview ready. Review the extracted idea and steering controls before restore.');
+    setImportMessage('Import preview ready. Review the extracted idea and steering controls before saving or restoring.');
+  };
+
+  const saveImportPreview = () => {
+    if (!importPreview) {
+      setImportStatus('error');
+      setImportMessage('Preview the saved draft before saving it as a session slot.');
+      return;
+    }
+
+    onSaveImportPreview(importPreview);
+    setImportStatus('success');
+    setImportMessage('Import preview saved as a session draft slot. Current editor was not changed.');
   };
 
   const restoreImportPreview = () => {
@@ -99,7 +113,7 @@ export const SavedDraftSlotsCard = ({
           <Text style={styles.kicker}>Saved Drafts</Text>
           <Text style={styles.heading}>Park or import an in-progress ride</Text>
           <Text style={styles.helper}>
-            Save, export, preview, or import the current idea and steering controls before create. Slots and imports are session-only and never include approvals, edited files, edited issues, or create results.
+            Save, export, preview, import, or park pasted draft snapshots before create. Slots and imports are session-only and never include approvals, edited files, edited issues, or create results.
           </Text>
         </View>
         <View style={styles.countBadge}>
@@ -128,7 +142,7 @@ export const SavedDraftSlotsCard = ({
         <View style={styles.importCard}>
           <Text style={styles.sectionTitle}>Import saved draft Markdown</Text>
           <Text style={styles.helperSmall}>
-            Paste a RepoRider saved draft export, preview the extracted idea and controls, then restore only after review.
+            Paste a RepoRider saved draft export, preview the extracted idea and controls, then either save that preview as a slot or restore it after review.
           </Text>
           <TextInput
             multiline
@@ -145,6 +159,7 @@ export const SavedDraftSlotsCard = ({
             <Text style={styles.metaPill}>{countLines(importMarkdown || ' ')} lines</Text>
             <Text style={styles.metaPill}>{importMarkdown.length} chars</Text>
             <Text style={styles.metaPill}>preview required</Text>
+            <Text style={styles.metaPill}>save or restore</Text>
           </View>
           {importMessage ? (
             <Text style={importStatus === 'error' ? styles.errorMessage : styles.successMessage}>{importMessage}</Text>
@@ -155,13 +170,21 @@ export const SavedDraftSlotsCard = ({
               <Text style={styles.ideaPreview}>{importPreview.idea || 'No idea text imported.'}</Text>
               <Text style={styles.overrideSummary}>{summarizeOverrides(importPreview.planOverrides)}</Text>
               <Text style={styles.helperSmall}>
-                Restore reloads planning inputs only. Files, issues, approvals, ledgers, create state, and receipts stay reset.
+                Saving parks this preview as a session slot without changing the editor. Restoring reloads planning inputs only and resets all review gates.
               </Text>
             </View>
           ) : null}
           <View style={styles.actionRow}>
             <Pressable accessibilityRole="button" onPress={previewImport} style={styles.importButton}>
               <Text style={styles.importButtonText}>Preview Import</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={!importPreview}
+              onPress={saveImportPreview}
+              style={[styles.secondaryButton, !importPreview && styles.disabledButton]}
+            >
+              <Text style={styles.secondaryButtonText}>Save Preview as Slot</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
