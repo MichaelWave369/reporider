@@ -20,6 +20,8 @@ export type StarterFilePreview = RepoFilePlan & {
 
 export type StarterFileDraftMap = Record<string, string>;
 
+export type StarterFileApprovalMap = Record<string, string>;
+
 export type StarterFileDraftSummary = {
   editedCount: number;
   editedPaths: string[];
