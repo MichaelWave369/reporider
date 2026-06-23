@@ -25,6 +25,15 @@ The summary includes:
 - queued starter file paths
 - queued starter issue titles
 - final receipt lines
+- copy-ready Markdown ride receipt export
+
+## Markdown export
+
+The Ride Complete card includes a collapsible Markdown receipt export.
+
+That export is generated from the same typed create result that powers the visible summary. It is meant for notes, pull requests, issues, handoffs, and debugging reports.
+
+See `docs/MARKDOWN_RIDE_RECEIPT.md` for the export boundary.
 
 ## Current boundary
 
@@ -40,6 +49,7 @@ When live GitHub writes are added, this same summary should be populated from th
 - created file paths from the commit response
 - opened issue titles from issue creation responses
 - receipt rows from the same write operation
+- Markdown export generated from the same write result
 
 The rider should never have to infer whether the ride succeeded from scattered UI state.
 
