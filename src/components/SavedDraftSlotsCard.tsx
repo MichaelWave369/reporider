@@ -12,6 +12,7 @@ type SavedDraftSlotsCardProps = {
   onDeleteSlot: (slotId: string) => void;
   onDuplicateSlot: (slot: SavedDraftSlot) => void;
   onImportSnapshot: (snapshot: RideDraftSnapshot) => void;
+  onMoveSlot: (slotId: string, direction: 'up' | 'down') => void;
   onRenameSlot: (slotId: string, label: string) => void;
   onRestoreSlot: (slot: SavedDraftSlot) => void;
   onSaveCurrentDraft: () => void;
@@ -44,6 +45,7 @@ export const SavedDraftSlotsCard = ({
   onDeleteSlot,
   onDuplicateSlot,
   onImportSnapshot,
+  onMoveSlot,
   onRenameSlot,
   onRestoreSlot,
   onSaveCurrentDraft,
@@ -65,6 +67,8 @@ export const SavedDraftSlotsCard = ({
     [selectedSlotId, slots],
   );
   const selectedSlotIndex = selectedSlot ? slots.findIndex((slot) => slot.id === selectedSlot.id) : -1;
+  const canMoveSelectedSlotUp = selectedSlotIndex > 0;
+  const canMoveSelectedSlotDown = selectedSlotIndex >= 0 && selectedSlotIndex < slots.length - 1;
   const markdownSnapshot = useMemo(
     () => (selectedSlot ? buildMarkdownSavedDraftSnapshot(selectedSlot) : ''),
     [selectedSlot],
@@ -133,9 +137,9 @@ export const SavedDraftSlotsCard = ({
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Saved Drafts</Text>
-          <Text style={styles.heading}>Park, branch, label, export, or import drafts</Text>
+          <Text style={styles.heading}>Park, branch, label, reorder, export, or import drafts</Text>
           <Text style={styles.helper}>
-            Session-only draft slots store idea and steering controls only. Duplicate creates a fresh slot for branching without touching the original.
+            Session-only draft slots store idea and steering controls only. Reorder changes list position only; it never changes slot contents or approval state.
           </Text>
         </View>
         <View style={styles.countBadge}>
@@ -238,7 +242,7 @@ export const SavedDraftSlotsCard = ({
                   style={[styles.slotButton, selected && styles.slotButtonSelected]}
                 >
                   <Text style={styles.slotTitle}>{slotDisplayTitle(slot, index, slots.length)}</Text>
-                  <Text style={styles.slotMeta}>{slot.label ? 'custom label' : 'unlabeled session slot'} · {formatSavedAt(slot.savedAt)}</Text>
+                  <Text style={styles.slotMeta}>{slot.label ? 'custom label' : 'unlabeled session slot'} · position {index + 1}/{slots.length} · {formatSavedAt(slot.savedAt)}</Text>
                   <Text numberOfLines={2} style={styles.slotIdea}>{slot.draftSnapshot.idea}</Text>
                 </Pressable>
               );
@@ -248,9 +252,33 @@ export const SavedDraftSlotsCard = ({
           <View style={styles.selectedCard}>
             <Text style={styles.sectionTitle}>Selected draft slot</Text>
             <Text style={styles.slotTitle}>{slotDisplayTitle(selectedSlot, selectedSlotIndex, slots.length)}</Text>
+            <Text style={styles.slotMeta}>Position {selectedSlotIndex + 1} of {slots.length}</Text>
             <Text style={styles.ideaPreview}>{selectedSlot.draftSnapshot.idea}</Text>
             <Text style={styles.overrideSummary}>{summarizeOverrides(selectedSlot.draftSnapshot.planOverrides)}</Text>
-            <Text style={styles.helperSmall}>Restore reloads planning inputs only. Duplicate creates a new slot from the same safe snapshot and does not change the current editor.</Text>
+            <Text style={styles.helperSmall}>Move changes only this session list order. Restore reloads planning inputs only. Duplicate creates a new slot from the same safe snapshot.</Text>
+
+            <View style={styles.reorderCard}>
+              <Text style={styles.previewKicker}>Slot Order</Text>
+              <Text style={styles.helperSmall}>Move this slot up or down without changing its label, timestamp, idea, or steering controls.</Text>
+              <View style={styles.actionRow}>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={!canMoveSelectedSlotUp}
+                  onPress={() => onMoveSlot(selectedSlot.id, 'up')}
+                  style={[styles.orderButton, !canMoveSelectedSlotUp && styles.disabledButton]}
+                >
+                  <Text style={styles.orderButtonText}>Move Up</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={!canMoveSelectedSlotDown}
+                  onPress={() => onMoveSlot(selectedSlot.id, 'down')}
+                  style={[styles.orderButton, !canMoveSelectedSlotDown && styles.disabledButton]}
+                >
+                  <Text style={styles.orderButtonText}>Move Down</Text>
+                </Pressable>
+              </View>
+            </View>
 
             <View style={styles.renameCard}>
               <Text style={styles.previewKicker}>Slot Label</Text>
@@ -321,7 +349,7 @@ export const SavedDraftSlotsCard = ({
           </View>
 
           <Pressable accessibilityRole="button" onPress={onClearSlots} style={styles.clearButton}>
-            <Text style={styles.clearButtonText}>Clear Saved Draft Slots</Text>
+            <Text style={styles.clearButtonText}>Clear All Saved Draft Slots</Text>
           </Pressable>
         </>
       )}
@@ -545,6 +573,25 @@ const styles = StyleSheet.create({
     color: '#fde68a',
     fontSize: 12,
     lineHeight: 17,
+  },
+  reorderCard: {
+    backgroundColor: '#111827',
+    borderColor: '#a78bfa',
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 10,
+    padding: 12,
+  },
+  orderButton: {
+    backgroundColor: '#5b21b6',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  orderButtonText: {
+    color: '#ede9fe',
+    fontSize: 12,
+    fontWeight: '900',
   },
   renameCard: {
     backgroundColor: '#020617',
