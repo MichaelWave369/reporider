@@ -8,6 +8,7 @@ import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
 import { RepoPlanControls } from './src/components/RepoPlanControls';
 import { RideHistoryCard } from './src/components/RideHistoryCard';
+import { SavedDraftPinningCard } from './src/components/SavedDraftPinningCard';
 import { SavedDraftSlotsCard } from './src/components/SavedDraftSlotsCard';
 import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard';
 import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
@@ -61,6 +62,11 @@ const normalizeSavedDraftLabel = (label: string) => {
   const trimmed = label.trim().replace(/\s+/g, ' ');
   return trimmed ? trimmed.slice(0, 48) : undefined;
 };
+
+const prioritizePinnedSavedDraftSlots = (slots: SavedDraftSlot[]) => [
+  ...slots.filter((slot) => slot.pinned),
+  ...slots.filter((slot) => !slot.pinned),
+];
 
 export default function App() {
   const [idea, setIdea] = useState(starterIdea);
@@ -129,7 +135,7 @@ export default function App() {
       savedAt,
     };
 
-    setSavedDraftSlots((currentSlots) => [draftSlot, ...currentSlots].slice(0, 5));
+    setSavedDraftSlots((currentSlots) => prioritizePinnedSavedDraftSlots([draftSlot, ...currentSlots].slice(0, 5)));
   };
 
   const restoreDraftSnapshot = (snapshot: RideDraftSnapshot) => {
@@ -153,8 +159,14 @@ export default function App() {
 
       const nextSlots = [...currentSlots];
       [nextSlots[currentIndex], nextSlots[targetIndex]] = [nextSlots[targetIndex], nextSlots[currentIndex]];
-      return nextSlots;
+      return prioritizePinnedSavedDraftSlots(nextSlots);
     });
+  };
+
+  const handleToggleSavedDraftSlotPin = (slotId: string) => {
+    setSavedDraftSlots((currentSlots) => prioritizePinnedSavedDraftSlots(currentSlots.map((slot) => (
+      slot.id === slotId ? { ...slot, pinned: !slot.pinned } : slot
+    ))));
   };
 
   const handleRenameSavedDraftSlot = (slotId: string, nextLabel: string) => {
@@ -284,6 +296,10 @@ export default function App() {
           onReset={() => setPlanOverrides({})}
           plan={repoPlan}
           suggestedPlan={suggestedPlan}
+        />
+        <SavedDraftPinningCard
+          onTogglePinnedSlot={handleToggleSavedDraftSlotPin}
+          slots={savedDraftSlots}
         />
         <SavedDraftSlotsCard
           onClearSlots={() => setSavedDraftSlots([])}
