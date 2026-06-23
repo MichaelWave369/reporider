@@ -4,6 +4,7 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ApprovalReceiptPreviewCard } from './src/components/ApprovalReceiptPreviewCard';
 import { AuthCapabilityCard } from './src/components/AuthCapabilityCard';
 import { CreateRepoPanel } from './src/components/CreateRepoPanel';
+import { DryRunWriterCard } from './src/components/DryRunWriterCard';
 import { IdeaCapture } from './src/components/IdeaCapture';
 import { LiveModeStateCard } from './src/components/LiveModeStateCard';
 import { PermissionExplainerCard } from './src/components/PermissionExplainerCard';
@@ -18,6 +19,7 @@ import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard'
 import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
 import { TokenStorageStatusCard } from './src/components/TokenStorageStatusCard';
 import { buildMockAuthCapability } from './src/lib/authCapability';
+import { dryRunWriterAdapter } from './src/lib/dryRunWriter';
 import { buildMockLiveModeState } from './src/lib/liveModeState';
 import { buildRepoPlan } from './src/lib/repoPlanner';
 import { createSeedReceipts } from './src/lib/receiptLedger';
@@ -111,21 +113,42 @@ export default function App() {
     [generatedStarterIssues, starterIssueDrafts],
   );
 
-  const approvedStarterFileCount = useMemo(
-    () => reviewedStarterFiles.filter((file) => starterFileApprovals[file.path] === buildStarterFileApprovalFingerprint(file)).length,
+  const approvedStarterFilesForDryRun = useMemo(
+    () => reviewedStarterFiles.filter((file) => starterFileApprovals[file.path] === buildStarterFileApprovalFingerprint(file)),
     [reviewedStarterFiles, starterFileApprovals],
   );
-  const approvedStarterIssueCount = useMemo(
+  const approvedStarterIssuesForDryRun = useMemo(
     () => reviewedStarterIssues.filter((issue, index) => (
       starterIssueApprovals[starterIssueKeyForIndex(index)] === buildStarterIssueApprovalFingerprint(issue, index)
-    )).length,
+    )),
     [reviewedStarterIssues, starterIssueApprovals],
   );
+
+  const approvedStarterFileCount = approvedStarterFilesForDryRun.length;
+  const approvedStarterIssueCount = approvedStarterIssuesForDryRun.length;
 
   const allStarterFilesApproved = reviewedStarterFiles.length > 0 && approvedStarterFileCount === reviewedStarterFiles.length;
   const allStarterIssuesApproved = reviewedStarterIssues.length === approvedStarterIssueCount;
   const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
+  const dryRunWriterResult = useMemo(() => dryRunWriterAdapter.dryRun({
+    approvedByUser: allStarterFilesApproved && allStarterIssuesApproved,
+    approvedStarterFiles: approvedStarterFilesForDryRun,
+    approvedStarterIssues: approvedStarterIssuesForDryRun,
+    liveModeState,
+    plan: repoPlan,
+    receiptPreview: receipts,
+    safetyReport,
+  }), [
+    allStarterFilesApproved,
+    allStarterIssuesApproved,
+    approvedStarterFilesForDryRun,
+    approvedStarterIssuesForDryRun,
+    liveModeState,
+    receipts,
+    repoPlan,
+    safetyReport,
+  ]);
   const activeSavedDraftSlots = useMemo(() => savedDraftSlots.filter((slot) => !slot.archived), [savedDraftSlots]);
   const archivedSavedDraftSlots = useMemo(() => savedDraftSlots.filter((slot) => slot.archived), [savedDraftSlots]);
 
@@ -319,6 +342,7 @@ export default function App() {
         <AuthCapabilityCard capability={authCapability} />
         <TokenStorageStatusCard snapshot={tokenStorageSnapshot} />
         <LiveModeStateCard state={liveModeState} />
+        <DryRunWriterCard result={dryRunWriterResult} />
         <IdeaCapture idea={idea} onIdeaChange={handleIdeaChange} />
         <RepoPlanControls
           overrides={planOverrides}
