@@ -46,14 +46,6 @@ export type DryRunWriterAdapter = {
   dryRun: (request: DryRunWriterRequest) => DryRunWriterResult;
 };
 
-const countWarnings = (report: SafetyReport) => (
-  report.findings.filter((finding) => finding.severity === 'warning').length
-);
-
-const countBlockers = (report: SafetyReport) => (
-  report.findings.filter((finding) => finding.severity === 'blocker').length
-);
-
 const buildBlockingReasons = (request: DryRunWriterRequest) => {
   const reasons: string[] = [];
 
@@ -69,8 +61,12 @@ const buildBlockingReasons = (request: DryRunWriterRequest) => {
     reasons.push('Every current starter issue draft must have a fresh approval.');
   }
 
+  if (request.safetyReport.blockerCount > 0) {
+    reasons.push(`${request.safetyReport.blockerCount} safety blocker(s) must be resolved.`);
+  }
+
   if (request.safetyReport.status !== 'pass') {
-    reasons.push(`Safety scan is ${request.safetyReport.status}, not pass.`);
+    reasons.push(`Safety policy gate is ${request.safetyReport.status}, not pass.`);
   }
 
   if (!isLiveModeWriteReady(request.liveModeState)) {
@@ -102,8 +98,8 @@ export const dryRunWriterAdapter: DryRunWriterAdapter = {
         wouldPushFileCount: request.approvedStarterFiles.length,
         wouldOpenIssueCount: request.approvedStarterIssues.length,
         receiptPreviewCount: request.receiptPreview.length,
-        warningCount: countWarnings(request.safetyReport),
-        blockerCount: countBlockers(request.safetyReport),
+        warningCount: request.safetyReport.warningCount,
+        blockerCount: request.safetyReport.blockerCount,
         blockingReasons,
       },
       boundaryNotes: [
