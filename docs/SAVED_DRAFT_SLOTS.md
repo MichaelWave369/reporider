@@ -20,6 +20,14 @@ A saved draft slot stores:
 
 RepoRider keeps the most recent five saved draft slots in app state.
 
+## Saved draft export
+
+Each selected saved draft slot can render a copy-ready Markdown planning snapshot.
+
+That export includes the slot id, timestamp, idea text, steering overrides, and restore/review boundary notes.
+
+The saved draft export is **pre-create**. It is not the same thing as the post-create Markdown ride receipt.
+
 ## What saved draft slots do not store
 
 Saved draft slots do **not** store:
@@ -44,7 +52,7 @@ After restore, the rider must review files, review issues, approve files, approv
 
 Core rule:
 
-> Saving a draft parks planning inputs. It does not preserve approval authority.
+> Saving or exporting a draft parks planning inputs. It does not preserve approval authority.
 
 ## Persistence boundary
 
