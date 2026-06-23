@@ -35,6 +35,16 @@ export type RepoIssuePlan = {
   labels: string[];
 };
 
+export type StarterIssueDraftMap = Record<string, RepoIssuePlan>;
+
+export type StarterIssueApprovalMap = Record<string, string>;
+
+export type StarterIssueDraftSummary = {
+  editedCount: number;
+  editedKeys: string[];
+  totalIssues: number;
+};
+
 export type RepoPlan = {
   name: string;
   description: string;
@@ -77,6 +87,7 @@ export type GithubCreateRepoRequest = {
   safetyReport: SafetyReport;
   approvedByUser: boolean;
   starterFiles?: StarterFilePreview[];
+  starterIssues?: RepoIssuePlan[];
 };
 
 export type GithubCreateRepoResult = {
