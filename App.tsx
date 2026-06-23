@@ -4,6 +4,7 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ApprovalReceiptPreviewCard } from './src/components/ApprovalReceiptPreviewCard';
 import { CreateRepoPanel } from './src/components/CreateRepoPanel';
 import { IdeaCapture } from './src/components/IdeaCapture';
+import { PermissionExplainerCard } from './src/components/PermissionExplainerCard';
 import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
 import { RepoPlanControls } from './src/components/RepoPlanControls';
@@ -305,6 +306,7 @@ export default function App() {
           <Text style={styles.subtitle}>A mobile-first GitHub creation assistant for builders away from the desk.</Text>
         </View>
 
+        <PermissionExplainerCard />
         <IdeaCapture idea={idea} onIdeaChange={handleIdeaChange} />
         <RepoPlanControls
           overrides={planOverrides}
