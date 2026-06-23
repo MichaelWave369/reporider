@@ -6,6 +6,7 @@ import type { RideHistoryEntry } from '../types';
 type RideHistoryCardProps = {
   history: RideHistoryEntry[];
   onClearHistory: () => void;
+  onRestoreDraft: (entry: RideHistoryEntry) => void;
 };
 
 const formatCompletedAt = (timestamp: string) => {
@@ -18,7 +19,7 @@ const formatCompletedAt = (timestamp: string) => {
   return parsedDate.toLocaleString();
 };
 
-export const RideHistoryCard = ({ history, onClearHistory }: RideHistoryCardProps) => {
+export const RideHistoryCard = ({ history, onClearHistory, onRestoreDraft }: RideHistoryCardProps) => {
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const selectedRide = useMemo(
     () => history.find((entry) => entry.id === selectedRideId) ?? history[0],
@@ -28,6 +29,8 @@ export const RideHistoryCard = ({ history, onClearHistory }: RideHistoryCardProp
   if (history.length === 0 || !selectedRide) {
     return null;
   }
+
+  const canRestoreDraft = Boolean(selectedRide.draftSnapshot);
 
   return (
     <View style={styles.card}>
@@ -78,6 +81,27 @@ export const RideHistoryCard = ({ history, onClearHistory }: RideHistoryCardProp
         </View>
         <Text style={styles.selectedDetail}>
           {selectedRide.result.summary.editedFileCount} edited files · {selectedRide.result.summary.editedIssueCount} edited issues
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          disabled={!canRestoreDraft}
+          onPress={() => {
+            if (canRestoreDraft) {
+              onRestoreDraft(selectedRide);
+            }
+          }}
+          style={({ pressed }) => [
+            styles.restoreButton,
+            !canRestoreDraft && styles.restoreButtonDisabled,
+            pressed && canRestoreDraft && styles.restoreButtonPressed,
+          ]}
+        >
+          <Text style={styles.restoreButtonText}>
+            {canRestoreDraft ? 'Restore as New Draft' : 'Restore unavailable for this ride'}
+          </Text>
+        </Pressable>
+        <Text style={styles.restoreHelper}>
+          Restores the idea and steering controls only. Starter-file drafts, issue drafts, and approvals reset for a fresh review.
         </Text>
         <RideReceiptExportCard result={selectedRide.result} />
       </View>
@@ -209,6 +233,34 @@ const styles = StyleSheet.create({
   },
   selectedDetail: {
     color: '#cbd5e1',
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  restoreButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#0369a1',
+    borderColor: '#38bdf8',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  restoreButtonDisabled: {
+    backgroundColor: '#334155',
+    borderColor: '#64748b',
+    opacity: 0.62,
+  },
+  restoreButtonPressed: {
+    opacity: 0.82,
+  },
+  restoreButtonText: {
+    color: '#f0f9ff',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  restoreHelper: {
+    color: '#bae6fd',
     fontSize: 12,
     lineHeight: 17,
   },
