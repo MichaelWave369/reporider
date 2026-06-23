@@ -10,23 +10,72 @@ import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard'
 import { buildRepoPlan } from './src/lib/repoPlanner';
 import { scanRepoPlan } from './src/lib/safetyScan';
 import { createSeedReceipts } from './src/lib/receiptLedger';
-import type { RepoPlanOverrides } from './src/types';
+import { applyStarterFileDrafts, buildStarterFilePreviews } from './src/lib/starterFilePreview';
+import type { RepoPlan, RepoPlanOverrides, StarterFileDraftMap } from './src/types';
 
 const starterIdea =
   'Create a private repo for a simple camping checklist app. Use React Native, add a README, and create starter issues.';
 
+const createStarterFilePlanKey = (plan: RepoPlan) =>
+  JSON.stringify({
+    name: plan.name,
+    description: plan.description,
+    visibility: plan.visibility,
+    stack: plan.stack,
+    files: plan.files,
+    issues: plan.issues.map((issue) => issue.title),
+  });
+
 export default function App() {
   const [idea, setIdea] = useState(starterIdea);
   const [planOverrides, setPlanOverrides] = useState<RepoPlanOverrides>({});
+  const [starterFileDraftState, setStarterFileDraftState] = useState<{
+    drafts: StarterFileDraftMap;
+    planKey: string;
+  }>({ drafts: {}, planKey: '' });
 
   const suggestedPlan = useMemo(() => buildRepoPlan(idea), [idea]);
   const repoPlan = useMemo(() => buildRepoPlan(idea, planOverrides), [idea, planOverrides]);
+  const starterFilePlanKey = useMemo(() => createStarterFilePlanKey(repoPlan), [repoPlan]);
+  const starterFileDrafts = starterFileDraftState.planKey === starterFilePlanKey
+    ? starterFileDraftState.drafts
+    : {};
+  const generatedStarterFiles = useMemo(() => buildStarterFilePreviews(repoPlan), [repoPlan]);
+  const reviewedStarterFiles = useMemo(
+    () => applyStarterFileDrafts(generatedStarterFiles, starterFileDrafts),
+    [generatedStarterFiles, starterFileDrafts],
+  );
   const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
 
   const handleIdeaChange = (nextIdea: string) => {
     setIdea(nextIdea);
     setPlanOverrides({});
+    setStarterFileDraftState({ drafts: {}, planKey: '' });
+  };
+
+  const updateStarterFileDraft = (path: string, content: string) => {
+    setStarterFileDraftState({
+      planKey: starterFilePlanKey,
+      drafts: {
+        ...starterFileDrafts,
+        [path]: content,
+      },
+    });
+  };
+
+  const resetStarterFileDraft = (path: string) => {
+    const nextDrafts = { ...starterFileDrafts };
+    delete nextDrafts[path];
+
+    setStarterFileDraftState({
+      planKey: starterFilePlanKey,
+      drafts: nextDrafts,
+    });
+  };
+
+  const resetAllStarterFileDrafts = () => {
+    setStarterFileDraftState({ drafts: {}, planKey: starterFilePlanKey });
   };
 
   return (
@@ -50,8 +99,14 @@ export default function App() {
           suggestedPlan={suggestedPlan}
         />
         <RepoPlanCard plan={repoPlan} safetyReport={safetyReport} />
-        <StarterFilePreviewCard plan={repoPlan} />
-        <CreateRepoPanel plan={repoPlan} safetyReport={safetyReport} />
+        <StarterFilePreviewCard
+          draftPreviews={reviewedStarterFiles}
+          generatedPreviews={generatedStarterFiles}
+          onDraftContentChange={updateStarterFileDraft}
+          onResetAllDrafts={resetAllStarterFileDrafts}
+          onResetFileDraft={resetStarterFileDraft}
+        />
+        <CreateRepoPanel plan={repoPlan} safetyReport={safetyReport} starterFiles={reviewedStarterFiles} />
         <ReceiptTimeline receipts={receipts} />
       </ScrollView>
     </SafeAreaView>
