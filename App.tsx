@@ -5,6 +5,7 @@ import { ApprovalReceiptPreviewCard } from './src/components/ApprovalReceiptPrev
 import { AuthCapabilityCard } from './src/components/AuthCapabilityCard';
 import { CreateRepoPanel } from './src/components/CreateRepoPanel';
 import { IdeaCapture } from './src/components/IdeaCapture';
+import { LiveModeStateCard } from './src/components/LiveModeStateCard';
 import { PermissionExplainerCard } from './src/components/PermissionExplainerCard';
 import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
@@ -17,6 +18,7 @@ import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard'
 import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
 import { TokenStorageStatusCard } from './src/components/TokenStorageStatusCard';
 import { buildMockAuthCapability } from './src/lib/authCapability';
+import { buildMockLiveModeState } from './src/lib/liveModeState';
 import { buildRepoPlan } from './src/lib/repoPlanner';
 import { createSeedReceipts } from './src/lib/receiptLedger';
 import { scanRepoPlan } from './src/lib/safetyScan';
@@ -88,6 +90,7 @@ export default function App() {
 
   const tokenStorageSnapshot = useMemo(() => nullTokenStorageAdapter.getSnapshot(), []);
   const authCapability = useMemo(() => buildMockAuthCapability(tokenStorageSnapshot), [tokenStorageSnapshot]);
+  const liveModeState = useMemo(() => buildMockLiveModeState(authCapability, tokenStorageSnapshot), [authCapability, tokenStorageSnapshot]);
   const suggestedPlan = useMemo(() => buildRepoPlan(idea), [idea]);
   const repoPlan = useMemo(() => buildRepoPlan(idea, planOverrides), [idea, planOverrides]);
   const starterPlanKey = useMemo(() => createStarterPlanKey(repoPlan), [repoPlan]);
@@ -315,6 +318,7 @@ export default function App() {
         <PermissionExplainerCard />
         <AuthCapabilityCard capability={authCapability} />
         <TokenStorageStatusCard snapshot={tokenStorageSnapshot} />
+        <LiveModeStateCard state={liveModeState} />
         <IdeaCapture idea={idea} onIdeaChange={handleIdeaChange} />
         <RepoPlanControls
           overrides={planOverrides}
