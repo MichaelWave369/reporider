@@ -18,6 +18,7 @@ The goal is simple:
 - Product spec and architecture docs
 - GitHub issue/PR templates
 - Basic CI typecheck workflow
+- MIT license
 
 ## Core flow
 
@@ -51,8 +52,17 @@ For TypeScript checks:
 npm run typecheck
 ```
 
+## Docs
+
+- [Product Spec](docs/PRODUCT_SPEC.md)
+- [Architecture](docs/ARCHITECTURE.md)
+
 ## Product principle
 
 RepoRider should feel like a friendly pocket forge, not a complicated developer console.
 
 No idea left uncommitted.
+
+## License
+
+MIT © 2026 Michael Hughes
