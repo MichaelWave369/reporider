@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ApprovalReceiptPreviewCard } from './src/components/ApprovalReceiptPreviewCard';
+import { AuthCapabilityCard } from './src/components/AuthCapabilityCard';
 import { CreateRepoPanel } from './src/components/CreateRepoPanel';
 import { IdeaCapture } from './src/components/IdeaCapture';
 import { PermissionExplainerCard } from './src/components/PermissionExplainerCard';
@@ -14,6 +15,7 @@ import { SavedDraftPinningCard } from './src/components/SavedDraftPinningCard';
 import { SavedDraftSlotsCard } from './src/components/SavedDraftSlotsCard';
 import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard';
 import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
+import { buildMockAuthCapability } from './src/lib/authCapability';
 import { buildRepoPlan } from './src/lib/repoPlanner';
 import { createSeedReceipts } from './src/lib/receiptLedger';
 import { scanRepoPlan } from './src/lib/safetyScan';
@@ -82,6 +84,7 @@ export default function App() {
   const [starterIssueDraftState, setStarterIssueDraftState] = useState<{ drafts: StarterIssueDraftMap; planKey: string }>({ drafts: {}, planKey: '' });
   const [starterIssueApprovalState, setStarterIssueApprovalState] = useState<{ approvals: StarterIssueApprovalMap; planKey: string }>({ approvals: {}, planKey: '' });
 
+  const authCapability = useMemo(() => buildMockAuthCapability(), []);
   const suggestedPlan = useMemo(() => buildRepoPlan(idea), [idea]);
   const repoPlan = useMemo(() => buildRepoPlan(idea, planOverrides), [idea, planOverrides]);
   const starterPlanKey = useMemo(() => createStarterPlanKey(repoPlan), [repoPlan]);
@@ -307,6 +310,7 @@ export default function App() {
         </View>
 
         <PermissionExplainerCard />
+        <AuthCapabilityCard capability={authCapability} />
         <IdeaCapture idea={idea} onIdeaChange={handleIdeaChange} />
         <RepoPlanControls
           overrides={planOverrides}
