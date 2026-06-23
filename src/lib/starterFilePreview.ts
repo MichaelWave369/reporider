@@ -314,6 +314,13 @@ const languageForPath = (path: string): StarterFilePreview['language'] => {
   return 'text';
 };
 
+export type StarterFileDiffLine = {
+  lineNumber: number;
+  generated?: string;
+  draft?: string;
+  status: 'same' | 'added' | 'removed' | 'changed';
+};
+
 export const buildStarterFilePreviews = (plan: RepoPlan): StarterFilePreview[] =>
   plan.files.map((file) => ({
     ...file,
@@ -329,6 +336,53 @@ export const applyStarterFileDrafts = (
     ...preview,
     content: drafts[preview.path] ?? preview.content,
   }));
+
+export const buildStarterFileDiff = (
+  generatedContent: string,
+  draftContent: string,
+): StarterFileDiffLine[] => {
+  const generatedLines = generatedContent.split('\n');
+  const draftLines = draftContent.split('\n');
+  const maxLineCount = Math.max(generatedLines.length, draftLines.length);
+
+  return Array.from({ length: maxLineCount }, (_, index) => {
+    const generated = generatedLines[index];
+    const draft = draftLines[index];
+    const lineNumber = index + 1;
+
+    if (generated === draft) {
+      return {
+        lineNumber,
+        generated,
+        draft,
+        status: 'same',
+      };
+    }
+
+    if (generated === undefined) {
+      return {
+        lineNumber,
+        draft,
+        status: 'added',
+      };
+    }
+
+    if (draft === undefined) {
+      return {
+        lineNumber,
+        generated,
+        status: 'removed',
+      };
+    }
+
+    return {
+      lineNumber,
+      generated,
+      draft,
+      status: 'changed',
+    };
+  });
+};
 
 export const summarizeStarterFileDrafts = (
   generatedPreviews: StarterFilePreview[],
