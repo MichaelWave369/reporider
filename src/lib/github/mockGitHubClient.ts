@@ -28,7 +28,7 @@ export const createMockGitHubRepository = async ({
   starterFiles,
 }: GithubCreateRepoRequest): Promise<GithubCreateRepoResult> => {
   if (!approvedByUser) {
-    throw new Error('Human approval is required before RepoRider can create a repository.');
+    throw new Error('Every starter file must be approved before RepoRider can create a repository.');
   }
 
   if (safetyReport.status === 'blocked') {
@@ -54,6 +54,7 @@ export const createMockGitHubRepository = async ({
     openedIssues,
     receipts: [
       receipt('mock-auth-boundary', 'GitHub auth boundary checked', 'No token was requested. Mock mode kept the ride local.', 'completed'),
+      receipt('mock-file-approvals-verified', 'Starter file approvals verified', `${starterPreviews.length} reviewed file drafts were approved before mock creation.`, 'approved'),
       receipt('mock-repo-created', 'Repository creation simulated', `Prepared ${repositoryUrl} as a ${plan.visibility} ${plan.stack} repo.`, 'completed'),
       receipt('mock-file-drafts-reviewed', 'Starter file drafts reviewed', `${starterPreviews.length} files reviewed; ${editedFiles.length} file drafts changed by the rider before approval.`, 'completed'),
       receipt('mock-file-previews-prepared', 'Starter file previews prepared', `${starterPreviews.length} files and ${previewCharacterCount} approved draft characters were prepared from the reviewed plan.`, 'completed'),
