@@ -41,6 +41,14 @@ The rider can tap/select/copy using device or browser controls.
 
 RepoRider does not add a clipboard dependency yet. A future clipboard implementation should make the copy action visible, explicit, and receipt-safe.
 
+## Import boundary
+
+RepoRider can import its own saved draft Markdown snapshots back into the current editor.
+
+Import is still a planning action, not an approval action. It restores only idea text and steering controls, then forces the rider to review generated files and starter issues again.
+
+See `docs/SAVED_DRAFT_IMPORT.md` for the import contract and parser validation rules.
+
 ## Restore boundary
 
 A saved draft export can help someone recreate planning intent, but it does not restore authority.
@@ -49,4 +57,4 @@ Core rule:
 
 > A saved draft export preserves planning context. It does not preserve approval authority.
 
-After restoring or recreating from an exported draft, the rider must review generated files, review generated issues, approve files, approve issues, inspect the ledger, and run create again.
+After restoring or importing from an exported draft, the rider must review generated files, review generated issues, approve files, approve issues, inspect the ledger, and run create again.
