@@ -8,6 +8,7 @@ import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
 import { RepoPlanControls } from './src/components/RepoPlanControls';
 import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard';
+import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
 import { buildRepoPlan } from './src/lib/repoPlanner';
 import { scanRepoPlan } from './src/lib/safetyScan';
 import { createSeedReceipts } from './src/lib/receiptLedger';
@@ -16,24 +17,33 @@ import {
   buildStarterFileApprovalFingerprint,
   buildStarterFilePreviews,
 } from './src/lib/starterFilePreview';
+import {
+  applyStarterIssueDrafts,
+  buildStarterIssueApprovalFingerprint,
+  buildStarterIssuePreviews,
+  starterIssueKeyForIndex,
+} from './src/lib/starterIssuePreview';
 import type {
+  RepoIssuePlan,
   RepoPlan,
   RepoPlanOverrides,
   StarterFileApprovalMap,
   StarterFileDraftMap,
+  StarterIssueApprovalMap,
+  StarterIssueDraftMap,
 } from './src/types';
 
 const starterIdea =
   'Create a private repo for a simple camping checklist app. Use React Native, add a README, and create starter issues.';
 
-const createStarterFilePlanKey = (plan: RepoPlan) =>
+const createStarterPlanKey = (plan: RepoPlan) =>
   JSON.stringify({
     name: plan.name,
     description: plan.description,
     visibility: plan.visibility,
     stack: plan.stack,
     files: plan.files,
-    issues: plan.issues.map((issue) => issue.title),
+    issues: plan.issues,
   });
 
 export default function App() {
@@ -47,20 +57,39 @@ export default function App() {
     approvals: StarterFileApprovalMap;
     planKey: string;
   }>({ approvals: {}, planKey: '' });
+  const [starterIssueDraftState, setStarterIssueDraftState] = useState<{
+    drafts: StarterIssueDraftMap;
+    planKey: string;
+  }>({ drafts: {}, planKey: '' });
+  const [starterIssueApprovalState, setStarterIssueApprovalState] = useState<{
+    approvals: StarterIssueApprovalMap;
+    planKey: string;
+  }>({ approvals: {}, planKey: '' });
 
   const suggestedPlan = useMemo(() => buildRepoPlan(idea), [idea]);
   const repoPlan = useMemo(() => buildRepoPlan(idea, planOverrides), [idea, planOverrides]);
-  const starterFilePlanKey = useMemo(() => createStarterFilePlanKey(repoPlan), [repoPlan]);
-  const starterFileDrafts = starterFileDraftState.planKey === starterFilePlanKey
+  const starterPlanKey = useMemo(() => createStarterPlanKey(repoPlan), [repoPlan]);
+  const starterFileDrafts = starterFileDraftState.planKey === starterPlanKey
     ? starterFileDraftState.drafts
     : {};
-  const starterFileApprovals = starterFileApprovalState.planKey === starterFilePlanKey
+  const starterFileApprovals = starterFileApprovalState.planKey === starterPlanKey
     ? starterFileApprovalState.approvals
+    : {};
+  const starterIssueDrafts = starterIssueDraftState.planKey === starterPlanKey
+    ? starterIssueDraftState.drafts
+    : {};
+  const starterIssueApprovals = starterIssueApprovalState.planKey === starterPlanKey
+    ? starterIssueApprovalState.approvals
     : {};
   const generatedStarterFiles = useMemo(() => buildStarterFilePreviews(repoPlan), [repoPlan]);
   const reviewedStarterFiles = useMemo(
     () => applyStarterFileDrafts(generatedStarterFiles, starterFileDrafts),
     [generatedStarterFiles, starterFileDrafts],
+  );
+  const generatedStarterIssues = useMemo(() => buildStarterIssuePreviews(repoPlan), [repoPlan]);
+  const reviewedStarterIssues = useMemo(
+    () => applyStarterIssueDrafts(generatedStarterIssues, starterIssueDrafts),
+    [generatedStarterIssues, starterIssueDrafts],
   );
   const approvedStarterFileCount = useMemo(
     () => reviewedStarterFiles.filter(
@@ -68,8 +97,15 @@ export default function App() {
     ).length,
     [reviewedStarterFiles, starterFileApprovals],
   );
+  const approvedStarterIssueCount = useMemo(
+    () => reviewedStarterIssues.filter(
+      (issue, index) => starterIssueApprovals[starterIssueKeyForIndex(index)] === buildStarterIssueApprovalFingerprint(issue, index),
+    ).length,
+    [reviewedStarterIssues, starterIssueApprovals],
+  );
   const allStarterFilesApproved = reviewedStarterFiles.length > 0
     && approvedStarterFileCount === reviewedStarterFiles.length;
+  const allStarterIssuesApproved = reviewedStarterIssues.length === approvedStarterIssueCount;
   const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
 
@@ -78,11 +114,13 @@ export default function App() {
     setPlanOverrides({});
     setStarterFileDraftState({ drafts: {}, planKey: '' });
     setStarterFileApprovalState({ approvals: {}, planKey: '' });
+    setStarterIssueDraftState({ drafts: {}, planKey: '' });
+    setStarterIssueApprovalState({ approvals: {}, planKey: '' });
   };
 
   const updateStarterFileDraft = (path: string, content: string) => {
     setStarterFileDraftState({
-      planKey: starterFilePlanKey,
+      planKey: starterPlanKey,
       drafts: {
         ...starterFileDrafts,
         [path]: content,
@@ -95,13 +133,13 @@ export default function App() {
     delete nextDrafts[path];
 
     setStarterFileDraftState({
-      planKey: starterFilePlanKey,
+      planKey: starterPlanKey,
       drafts: nextDrafts,
     });
   };
 
   const resetAllStarterFileDrafts = () => {
-    setStarterFileDraftState({ drafts: {}, planKey: starterFilePlanKey });
+    setStarterFileDraftState({ drafts: {}, planKey: starterPlanKey });
   };
 
   const approveStarterFile = (path: string) => {
@@ -112,7 +150,7 @@ export default function App() {
     }
 
     setStarterFileApprovalState({
-      planKey: starterFilePlanKey,
+      planKey: starterPlanKey,
       approvals: {
         ...starterFileApprovals,
         [path]: buildStarterFileApprovalFingerprint(file),
@@ -122,10 +160,60 @@ export default function App() {
 
   const approveAllStarterFiles = () => {
     setStarterFileApprovalState({
-      planKey: starterFilePlanKey,
+      planKey: starterPlanKey,
       approvals: reviewedStarterFiles.reduce<StarterFileApprovalMap>((approvals, file) => ({
         ...approvals,
         [file.path]: buildStarterFileApprovalFingerprint(file),
+      }), {}),
+    });
+  };
+
+  const updateStarterIssueDraft = (index: number, issue: RepoIssuePlan) => {
+    setStarterIssueDraftState({
+      planKey: starterPlanKey,
+      drafts: {
+        ...starterIssueDrafts,
+        [starterIssueKeyForIndex(index)]: issue,
+      },
+    });
+  };
+
+  const resetStarterIssueDraft = (index: number) => {
+    const nextDrafts = { ...starterIssueDrafts };
+    delete nextDrafts[starterIssueKeyForIndex(index)];
+
+    setStarterIssueDraftState({
+      planKey: starterPlanKey,
+      drafts: nextDrafts,
+    });
+  };
+
+  const resetAllStarterIssueDrafts = () => {
+    setStarterIssueDraftState({ drafts: {}, planKey: starterPlanKey });
+  };
+
+  const approveStarterIssue = (index: number) => {
+    const issue = reviewedStarterIssues[index];
+
+    if (!issue) {
+      return;
+    }
+
+    setStarterIssueApprovalState({
+      planKey: starterPlanKey,
+      approvals: {
+        ...starterIssueApprovals,
+        [starterIssueKeyForIndex(index)]: buildStarterIssueApprovalFingerprint(issue, index),
+      },
+    });
+  };
+
+  const approveAllStarterIssues = () => {
+    setStarterIssueApprovalState({
+      planKey: starterPlanKey,
+      approvals: reviewedStarterIssues.reduce<StarterIssueApprovalMap>((approvals, issue, index) => ({
+        ...approvals,
+        [starterIssueKeyForIndex(index)]: buildStarterIssueApprovalFingerprint(issue, index),
       }), {}),
     });
   };
@@ -161,6 +249,16 @@ export default function App() {
           onResetAllDrafts={resetAllStarterFileDrafts}
           onResetFileDraft={resetStarterFileDraft}
         />
+        <StarterIssuePreviewCard
+          approvedIssueFingerprints={starterIssueApprovals}
+          draftIssues={reviewedStarterIssues}
+          generatedIssues={generatedStarterIssues}
+          onApproveAllIssues={approveAllStarterIssues}
+          onApproveIssue={approveStarterIssue}
+          onIssueChange={updateStarterIssueDraft}
+          onResetAllIssues={resetAllStarterIssueDrafts}
+          onResetIssue={resetStarterIssueDraft}
+        />
         <ApprovalReceiptPreviewCard
           approvedDraftFingerprints={starterFileApprovals}
           draftPreviews={reviewedStarterFiles}
@@ -168,10 +266,13 @@ export default function App() {
         />
         <CreateRepoPanel
           allStarterFilesApproved={allStarterFilesApproved}
+          allStarterIssuesApproved={allStarterIssuesApproved}
           approvedStarterFileCount={approvedStarterFileCount}
+          approvedStarterIssueCount={approvedStarterIssueCount}
           plan={repoPlan}
           safetyReport={safetyReport}
           starterFiles={reviewedStarterFiles}
+          starterIssues={reviewedStarterIssues}
         />
         <ReceiptTimeline receipts={receipts} />
       </ScrollView>
