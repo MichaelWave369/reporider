@@ -40,6 +40,7 @@ The goal is simple:
 - Safety scan placeholder for generated files
 - Mock create-repo ride flow that receives reviewed and approved file and issue drafts
 - GitHub write boundary model
+- OAuth/write-mode architecture contract before live GitHub writes
 - Receipt ledger model for every meaningful action
 - Product spec and architecture docs
 - GitHub issue/PR templates
@@ -122,6 +123,7 @@ Start with:
 - `docs/PRODUCT_SPEC.md`
 - `docs/ARCHITECTURE.md`
 - `docs/GITHUB_WRITE_BOUNDARY.md`
+- `docs/OAUTH_WRITE_MODE_ARCHITECTURE.md`
 - `docs/PLANNER.md`
 - `docs/README_PREVIEW.md`
 - `docs/STARTER_FILE_PREVIEWS.md`
