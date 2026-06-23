@@ -5,19 +5,28 @@ import { CreateRepoPanel } from './src/components/CreateRepoPanel';
 import { IdeaCapture } from './src/components/IdeaCapture';
 import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
+import { RepoPlanControls } from './src/components/RepoPlanControls';
 import { buildRepoPlan } from './src/lib/repoPlanner';
 import { scanRepoPlan } from './src/lib/safetyScan';
 import { createSeedReceipts } from './src/lib/receiptLedger';
+import type { RepoPlanOverrides } from './src/types';
 
 const starterIdea =
   'Create a private repo for a simple camping checklist app. Use React Native, add a README, and create starter issues.';
 
 export default function App() {
   const [idea, setIdea] = useState(starterIdea);
+  const [planOverrides, setPlanOverrides] = useState<RepoPlanOverrides>({});
 
-  const repoPlan = useMemo(() => buildRepoPlan(idea), [idea]);
+  const suggestedPlan = useMemo(() => buildRepoPlan(idea), [idea]);
+  const repoPlan = useMemo(() => buildRepoPlan(idea, planOverrides), [idea, planOverrides]);
   const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
+
+  const handleIdeaChange = (nextIdea: string) => {
+    setIdea(nextIdea);
+    setPlanOverrides({});
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -31,7 +40,14 @@ export default function App() {
           </Text>
         </View>
 
-        <IdeaCapture idea={idea} onIdeaChange={setIdea} />
+        <IdeaCapture idea={idea} onIdeaChange={handleIdeaChange} />
+        <RepoPlanControls
+          overrides={planOverrides}
+          onOverridesChange={setPlanOverrides}
+          onReset={() => setPlanOverrides({})}
+          plan={repoPlan}
+          suggestedPlan={suggestedPlan}
+        />
         <RepoPlanCard plan={repoPlan} safetyReport={safetyReport} />
         <CreateRepoPanel plan={repoPlan} safetyReport={safetyReport} />
         <ReceiptTimeline receipts={receipts} />
