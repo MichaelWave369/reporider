@@ -110,3 +110,9 @@ export type GithubCreateRepoResult = {
   receipts: Receipt[];
   summary: GithubCreateRepoSummary;
 };
+
+export type RideHistoryEntry = {
+  id: string;
+  completedAt: string;
+  result: GithubCreateRepoResult;
+};
