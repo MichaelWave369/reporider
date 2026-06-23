@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CreateRepoPanel } from './src/components/CreateRepoPanel';
 import { IdeaCapture } from './src/components/IdeaCapture';
 import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
@@ -29,6 +30,7 @@ export default function App() {
 
         <IdeaCapture initialIdea={starterIdea} />
         <RepoPlanCard plan={repoPlan} safetyReport={safetyReport} />
+        <CreateRepoPanel plan={repoPlan} safetyReport={safetyReport} />
         <ReceiptTimeline receipts={receipts} />
       </ScrollView>
     </SafeAreaView>
