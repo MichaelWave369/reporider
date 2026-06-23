@@ -48,3 +48,18 @@ export type Receipt = {
   detail: string;
   timestamp: string;
 };
+
+export type GithubCreateRepoRequest = {
+  plan: RepoPlan;
+  safetyReport: SafetyReport;
+  approvedByUser: boolean;
+};
+
+export type GithubCreateRepoResult = {
+  mode: 'mock' | 'live';
+  repositoryUrl: string;
+  defaultBranch: string;
+  createdFiles: string[];
+  openedIssues: string[];
+  receipts: Receipt[];
+};
