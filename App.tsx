@@ -313,6 +313,7 @@ export default function App() {
         <SavedDraftSlotsCard
           onClearSlots={() => setSavedDraftSlots([])}
           onDeleteSlot={handleDeleteSavedDraftSlot}
+          onImportSnapshot={restoreDraftSnapshot}
           onRestoreSlot={handleRestoreSavedDraftSlot}
           onSaveCurrentDraft={handleSaveCurrentDraftSlot}
           slots={savedDraftSlots}
