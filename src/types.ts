@@ -19,6 +19,32 @@ export type AuthCapability = {
   requiredGates: string[];
 };
 
+export type TokenStorageStatus = 'unsupported' | 'empty' | 'mock_stored';
+
+export type TokenStorageScope = 'none' | 'memory_mock' | 'secure_device_store';
+
+export type TokenStorageSnapshot = {
+  status: TokenStorageStatus;
+  label: string;
+  summary: string;
+  scope: TokenStorageScope;
+  hasStoredToken: boolean;
+  canPersistToken: boolean;
+  canReadToken: boolean;
+  canClearToken: boolean;
+  requiredGates: string[];
+  boundaryNotes: string[];
+};
+
+export type TokenStorageAdapter = {
+  id: string;
+  label: string;
+  getSnapshot: () => TokenStorageSnapshot;
+  storeTokenUnavailable: () => TokenStorageSnapshot;
+  readTokenUnavailable: () => null;
+  clearTokenUnavailable: () => TokenStorageSnapshot;
+};
+
 export type RepoFilePlan = {
   path: string;
   purpose: string;
