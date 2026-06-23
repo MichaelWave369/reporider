@@ -42,11 +42,13 @@ export const buildMarkdownSavedDraftSnapshot = (slot: SavedDraftSlot) => {
   const { draftSnapshot } = slot;
   const { planOverrides } = draftSnapshot;
   const idea = draftSnapshot.idea.trim() || '_No idea text saved._';
+  const label = slot.label?.trim() || unset;
 
   return [
     header,
     '',
     `- Slot ID: ${slot.id}`,
+    `- Label: ${label}`,
     `- Saved At: ${slot.savedAt}`,
     '- Mode: session-only pre-create draft',
     '- Boundary: no approvals, no edited starter files, no edited starter issues, no GitHub writes',
