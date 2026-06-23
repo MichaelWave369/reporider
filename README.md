@@ -6,7 +6,7 @@ RepoRider is a mobile-first, voice-friendly GitHub creation assistant for builde
 
 The goal is simple:
 
-> Speak an idea on your phone, review the repo plan, steer the final settings, preview the first README, approve the files, and publish a safe starter repository with receipts.
+> Speak an idea on your phone, review the repo plan, steer the final settings, preview the starter files, approve the seed package, and publish a safe starter repository with receipts.
 
 ## What this skeleton includes
 
@@ -15,7 +15,8 @@ The goal is simple:
 - Live idea-to-repo planner
 - Editable repo name, visibility, stack, and starter issue controls
 - Dynamic repo name, visibility, stack, file, and issue planning
-- Generated README preview before approval
+- Generated starter file previews before approval
+- Code-stack `package.json` planning
 - Safety scan placeholder for generated files
 - Mock create-repo ride flow
 - GitHub write boundary model
@@ -37,7 +38,7 @@ That means the app can simulate the full ride from approval to repo creation wit
 2. **Shape** — RepoRider turns it into a structured project brief.
 3. **Steer** — user edits repo name, visibility, starter stack, and issue count.
 4. **Plan** — user reviews repo files, starter issues, and safety status.
-5. **Preview** — user inspects the generated `README.md` that would be committed.
+5. **Preview** — user inspects the generated starter files that would be committed.
 6. **Guard** — safety checks catch secrets, dangerous file names, and risky defaults.
 7. **Approve** — human approval unlocks the ride.
 8. **Create** — approved starter files are pushed to GitHub once live mode exists.
@@ -45,11 +46,11 @@ That means the app can simulate the full ride from approval to repo creation wit
 
 ## Planner behavior
 
-The current planner is local and deterministic. As the idea text changes, RepoRider regenerates the suggested repo plan, safety report, approval state, receipt preview, and generated README preview.
+The current planner is local and deterministic. As the idea text changes, RepoRider regenerates the suggested repo plan, safety report, approval state, receipt preview, and generated starter file previews.
 
 The rider can override the generated repo name, choose public or private visibility, switch starter stacks, and cap starter issue generation before approval. Editing the idea resets plan overrides so the suggestion and safety scan stay aligned.
 
-It keeps repositories private by default, infers likely starter stacks from idea text, chooses starter files from the selected stack, generates a first README preview, and creates a small first issue set. It does not write to GitHub by itself.
+It keeps repositories private by default, infers likely starter stacks from idea text, chooses starter files from the selected stack, includes `package.json` for code stacks, generates a first starter file preview set, and creates a small first issue set. It does not write to GitHub by itself.
 
 ## MVP scope
 
@@ -81,6 +82,7 @@ npm run typecheck
 - [GitHub Write Boundary](docs/GITHUB_WRITE_BOUNDARY.md)
 - [Planner](docs/PLANNER.md)
 - [README Preview](docs/README_PREVIEW.md)
+- [Starter File Previews](docs/STARTER_FILE_PREVIEWS.md)
 
 ## Product principle
 
