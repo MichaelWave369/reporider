@@ -7,8 +7,10 @@ This feature is designed for mobile handoffs:
 1. Save an in-progress draft slot.
 2. Export the saved draft as Markdown.
 3. Paste that Markdown into notes, chat, a planning doc, or another RepoRider session.
-4. Import the Markdown back into RepoRider.
-5. Re-review generated files, starter issues, approvals, and ledgers before create.
+4. Paste the Markdown into RepoRider's import box.
+5. Preview the extracted idea and steering controls.
+6. Restore the preview as a new draft only after review.
+7. Re-review generated files, starter issues, approvals, and ledgers before create.
 
 ## What import accepts
 
@@ -39,6 +41,15 @@ Import is intentionally narrow and predictable.
 - Starter issue count must be a whole number from `0` to `5`.
 - Missing override values are treated as unset.
 - Unknown extra Markdown content is ignored.
+
+## Preview before restore
+
+Import now has two explicit actions:
+
+1. **Preview Import** parses the pasted Markdown and shows the extracted idea plus steering controls.
+2. **Restore Preview as New Draft** reloads those planning inputs only after the rider has inspected the preview.
+
+The restore action stays unavailable until a valid preview exists. Editing the pasted Markdown clears the preview and requires parsing again.
 
 ## What import restores
 
