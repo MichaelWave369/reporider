@@ -122,3 +122,9 @@ export type RideHistoryEntry = {
   draftSnapshot?: RideDraftSnapshot;
   result: GithubCreateRepoResult;
 };
+
+export type SavedDraftSlot = {
+  id: string;
+  savedAt: string;
+  draftSnapshot: RideDraftSnapshot;
+};
