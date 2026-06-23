@@ -1,22 +1,25 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 type IdeaCaptureProps = {
-  initialIdea: string;
+  idea: string;
+  onIdeaChange: (idea: string) => void;
 };
 
-export const IdeaCapture = ({ initialIdea }: IdeaCaptureProps) => {
+export const IdeaCapture = ({ idea, onIdeaChange }: IdeaCaptureProps) => {
   return (
     <View style={styles.card}>
       <Text style={styles.label}>Ride New Idea</Text>
       <Text style={styles.helper}>
-        Voice capture can start with device dictation. Native speech-to-text can land after the GitHub write path is safe.
+        Type or dictate an idea. RepoRider updates the repo name, stack, starter files, safety scan, and receipts as the idea changes.
       </Text>
       <TextInput
+        accessibilityLabel="Repo idea"
         multiline
-        defaultValue={initialIdea}
+        onChangeText={onIdeaChange}
         placeholder="Tell RepoRider what you want to build..."
         placeholderTextColor="#94a3b8"
         style={styles.input}
+        value={idea}
       />
     </View>
   );
