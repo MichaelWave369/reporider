@@ -29,6 +29,13 @@ export type RepoPlan = {
   approvalRequired: boolean;
 };
 
+export type RepoPlanOverrides = {
+  name?: string;
+  visibility?: RepoVisibility;
+  stack?: StarterStack;
+  issueCount?: number;
+};
+
 export type SafetyFinding = {
   id: string;
   severity: 'info' | 'warning' | 'blocker';
