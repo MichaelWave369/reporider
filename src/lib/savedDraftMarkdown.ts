@@ -28,7 +28,7 @@ const normalizeImportedValue = (value: string | undefined) => {
 };
 
 const extractSection = (markdown: string, title: string) => {
-  const pattern = new RegExp(`## ${title}\\n\\n([\\s\\S]*?)(?=\\n## |$)`);
+  const pattern = new RegExp(`## ${title}\n\n([\s\S]*?)(?=\n## |$)`);
   return markdown.match(pattern)?.[1]?.trim();
 };
 
@@ -43,12 +43,14 @@ export const buildMarkdownSavedDraftSnapshot = (slot: SavedDraftSlot) => {
   const { planOverrides } = draftSnapshot;
   const idea = draftSnapshot.idea.trim() || '_No idea text saved._';
   const label = slot.label?.trim() || unset;
+  const pinned = slot.pinned ? 'yes' : 'no';
 
   return [
     header,
     '',
     `- Slot ID: ${slot.id}`,
     `- Label: ${label}`,
+    `- Pinned: ${pinned}`,
     `- Saved At: ${slot.savedAt}`,
     '- Mode: session-only pre-create draft',
     '- Boundary: no approvals, no edited starter files, no edited starter issues, no GitHub writes',
