@@ -116,10 +116,21 @@ export default function App() {
   const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
 
+  const resetReviewState = () => {
+    setStarterFileDraftState({ drafts: {}, planKey: '' });
+    setStarterFileApprovalState({ approvals: {}, planKey: '' });
+    setStarterIssueDraftState({ drafts: {}, planKey: '' });
+    setStarterIssueApprovalState({ approvals: {}, planKey: '' });
+  };
+
   const handleRideComplete = (result: GithubCreateRepoResult) => {
     const completedAt = result.receipts.at(-1)?.timestamp ?? new Date().toISOString();
     const historyEntry: RideHistoryEntry = {
       completedAt,
+      draftSnapshot: {
+        idea,
+        planOverrides: { ...planOverrides },
+      },
       id: buildRideHistoryId(result, completedAt),
       result,
     };
@@ -130,13 +141,20 @@ export default function App() {
     ].slice(0, 5));
   };
 
+  const handleRestoreRideDraft = (entry: RideHistoryEntry) => {
+    if (!entry.draftSnapshot) {
+      return;
+    }
+
+    setIdea(entry.draftSnapshot.idea);
+    setPlanOverrides(entry.draftSnapshot.planOverrides);
+    resetReviewState();
+  };
+
   const handleIdeaChange = (nextIdea: string) => {
     setIdea(nextIdea);
     setPlanOverrides({});
-    setStarterFileDraftState({ drafts: {}, planKey: '' });
-    setStarterFileApprovalState({ approvals: {}, planKey: '' });
-    setStarterIssueDraftState({ drafts: {}, planKey: '' });
-    setStarterIssueApprovalState({ approvals: {}, planKey: '' });
+    resetReviewState();
   };
 
   const updateStarterFileDraft = (path: string, content: string) => {
@@ -299,7 +317,11 @@ export default function App() {
           starterFiles={reviewedStarterFiles}
           starterIssues={reviewedStarterIssues}
         />
-        <RideHistoryCard history={rideHistory} onClearHistory={() => setRideHistory([])} />
+        <RideHistoryCard
+          history={rideHistory}
+          onClearHistory={() => setRideHistory([])}
+          onRestoreDraft={handleRestoreRideDraft}
+        />
         <ReceiptTimeline receipts={receipts} />
       </ScrollView>
     </SafeAreaView>
