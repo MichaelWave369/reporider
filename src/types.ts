@@ -127,6 +127,7 @@ export type SavedDraftSlot = {
   id: string;
   label?: string;
   pinned?: boolean;
+  archived?: boolean;
   savedAt: string;
   draftSnapshot: RideDraftSnapshot;
 };
