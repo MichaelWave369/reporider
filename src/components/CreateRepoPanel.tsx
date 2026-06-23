@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { createMockGitHubRepository } from '../lib/github/mockGitHubClient';
 import { mockGitHubWriteBoundary } from '../lib/github/types';
-import type { GithubCreateRepoResult, Receipt, RepoPlan, SafetyReport } from '../types';
+import type { GithubCreateRepoResult, Receipt, RepoPlan, SafetyReport, StarterFilePreview } from '../types';
 
 type CreateRepoPanelProps = {
   plan: RepoPlan;
   safetyReport: SafetyReport;
+  starterFiles: StarterFilePreview[];
 };
 
 type RidePhase = 'idle' | 'running' | 'completed' | 'blocked';
@@ -44,7 +45,7 @@ const buildStages = (
   {
     id: 'human-approval',
     label: 'Human approval',
-    detail: 'The rider reviews the plan before any repo action can happen.',
+    detail: 'The rider reviews the plan and starter-file drafts before any repo action can happen.',
     status: statusForPhase(phase, Boolean(result)),
   },
   {
@@ -71,10 +72,14 @@ const buildStages = (
 
 const formatReceiptLine = (receipt: Receipt) => `${receipt.status.toUpperCase()} · ${receipt.action}`;
 
-export const CreateRepoPanel = ({ plan, safetyReport }: CreateRepoPanelProps) => {
+const buildStarterFilesKey = (starterFiles: StarterFilePreview[]) =>
+  starterFiles.map((file) => `${file.path}:${file.content}`).join('\n---reporider-file---\n');
+
+export const CreateRepoPanel = ({ plan, safetyReport, starterFiles }: CreateRepoPanelProps) => {
   const [phase, setPhase] = useState<RidePhase>('idle');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GithubCreateRepoResult | null>(null);
+  const starterFilesKey = useMemo(() => buildStarterFilesKey(starterFiles), [starterFiles]);
 
   useEffect(() => {
     setPhase('idle');
@@ -88,6 +93,7 @@ export const CreateRepoPanel = ({ plan, safetyReport }: CreateRepoPanelProps) =>
     plan.files.length,
     plan.issues.length,
     safetyReport.status,
+    starterFilesKey,
   ]);
 
   const stages = useMemo(() => buildStages(phase, result, safetyReport), [phase, result, safetyReport]);
@@ -103,6 +109,7 @@ export const CreateRepoPanel = ({ plan, safetyReport }: CreateRepoPanelProps) =>
         plan,
         safetyReport,
         approvedByUser: true,
+        starterFiles,
       });
 
       setResult(mockResult);
@@ -120,7 +127,7 @@ export const CreateRepoPanel = ({ plan, safetyReport }: CreateRepoPanelProps) =>
           <Text style={styles.kicker}>Ride Preview</Text>
           <Text style={styles.heading}>Approve & Create Repo</Text>
           <Text style={styles.helper}>
-            This is the first complete repo creation lane. It proves approval, safety, GitHub boundary, and receipts in mock mode before live OAuth lands.
+            This is the first complete repo creation lane. It proves approval, editable starter drafts, safety, GitHub boundary, and receipts in mock mode before live OAuth lands.
           </Text>
         </View>
         <View style={styles.modeBadge}>
