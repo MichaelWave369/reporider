@@ -221,10 +221,6 @@ This document starts the architecture track for:
 - `#25 Document generated repo receipt format`
 - `#30 Generated issue creation guardrails`
 
-## Tracker update
-
-Posted in `#31` after this architecture pass: the next implementation should begin with the permission explainer and auth capability model before OAuth tokens or live writer code.
-
 ## Non-goals for this step
 
 This document does not implement OAuth.
