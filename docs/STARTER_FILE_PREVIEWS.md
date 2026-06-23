@@ -18,6 +18,20 @@ The current preview generator can prepare:
 - `docs/OVERVIEW.md` for docs-only projects
 - `docs/RECEIPTS.md`
 
+## Editable drafts
+
+Generated previews are treated as the baseline. The rider-approved draft is a separate layer on top of that baseline.
+
+That means RepoRider can show:
+
+- generated content
+- rider-edited content
+- which files diverged from generation
+- reset controls for one file or all drafts
+- receipts proving edited drafts were reviewed before mock creation
+
+If the repo plan changes, stale drafts are not carried forward into the new plan.
+
 ## Why this matters
 
 RepoRider should never ask the rider to approve an invisible commit.
@@ -27,10 +41,12 @@ The safe path is:
 1. generate the repo plan
 2. show the planned files
 3. show the starter file contents
-4. run the safety scan
-5. require human approval
-6. create the repo only after live GitHub writes are intentionally enabled
-7. record receipts
+4. allow rider edits before approval
+5. track which drafts diverged from generated content
+6. run the safety scan
+7. require human approval
+8. create the repo only after live GitHub writes are intentionally enabled
+9. record receipts
 
 ## Template boundaries
 
@@ -40,8 +56,9 @@ They are intended to prove the flow:
 
 - plan-driven file generation
 - human-readable preview
+- rider-editable starter drafts
 - private-first defaults
 - safety review before write
 - receipt-backed creation history
 
-Future versions should support rider edits, file add/remove controls, diff view, and receipts when previewed content diverges from generated content.
+Future versions should support file add/remove controls, inline diff view, stronger syntax validation, and receipts that store content hashes instead of raw file content.
