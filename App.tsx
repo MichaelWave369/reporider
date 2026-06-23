@@ -8,6 +8,7 @@ import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
 import { RepoPlanControls } from './src/components/RepoPlanControls';
 import { RideHistoryCard } from './src/components/RideHistoryCard';
+import { SavedDraftSlotsCard } from './src/components/SavedDraftSlotsCard';
 import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard';
 import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
 import { buildRepoPlan } from './src/lib/repoPlanner';
@@ -29,7 +30,9 @@ import type {
   RepoIssuePlan,
   RepoPlan,
   RepoPlanOverrides,
+  RideDraftSnapshot,
   RideHistoryEntry,
+  SavedDraftSlot,
   StarterFileApprovalMap,
   StarterFileDraftMap,
   StarterIssueApprovalMap,
@@ -52,10 +55,14 @@ const createStarterPlanKey = (plan: RepoPlan) =>
 const buildRideHistoryId = (result: GithubCreateRepoResult, completedAt: string) =>
   `${result.repositoryUrl}:${completedAt}:${result.summary.writeArtifactCount}:${result.summary.receiptCount}`;
 
+const buildSavedDraftSlotId = (snapshot: RideDraftSnapshot, savedAt: string) =>
+  `${savedAt}:${snapshot.idea}:${JSON.stringify(snapshot.planOverrides)}`;
+
 export default function App() {
   const [idea, setIdea] = useState(starterIdea);
   const [planOverrides, setPlanOverrides] = useState<RepoPlanOverrides>({});
   const [rideHistory, setRideHistory] = useState<RideHistoryEntry[]>([]);
+  const [savedDraftSlots, setSavedDraftSlots] = useState<SavedDraftSlot[]>([]);
   const [starterFileDraftState, setStarterFileDraftState] = useState<{
     drafts: StarterFileDraftMap;
     planKey: string;
@@ -123,14 +130,42 @@ export default function App() {
     setStarterIssueApprovalState({ approvals: {}, planKey: '' });
   };
 
+  const buildCurrentDraftSnapshot = (): RideDraftSnapshot => ({
+    idea,
+    planOverrides: { ...planOverrides },
+  });
+
+  const restoreDraftSnapshot = (snapshot: RideDraftSnapshot) => {
+    setIdea(snapshot.idea);
+    setPlanOverrides(snapshot.planOverrides);
+    resetReviewState();
+  };
+
+  const handleSaveCurrentDraftSlot = () => {
+    const savedAt = new Date().toISOString();
+    const draftSnapshot = buildCurrentDraftSnapshot();
+    const draftSlot: SavedDraftSlot = {
+      draftSnapshot,
+      id: buildSavedDraftSlotId(draftSnapshot, savedAt),
+      savedAt,
+    };
+
+    setSavedDraftSlots((currentSlots) => [draftSlot, ...currentSlots].slice(0, 5));
+  };
+
+  const handleRestoreSavedDraftSlot = (slot: SavedDraftSlot) => {
+    restoreDraftSnapshot(slot.draftSnapshot);
+  };
+
+  const handleDeleteSavedDraftSlot = (slotId: string) => {
+    setSavedDraftSlots((currentSlots) => currentSlots.filter((slot) => slot.id !== slotId));
+  };
+
   const handleRideComplete = (result: GithubCreateRepoResult) => {
     const completedAt = result.receipts.at(-1)?.timestamp ?? new Date().toISOString();
     const historyEntry: RideHistoryEntry = {
       completedAt,
-      draftSnapshot: {
-        idea,
-        planOverrides: { ...planOverrides },
-      },
+      draftSnapshot: buildCurrentDraftSnapshot(),
       id: buildRideHistoryId(result, completedAt),
       result,
     };
@@ -146,9 +181,7 @@ export default function App() {
       return;
     }
 
-    setIdea(entry.draftSnapshot.idea);
-    setPlanOverrides(entry.draftSnapshot.planOverrides);
-    resetReviewState();
+    restoreDraftSnapshot(entry.draftSnapshot);
   };
 
   const handleIdeaChange = (nextIdea: string) => {
@@ -276,6 +309,13 @@ export default function App() {
           onReset={() => setPlanOverrides({})}
           plan={repoPlan}
           suggestedPlan={suggestedPlan}
+        />
+        <SavedDraftSlotsCard
+          onClearSlots={() => setSavedDraftSlots([])}
+          onDeleteSlot={handleDeleteSavedDraftSlot}
+          onRestoreSlot={handleRestoreSavedDraftSlot}
+          onSaveCurrentDraft={handleSaveCurrentDraftSlot}
+          slots={savedDraftSlots}
         />
         <RepoPlanCard plan={repoPlan} safetyReport={safetyReport} />
         <StarterFilePreviewCard
