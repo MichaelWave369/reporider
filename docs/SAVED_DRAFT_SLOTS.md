@@ -16,15 +16,24 @@ A saved draft slot stores:
 - visibility override, when set
 - starter stack override, when set
 - starter issue count override, when set
+- optional short slot label
 - saved timestamp
 
 RepoRider keeps the most recent five saved draft slots in app state.
+
+## Slot labels
+
+The selected saved draft slot can be given a short label to make it easier to recognize later in the same session.
+
+Labels are session metadata. They do not change the saved idea, steering controls, review state, approvals, or create results.
+
+Clearing a label leaves the draft snapshot intact and returns the UI to the fallback slot name.
 
 ## Saved draft export
 
 Each selected saved draft slot can render a copy-ready Markdown planning snapshot.
 
-That export includes the slot id, timestamp, idea text, steering overrides, and restore/review boundary notes.
+That export includes the slot id, optional label, timestamp, idea text, steering overrides, and restore/review boundary notes.
 
 The saved draft export is **pre-create**. It is not the same thing as the post-create Markdown ride receipt.
 
@@ -52,7 +61,7 @@ After restore, the rider must review files, review issues, approve files, approv
 
 Core rule:
 
-> Saving or exporting a draft parks planning inputs. It does not preserve approval authority.
+> Saving, labeling, or exporting a draft parks planning inputs. It does not preserve approval authority.
 
 ## Persistence boundary
 
