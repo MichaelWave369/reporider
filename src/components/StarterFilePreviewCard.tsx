@@ -1,11 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { buildStarterFileDiff, summarizeStarterFileDrafts } from '../lib/starterFilePreview';
-import type { StarterFilePreview } from '../types';
+import {
+  buildStarterFileApprovalFingerprint,
+  buildStarterFileDiff,
+  summarizeStarterFileDrafts,
+} from '../lib/starterFilePreview';
+import type { StarterFileApprovalMap, StarterFilePreview } from '../types';
 
 type StarterFilePreviewCardProps = {
+  approvedDraftFingerprints: StarterFileApprovalMap;
   draftPreviews: StarterFilePreview[];
   generatedPreviews: StarterFilePreview[];
+  onApproveAllFiles: () => void;
+  onApproveFile: (path: string) => void;
   onDraftContentChange: (path: string, content: string) => void;
   onResetAllDrafts: () => void;
   onResetFileDraft: (path: string) => void;
@@ -16,41 +23,64 @@ type PreviewMode = 'edit' | 'diff';
 const previewLabel = (preview: StarterFilePreview) => `${preview.path} · ${preview.language} · ${preview.riskLevel}`;
 
 export const StarterFilePreviewCard = ({
+  approvedDraftFingerprints,
   draftPreviews,
   generatedPreviews,
+  onApproveAllFiles,
+  onApproveFile,
   onDraftContentChange,
   onResetAllDrafts,
   onResetFileDraft,
 }: StarterFilePreviewCardProps) => {
   const [activePath, setActivePath] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('edit');
+
+  if (draftPreviews.length === 0) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.kicker}>Starter Files</Text>
+        <Text style={styles.heading}>No starter files planned</Text>
+        <Text style={styles.helper}>Choose a starter stack to preview, edit, diff, and approve generated files.</Text>
+      </View>
+    );
+  }
+
   const selectedPreview = draftPreviews.find((preview) => preview.path === activePath) ?? draftPreviews[0];
   const generatedPreview = generatedPreviews.find((preview) => preview.path === selectedPreview.path) ?? selectedPreview;
   const draftSummary = useMemo(
     () => summarizeStarterFileDrafts(generatedPreviews, draftPreviews),
     [draftPreviews, generatedPreviews],
   );
+  const approvedCount = useMemo(
+    () => draftPreviews.filter(
+      (preview) => approvedDraftFingerprints[preview.path] === buildStarterFileApprovalFingerprint(preview),
+    ).length,
+    [approvedDraftFingerprints, draftPreviews],
+  );
+  const allFilesApproved = approvedCount === draftPreviews.length;
   const selectedFileChanged = generatedPreview.content !== selectedPreview.content;
+  const selectedFileApproved = approvedDraftFingerprints[selectedPreview.path]
+    === buildStarterFileApprovalFingerprint(selectedPreview);
   const selectedDiff = useMemo(
     () => buildStarterFileDiff(generatedPreview.content, selectedPreview.content),
     [generatedPreview.content, selectedPreview.content],
   );
   const selectedDiffCount = selectedDiff.filter((line) => line.status !== 'same').length;
-  const badgeLabel = draftSummary.editedCount > 0
-    ? `${draftSummary.editedCount}/${draftSummary.totalFiles} edited`
-    : `${draftSummary.totalFiles} files`;
+  const badgeLabel = allFilesApproved
+    ? `${approvedCount}/${draftSummary.totalFiles} approved`
+    : `${approvedCount}/${draftSummary.totalFiles} needs approval`;
 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Starter Files</Text>
-          <Text style={styles.heading}>Preview, edit, and diff the seed package</Text>
+          <Text style={styles.heading}>Preview, edit, diff, and approve the seed package</Text>
           <Text style={styles.helper}>
-            Inspect, tweak, and compare every planned starter file before approval. Generated content stays separate from the rider-approved draft.
+            Inspect each planned file, tweak the draft, compare it to the generated baseline, then approve the exact content RepoRider may create.
           </Text>
         </View>
-        <View style={[styles.badge, draftSummary.editedCount > 0 && styles.badgeEdited]}>
+        <View style={[styles.badge, allFilesApproved ? styles.badgeApproved : styles.badgeNeedsApproval]}>
           <Text style={styles.badgeText}>{badgeLabel}</Text>
         </View>
       </View>
@@ -60,6 +90,7 @@ export const StarterFilePreviewCard = ({
           const selected = preview.path === selectedPreview.path;
           const generated = generatedPreviews.find((candidate) => candidate.path === preview.path);
           const changed = generated ? generated.content !== preview.content : false;
+          const approved = approvedDraftFingerprints[preview.path] === buildStarterFileApprovalFingerprint(preview);
 
           return (
             <Pressable
@@ -71,11 +102,12 @@ export const StarterFilePreviewCard = ({
                 styles.fileChip,
                 selected && styles.fileChipSelected,
                 changed && styles.fileChipEdited,
+                approved && styles.fileChipApproved,
                 pressed && styles.fileChipPressed,
               ]}
             >
               <Text style={[styles.fileChipText, selected && styles.fileChipTextSelected]}>
-                {preview.path}{changed ? ' *' : ''}
+                {approved ? '✓ ' : ''}{preview.path}{changed ? ' *' : ''}
               </Text>
             </Pressable>
           );
@@ -90,6 +122,11 @@ export const StarterFilePreviewCard = ({
           </Text>
         </View>
         <Text style={styles.metaText}>{selectedPreview.purpose}</Text>
+        <Text style={[styles.metaText, selectedFileApproved ? styles.approvedText : styles.needsApprovalText]}>
+          {selectedFileApproved
+            ? 'Approved: this exact draft is cleared for the mock ride.'
+            : 'Needs approval: review this draft before RepoRider can create the repo.'}
+        </Text>
         {draftSummary.editedCount > 0 ? (
           <Text style={styles.metaText}>
             Edited files: {draftSummary.editedPaths.join(', ')} · {draftSummary.totalEditedCharacters} drafted characters
@@ -209,6 +246,33 @@ export const StarterFilePreviewCard = ({
       <View style={styles.actionRow}>
         <Pressable
           accessibilityRole="button"
+          disabled={selectedFileApproved}
+          onPress={() => onApproveFile(selectedPreview.path)}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            selectedFileApproved && styles.buttonDisabled,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.primaryButtonText}>{selectedFileApproved ? 'File Approved' : 'Approve This File'}</Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          disabled={allFilesApproved}
+          onPress={onApproveAllFiles}
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            !allFilesApproved && styles.secondaryButtonActive,
+            allFilesApproved && styles.buttonDisabled,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.secondaryButtonText}>{allFilesApproved ? 'All Files Approved' : 'Approve All Files'}</Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
           disabled={!selectedFileChanged}
           onPress={() => onResetFileDraft(selectedPreview.path)}
           style={({ pressed }) => [
@@ -276,12 +340,14 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#164e63',
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
-  badgeEdited: {
+  badgeApproved: {
+    backgroundColor: '#14532d',
+  },
+  badgeNeedsApproval: {
     backgroundColor: '#854d0e',
   },
   badgeText: {
@@ -309,6 +375,9 @@ const styles = StyleSheet.create({
   },
   fileChipEdited: {
     borderColor: '#facc15',
+  },
+  fileChipApproved: {
+    borderColor: '#22c55e',
   },
   fileChipPressed: {
     opacity: 0.78,
@@ -343,6 +412,14 @@ const styles = StyleSheet.create({
     color: '#cbd5e1',
     fontSize: 13,
     lineHeight: 18,
+  },
+  approvedText: {
+    color: '#bbf7d0',
+    fontWeight: '800',
+  },
+  needsApprovalText: {
+    color: '#fef3c7',
+    fontWeight: '800',
   },
   changeBadge: {
     backgroundColor: '#1e293b',
@@ -469,6 +546,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+  },
+  primaryButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#06b6d4',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  primaryButtonText: {
+    color: '#082f49',
+    fontSize: 13,
+    fontWeight: '900',
   },
   secondaryButton: {
     alignItems: 'center',
