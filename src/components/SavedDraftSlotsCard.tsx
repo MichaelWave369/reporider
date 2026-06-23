@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { buildMarkdownSavedDraftSnapshot } from '../lib/savedDraftMarkdown';
-import type { SavedDraftSlot } from '../types';
+import {
+  buildMarkdownSavedDraftSnapshot,
+  parseMarkdownSavedDraftSnapshot,
+} from '../lib/savedDraftMarkdown';
+import type { RideDraftSnapshot, SavedDraftSlot } from '../types';
 
 type SavedDraftSlotsCardProps = {
   slots: SavedDraftSlot[];
   onClearSlots: () => void;
   onDeleteSlot: (slotId: string) => void;
+  onImportSnapshot: (snapshot: RideDraftSnapshot) => void;
   onRestoreSlot: (slot: SavedDraftSlot) => void;
   onSaveCurrentDraft: () => void;
 };
@@ -38,11 +42,16 @@ const summarizeOverrides = (slot: SavedDraftSlot) => {
 export const SavedDraftSlotsCard = ({
   onClearSlots,
   onDeleteSlot,
+  onImportSnapshot,
   onRestoreSlot,
   onSaveCurrentDraft,
   slots,
 }: SavedDraftSlotsCardProps) => {
   const [exportExpanded, setExportExpanded] = useState(false);
+  const [importExpanded, setImportExpanded] = useState(false);
+  const [importMarkdown, setImportMarkdown] = useState('');
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const selectedSlot = useMemo(
     () => slots.find((slot) => slot.id === selectedSlotId) ?? slots[0],
@@ -53,14 +62,29 @@ export const SavedDraftSlotsCard = ({
     [selectedSlot],
   );
 
+  const importSnapshot = () => {
+    const result = parseMarkdownSavedDraftSnapshot(importMarkdown);
+
+    if (!result.ok) {
+      setImportStatus('error');
+      setImportMessage(result.error);
+      return;
+    }
+
+    onImportSnapshot(result.draftSnapshot);
+    setImportStatus('success');
+    setImportMessage('Saved draft snapshot imported as a new draft. Review gates were reset.');
+    setImportMarkdown('');
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Saved Drafts</Text>
-          <Text style={styles.heading}>Park an in-progress ride</Text>
+          <Text style={styles.heading}>Park or import an in-progress ride</Text>
           <Text style={styles.helper}>
-            Save the current idea and steering controls before create. Slots are session-only and do not include edited files, edited issues, approvals, or create results.
+            Save, export, or import the current idea and steering controls before create. Slots and imports are session-only and never include approvals, edited files, edited issues, or create results.
           </Text>
         </View>
         <View style={styles.countBadge}>
@@ -69,13 +93,62 @@ export const SavedDraftSlotsCard = ({
         </View>
       </View>
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={onSaveCurrentDraft}
-        style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}
-      >
-        <Text style={styles.primaryButtonText}>Save Current Draft Slot</Text>
-      </Pressable>
+      <View style={styles.topActions}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onSaveCurrentDraft}
+          style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}
+        >
+          <Text style={styles.primaryButtonText}>Save Current Draft Slot</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            setImportExpanded((current) => !current);
+            setImportMessage(null);
+            setImportStatus('idle');
+          }}
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+        >
+          <Text style={styles.secondaryButtonText}>{importExpanded ? 'Hide Import' : 'Import Markdown'}</Text>
+        </Pressable>
+      </View>
+
+      {importExpanded ? (
+        <View style={styles.importCard}>
+          <Text style={styles.sectionTitle}>Import saved draft Markdown</Text>
+          <Text style={styles.restoreHelper}>
+            Paste a RepoRider saved draft export. Import restores idea text and steering controls only, then resets files, issues, approvals, ledgers, and create state for fresh review.
+          </Text>
+          <TextInput
+            multiline
+            onChangeText={(value) => {
+              setImportMarkdown(value);
+              setImportMessage(null);
+              setImportStatus('idle');
+            }}
+            placeholder="Paste # RepoRider Saved Draft Snapshot here..."
+            placeholderTextColor="#64748b"
+            style={styles.importInput}
+            value={importMarkdown}
+          />
+          <View style={styles.metaRow}>
+            <Text style={styles.metaPill}>{countLines(importMarkdown || ' ')} lines</Text>
+            <Text style={styles.metaPill}>{importMarkdown.length} chars</Text>
+            <Text style={styles.metaPill}>pre-create import</Text>
+          </View>
+          {importMessage ? (
+            <Text style={importStatus === 'error' ? styles.errorMessage : styles.successMessage}>{importMessage}</Text>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            onPress={importSnapshot}
+            style={({ pressed }) => [styles.importButton, pressed && styles.buttonPressed]}
+          >
+            <Text style={styles.importButtonText}>Import as New Draft</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {slots.length === 0 || !selectedSlot ? (
         <View style={styles.emptyState}>
@@ -249,9 +322,13 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     textTransform: 'uppercase',
   },
+  topActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
   primaryButton: {
     alignItems: 'center',
-    alignSelf: 'flex-start',
     backgroundColor: '#ca8a04',
     borderColor: '#fde047',
     borderRadius: 14,
@@ -263,6 +340,63 @@ const styles = StyleSheet.create({
     color: '#111827',
     fontSize: 12,
     fontWeight: '900',
+  },
+  secondaryButton: {
+    alignItems: 'center',
+    backgroundColor: '#164e63',
+    borderColor: '#67e8f9',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  secondaryButtonText: {
+    color: '#e0f2fe',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  importCard: {
+    backgroundColor: '#020617',
+    borderColor: '#22c55e',
+    borderRadius: 18,
+    borderWidth: 1,
+    gap: 10,
+    padding: 12,
+  },
+  importInput: {
+    backgroundColor: '#0f172a',
+    borderColor: '#334155',
+    borderRadius: 14,
+    borderWidth: 1,
+    color: '#f8fafc',
+    minHeight: 150,
+    padding: 12,
+    textAlignVertical: 'top',
+  },
+  importButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#15803d',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  importButtonText: {
+    color: '#dcfce7',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  errorMessage: {
+    color: '#fecaca',
+    fontSize: 12,
+    fontWeight: '800',
+    lineHeight: 17,
+  },
+  successMessage: {
+    color: '#bbf7d0',
+    fontSize: 12,
+    fontWeight: '800',
+    lineHeight: 17,
   },
   emptyState: {
     backgroundColor: '#0f172a',
@@ -401,15 +535,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   exportToggle: {
-    alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: '#38bdf8',
-    borderRadius: 14,
+    backgroundColor: '#0e7490',
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 9,
   },
   exportToggleText: {
-    color: '#082f49',
+    color: '#ecfeff',
     fontSize: 12,
     fontWeight: '900',
   },
@@ -418,19 +551,16 @@ const styles = StyleSheet.create({
   },
   exportHelpText: {
     color: '#bae6fd',
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11,
     lineHeight: 16,
   },
   markdownInput: {
-    backgroundColor: '#020617',
-    borderColor: '#1e293b',
+    backgroundColor: '#0f172a',
+    borderColor: '#334155',
     borderRadius: 14,
     borderWidth: 1,
-    color: '#e2e8f0',
+    color: '#f8fafc',
     fontFamily: 'monospace',
-    fontSize: 11,
-    lineHeight: 16,
     minHeight: 220,
     padding: 12,
     textAlignVertical: 'top',
@@ -441,27 +571,21 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   restoreButton: {
-    alignItems: 'center',
     backgroundColor: '#0369a1',
-    borderColor: '#38bdf8',
-    borderRadius: 14,
-    borderWidth: 1,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 9,
   },
   restoreButtonText: {
-    color: '#f0f9ff',
+    color: '#e0f2fe',
     fontSize: 12,
     fontWeight: '900',
   },
   deleteButton: {
-    alignItems: 'center',
     backgroundColor: '#7f1d1d',
-    borderColor: '#fca5a5',
-    borderRadius: 14,
-    borderWidth: 1,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 9,
   },
   deleteButtonText: {
     color: '#fee2e2',
@@ -469,14 +593,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   clearButton: {
-    alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: '#1e293b',
-    borderColor: '#475569',
-    borderRadius: 14,
-    borderWidth: 1,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 9,
   },
   clearButtonText: {
     color: '#e2e8f0',
