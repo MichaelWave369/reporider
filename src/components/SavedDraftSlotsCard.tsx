@@ -10,6 +10,7 @@ type SavedDraftSlotsCardProps = {
   slots: SavedDraftSlot[];
   onClearSlots: () => void;
   onDeleteSlot: (slotId: string) => void;
+  onDuplicateSlot: (slot: SavedDraftSlot) => void;
   onImportSnapshot: (snapshot: RideDraftSnapshot) => void;
   onRenameSlot: (slotId: string, label: string) => void;
   onRestoreSlot: (slot: SavedDraftSlot) => void;
@@ -41,6 +42,7 @@ const slotDisplayTitle = (slot: SavedDraftSlot, index: number, total: number) =>
 export const SavedDraftSlotsCard = ({
   onClearSlots,
   onDeleteSlot,
+  onDuplicateSlot,
   onImportSnapshot,
   onRenameSlot,
   onRestoreSlot,
@@ -57,13 +59,12 @@ export const SavedDraftSlotsCard = ({
   const [renameLabel, setRenameLabel] = useState('');
   const [renameMessage, setRenameMessage] = useState<string | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+
   const selectedSlot = useMemo(
     () => slots.find((slot) => slot.id === selectedSlotId) ?? slots[0],
     [selectedSlotId, slots],
   );
-  const selectedSlotIndex = selectedSlot
-    ? slots.findIndex((slot) => slot.id === selectedSlot.id)
-    : -1;
+  const selectedSlotIndex = selectedSlot ? slots.findIndex((slot) => slot.id === selectedSlot.id) : -1;
   const markdownSnapshot = useMemo(
     () => (selectedSlot ? buildMarkdownSavedDraftSnapshot(selectedSlot) : ''),
     [selectedSlot],
@@ -122,10 +123,7 @@ export const SavedDraftSlotsCard = ({
   };
 
   const saveSelectedLabel = () => {
-    if (!selectedSlot) {
-      return;
-    }
-
+    if (!selectedSlot) return;
     onRenameSlot(selectedSlot.id, renameLabel);
     setRenameMessage(renameLabel.trim() ? 'Slot label saved.' : 'Slot label cleared.');
   };
@@ -135,9 +133,9 @@ export const SavedDraftSlotsCard = ({
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Saved Drafts</Text>
-          <Text style={styles.heading}>Park, label, or import an in-progress ride</Text>
+          <Text style={styles.heading}>Park, branch, label, export, or import drafts</Text>
           <Text style={styles.helper}>
-            Save, rename, export, preview, import, or park pasted draft snapshots before create. Labels are session-only metadata and never change approvals, edited files, edited issues, or create results.
+            Session-only draft slots store idea and steering controls only. Duplicate creates a fresh slot for branching without touching the original.
           </Text>
         </View>
         <View style={styles.countBadge}>
@@ -166,7 +164,7 @@ export const SavedDraftSlotsCard = ({
         <View style={styles.importCard}>
           <Text style={styles.sectionTitle}>Import saved draft Markdown</Text>
           <Text style={styles.helperSmall}>
-            Paste a RepoRider saved draft export, preview the extracted idea and controls, then either save that preview as a slot or restore it after review.
+            Paste a RepoRider saved draft export, preview the extracted idea and controls, then save that preview as a slot or restore it after review.
           </Text>
           <TextInput
             multiline
@@ -183,7 +181,6 @@ export const SavedDraftSlotsCard = ({
             <Text style={styles.metaPill}>{countLines(importMarkdown || ' ')} lines</Text>
             <Text style={styles.metaPill}>{importMarkdown.length} chars</Text>
             <Text style={styles.metaPill}>preview required</Text>
-            <Text style={styles.metaPill}>save or restore</Text>
           </View>
           {importMessage ? (
             <Text style={importStatus === 'error' ? styles.errorMessage : styles.successMessage}>{importMessage}</Text>
@@ -193,9 +190,7 @@ export const SavedDraftSlotsCard = ({
               <Text style={styles.previewKicker}>Import Preview</Text>
               <Text style={styles.ideaPreview}>{importPreview.idea || 'No idea text imported.'}</Text>
               <Text style={styles.overrideSummary}>{summarizeOverrides(importPreview.planOverrides)}</Text>
-              <Text style={styles.helperSmall}>
-                Saving parks this preview as a session slot without changing the editor. Restoring reloads planning inputs only and resets all review gates.
-              </Text>
+              <Text style={styles.helperSmall}>Saving parks this preview as a session slot. Restoring reloads planning inputs only and resets all review gates.</Text>
             </View>
           ) : null}
           <View style={styles.actionRow}>
@@ -225,14 +220,13 @@ export const SavedDraftSlotsCard = ({
       {slots.length === 0 || !selectedSlot ? (
         <View style={styles.emptyState}>
           <Text style={styles.sectionTitle}>No saved draft slots yet</Text>
-          <Text style={styles.helperSmall}>Save the current idea and steering controls when you want to park a ride before approval.</Text>
+          <Text style={styles.helperSmall}>Save the current idea and steering controls when you want to park or branch a ride before approval.</Text>
         </View>
       ) : (
         <>
           <View style={styles.slotList}>
             {slots.map((slot, index) => {
               const selected = slot.id === selectedSlot.id;
-
               return (
                 <Pressable
                   accessibilityRole="button"
@@ -244,8 +238,7 @@ export const SavedDraftSlotsCard = ({
                   style={[styles.slotButton, selected && styles.slotButtonSelected]}
                 >
                   <Text style={styles.slotTitle}>{slotDisplayTitle(slot, index, slots.length)}</Text>
-                  <Text style={styles.slotMeta}>{slot.label ? 'custom label' : 'unlabeled session slot'}</Text>
-                  <Text style={styles.slotMeta}>{formatSavedAt(slot.savedAt)}</Text>
+                  <Text style={styles.slotMeta}>{slot.label ? 'custom label' : 'unlabeled session slot'} · {formatSavedAt(slot.savedAt)}</Text>
                   <Text numberOfLines={2} style={styles.slotIdea}>{slot.draftSnapshot.idea}</Text>
                 </Pressable>
               );
@@ -257,13 +250,11 @@ export const SavedDraftSlotsCard = ({
             <Text style={styles.slotTitle}>{slotDisplayTitle(selectedSlot, selectedSlotIndex, slots.length)}</Text>
             <Text style={styles.ideaPreview}>{selectedSlot.draftSnapshot.idea}</Text>
             <Text style={styles.overrideSummary}>{summarizeOverrides(selectedSlot.draftSnapshot.planOverrides)}</Text>
-            <Text style={styles.helperSmall}>
-              Restore reloads the idea and steering controls only. Review state resets for a fresh ride.
-            </Text>
+            <Text style={styles.helperSmall}>Restore reloads planning inputs only. Duplicate creates a new slot from the same safe snapshot and does not change the current editor.</Text>
 
             <View style={styles.renameCard}>
               <Text style={styles.previewKicker}>Slot Label</Text>
-              <Text style={styles.helperSmall}>Add a short session label to recognize this saved draft. Renaming does not change the saved idea or controls.</Text>
+              <Text style={styles.helperSmall}>Add a short session label. Renaming changes only slot metadata.</Text>
               <TextInput
                 onChangeText={setRenameLabel}
                 placeholder="Example: Camping app v2"
@@ -312,19 +303,16 @@ export const SavedDraftSlotsCard = ({
                 <Text style={styles.secondaryButtonText}>{exportExpanded ? 'Hide Saved Draft Markdown' : 'Show Saved Draft Markdown'}</Text>
               </Pressable>
               {exportExpanded ? (
-                <TextInput
-                  editable={false}
-                  multiline
-                  selectTextOnFocus
-                  style={styles.markdownInput}
-                  value={markdownSnapshot}
-                />
+                <TextInput editable={false} multiline selectTextOnFocus style={styles.markdownInput} value={markdownSnapshot} />
               ) : null}
             </View>
 
             <View style={styles.actionRow}>
               <Pressable accessibilityRole="button" onPress={() => onRestoreSlot(selectedSlot)} style={styles.restoreButton}>
                 <Text style={styles.restoreButtonText}>Restore Slot as Draft</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" onPress={() => onDuplicateSlot(selectedSlot)} style={styles.duplicateButton}>
+                <Text style={styles.duplicateButtonText}>Duplicate Slot</Text>
               </Pressable>
               <Pressable accessibilityRole="button" onPress={() => onDeleteSlot(selectedSlot.id)} style={styles.deleteButton}>
                 <Text style={styles.deleteButtonText}>Delete Slot</Text>
@@ -621,6 +609,17 @@ const styles = StyleSheet.create({
   },
   restoreButtonText: {
     color: '#e0f2fe',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  duplicateButton: {
+    backgroundColor: '#4c1d95',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  duplicateButtonText: {
+    color: '#ede9fe',
     fontSize: 12,
     fontWeight: '900',
   },
