@@ -6,7 +6,7 @@ RepoRider is a mobile-first, voice-friendly GitHub creation assistant for builde
 
 The goal is simple:
 
-> Speak an idea on your phone, review the repo plan, steer the final settings, save/export/import in-progress drafts when useful, preview, edit, diff, approve every starter file and starter issue, inspect the unified approval ledger, then publish a safe starter repository with receipts.
+> Speak an idea on your phone, review the repo plan, steer the final settings, save/label/export/import in-progress drafts when useful, preview, edit, diff, approve every starter file and starter issue, inspect the unified approval ledger, then publish a safe starter repository with receipts.
 
 ## What this skeleton includes
 
@@ -15,6 +15,7 @@ The goal is simple:
 - Live idea-to-repo planner
 - Editable repo name, visibility, stack, and starter issue controls
 - Session-only saved draft slots for in-progress idea/plan steering
+- Saved draft slot labels for easier session navigation
 - Copy-ready Markdown export for saved draft slots before create
 - Saved draft Markdown import with a required preview before save or restore
 - Save imported Markdown previews into session draft slots without changing the current editor
@@ -53,32 +54,33 @@ That means the app can simulate the full ride from approval to repo creation wit
 2. **Shape** — RepoRider turns it into a structured project brief.
 3. **Steer** — user edits repo name, visibility, starter stack, and issue count.
 4. **Save draft** — user can save the current idea and steering controls as a session-only draft slot before create.
-5. **Export saved draft** — user can open a copy-ready Markdown snapshot of a saved draft slot before create.
-6. **Preview imported draft** — user can paste a RepoRider saved draft snapshot and inspect the extracted idea/steering controls before any action.
-7. **Save imported preview** — after preview, user can park the imported idea/steering controls as a saved draft slot without changing the current editor.
-8. **Import saved draft** — after preview, user can restore the imported idea/steering controls as a fresh draft with approvals reset.
-9. **Plan** — user reviews repo files, starter issues, and safety status.
-10. **Preview** — user inspects the generated starter files that would be committed.
-11. **Edit files** — user can tweak starter-file drafts before approval.
-12. **Diff** — user compares generated baselines against rider-reviewed file drafts.
-13. **Approve files** — every current starter-file draft must be approved before create unlocks.
-14. **Edit issues** — user can tweak starter issue titles, bodies, and labels.
-15. **Approve issues** — every current starter-issue draft must be approved before create unlocks.
-16. **Ledger** — user reviews one unified approval receipt with file status, issue status, edit status, and compact fingerprints.
-17. **Guard** — safety checks catch secrets, dangerous file names, and risky defaults.
-18. **Create** — approved starter files and approved starter issues are pushed/opened on GitHub once live mode exists.
-19. **Complete** — user sees a final Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, and receipts.
-20. **Export ride** — user can open a copy-ready Markdown ride receipt for notes, PRs, issues, or handoffs.
-21. **History** — recent mock ride receipts remain available during the current app session for revisit/export.
-22. **Restore ride** — a previous session ride can reload its captured idea and steering controls as a new draft, with file drafts, issue drafts, and approvals reset.
-23. **Restore saved draft** — a saved draft slot can reload in-progress idea and steering controls, also with review state reset.
-24. **Receipt** — every action gets a human-readable audit trail.
+5. **Label saved draft** — user can add a short session label to recognize a saved draft slot without changing the saved snapshot.
+6. **Export saved draft** — user can open a copy-ready Markdown snapshot of a saved draft slot before create.
+7. **Preview imported draft** — user can paste a RepoRider saved draft snapshot and inspect the extracted idea/steering controls before any action.
+8. **Save imported preview** — after preview, user can park the imported idea/steering controls as a saved draft slot without changing the current editor.
+9. **Import saved draft** — after preview, user can restore the imported idea/steering controls as a fresh draft with approvals reset.
+10. **Plan** — user reviews repo files, starter issues, and safety status.
+11. **Preview** — user inspects the generated starter files that would be committed.
+12. **Edit files** — user can tweak starter-file drafts before approval.
+13. **Diff** — user compares generated baselines against rider-reviewed file drafts.
+14. **Approve files** — every current starter-file draft must be approved before create unlocks.
+15. **Edit issues** — user can tweak starter issue titles, bodies, and labels.
+16. **Approve issues** — every current starter-issue draft must be approved before create unlocks.
+17. **Ledger** — user reviews one unified approval receipt with file status, issue status, edit status, and compact fingerprints.
+18. **Guard** — safety checks catch secrets, dangerous file names, and risky defaults.
+19. **Create** — approved starter files and approved starter issues are pushed/opened on GitHub once live mode exists.
+20. **Complete** — user sees a final Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, and receipts.
+21. **Export ride** — user can open a copy-ready Markdown ride receipt for notes, PRs, issues, or handoffs.
+22. **History** — recent mock ride receipts remain available during the current app session for revisit/export.
+23. **Restore ride** — a previous session ride can reload its captured idea and steering controls as a new draft, with file drafts, issue drafts, and approvals reset.
+24. **Restore saved draft** — a saved draft slot can reload in-progress idea and steering controls, also with review state reset.
+25. **Receipt** — every action gets a human-readable audit trail.
 
 ## Planner behavior
 
 The current planner is local and deterministic. As the idea text changes, RepoRider regenerates the suggested repo plan, safety report, approval state, receipt preview, generated starter file previews, and generated starter issue previews.
 
-The rider can override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, save the current idea/steering controls into a session-only draft slot, export a saved draft slot as copy-ready Markdown, paste a saved draft Markdown snapshot, preview the extracted planning inputs, save the preview as a session-only draft slot without changing the current editor, restore the preview as a fresh draft, edit starter-file drafts, compare generated vs rider-edited drafts, approve each file, edit starter issue drafts, approve each issue, review a unified approval ledger before creation, inspect a ride-complete summary after mock creation, export a copy-ready Markdown ride receipt, revisit recent mock ride receipts during the same app session, and restore either a completed ride's planning inputs or a saved in-progress draft as a fresh draft. Editing a file or issue after approval makes that artifact require approval again, because approvals are tied to the current draft content.
+The rider can override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, save the current idea/steering controls into a session-only draft slot, label saved draft slots, export a saved draft slot as copy-ready Markdown, paste a saved draft Markdown snapshot, preview the extracted planning inputs, save the preview as a session-only draft slot without changing the current editor, restore the preview as a fresh draft, edit starter-file drafts, compare generated vs rider-edited drafts, approve each file, edit starter issue drafts, approve each issue, review a unified approval ledger before creation, inspect a ride-complete summary after mock creation, export a copy-ready Markdown ride receipt, revisit recent mock ride receipts during the same app session, and restore either a completed ride's planning inputs or a saved in-progress draft as a fresh draft. Editing a file or issue after approval makes that artifact require approval again, because approvals are tied to the current draft content.
 
 It keeps repositories private by default, infers likely starter stacks from idea text, chooses starter files from the selected stack, includes `package.json` for code stacks, generates a first starter file preview set, and creates a small first issue set. It does not write to GitHub by itself.
 
@@ -125,6 +127,7 @@ Start with:
 - `docs/LOCAL_RIDE_HISTORY.md`
 - `docs/RESTORE_RIDE_DRAFT.md`
 - `docs/SAVED_DRAFT_SLOTS.md`
+- `docs/SAVED_DRAFT_SLOT_LABELS.md`
 - `docs/SAVED_DRAFT_EXPORT.md`
 - `docs/SAVED_DRAFT_IMPORT.md`
 - `docs/SAVED_DRAFT_IMPORT_PREVIEW.md`
