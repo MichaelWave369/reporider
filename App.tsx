@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ApprovalReceiptPreviewCard } from './src/components/ApprovalReceiptPreviewCard';
 import { CreateRepoPanel } from './src/components/CreateRepoPanel';
 import { IdeaCapture } from './src/components/IdeaCapture';
 import { ReceiptTimeline } from './src/components/ReceiptTimeline';
@@ -159,6 +160,11 @@ export default function App() {
           onDraftContentChange={updateStarterFileDraft}
           onResetAllDrafts={resetAllStarterFileDrafts}
           onResetFileDraft={resetStarterFileDraft}
+        />
+        <ApprovalReceiptPreviewCard
+          approvedDraftFingerprints={starterFileApprovals}
+          draftPreviews={reviewedStarterFiles}
+          generatedPreviews={generatedStarterFiles}
         />
         <CreateRepoPanel
           allStarterFilesApproved={allStarterFilesApproved}
