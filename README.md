@@ -24,6 +24,7 @@ The goal is simple:
 - Unified approval receipt preview for starter files and starter issues before create
 - Post-create Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, and receipts
 - Copy-ready Markdown ride receipt export after mock create
+- Session-only local ride history for recent mock ride receipts
 - Content-sensitive approval fingerprints that stale out after edits
 - Code-stack `package.json` planning
 - Safety scan placeholder for generated files
@@ -58,13 +59,14 @@ That means the app can simulate the full ride from approval to repo creation wit
 13. **Create** — approved starter files and approved starter issues are pushed/opened on GitHub once live mode exists.
 14. **Complete** — user sees a final Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, and receipts.
 15. **Export** — user can open a copy-ready Markdown ride receipt for notes, PRs, issues, or handoffs.
-16. **Receipt** — every action gets a human-readable audit trail.
+16. **History** — recent mock ride receipts remain available during the current app session for revisit/export.
+17. **Receipt** — every action gets a human-readable audit trail.
 
 ## Planner behavior
 
 The current planner is local and deterministic. As the idea text changes, RepoRider regenerates the suggested repo plan, safety report, approval state, receipt preview, generated starter file previews, and generated starter issue previews.
 
-The rider can override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, edit starter-file drafts, compare generated vs rider-edited drafts, approve each file, edit starter issue drafts, approve each issue, review a unified approval ledger before creation, inspect a ride-complete summary after mock creation, and export a copy-ready Markdown receipt. Editing a file or issue after approval makes that artifact require approval again, because approvals are tied to the current draft content.
+The rider can override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, edit starter-file drafts, compare generated vs rider-edited drafts, approve each file, edit starter issue drafts, approve each issue, review a unified approval ledger before creation, inspect a ride-complete summary after mock creation, export a copy-ready Markdown receipt, and revisit recent mock ride receipts during the same app session. Editing a file or issue after approval makes that artifact require approval again, because approvals are tied to the current draft content.
 
 It keeps repositories private by default, infers likely starter stacks from idea text, chooses starter files from the selected stack, includes `package.json` for code stacks, generates a first starter file preview set, and creates a small first issue set. It does not write to GitHub by itself.
 
@@ -108,6 +110,7 @@ Start with:
 - `docs/APPROVAL_RECEIPT_PREVIEW.md`
 - `docs/RIDE_COMPLETE_SUMMARY.md`
 - `docs/MARKDOWN_RIDE_RECEIPT.md`
+- `docs/LOCAL_RIDE_HISTORY.md`
 
 ## License
 
