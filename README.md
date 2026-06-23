@@ -12,7 +12,8 @@ The goal is simple:
 
 - Expo + React Native + TypeScript starter app
 - Phone-first project capture flow
-- Repo plan preview model
+- Live idea-to-repo planner
+- Dynamic repo name, visibility, stack, file, and issue planning
 - Safety scan placeholder for generated files
 - Mock create-repo ride flow
 - GitHub write boundary model
@@ -37,6 +38,12 @@ That means the app can simulate the full ride from approval to repo creation wit
 5. **Approve** — human approval unlocks the ride.
 6. **Create** — approved starter files are pushed to GitHub once live mode exists.
 7. **Receipt** — every action gets a human-readable audit trail.
+
+## Planner behavior
+
+The current planner is local and deterministic. As the idea text changes, RepoRider regenerates the repo plan, safety report, approval state, and receipt preview.
+
+It keeps repositories private by default, infers likely starter stacks from idea text, chooses starter files from the inferred stack, and creates a small first issue set. It does not write to GitHub by itself.
 
 ## MVP scope
 
@@ -66,6 +73,7 @@ npm run typecheck
 - [Product Spec](docs/PRODUCT_SPEC.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [GitHub Write Boundary](docs/GITHUB_WRITE_BOUNDARY.md)
+- [Planner](docs/PLANNER.md)
 
 ## Product principle
 
