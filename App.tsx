@@ -8,6 +8,7 @@ import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
 import { RepoPlanControls } from './src/components/RepoPlanControls';
 import { RideHistoryCard } from './src/components/RideHistoryCard';
+import { SavedDraftArchiveCard } from './src/components/SavedDraftArchiveCard';
 import { SavedDraftPinningCard } from './src/components/SavedDraftPinningCard';
 import { SavedDraftSlotsCard } from './src/components/SavedDraftSlotsCard';
 import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard';
@@ -63,9 +64,11 @@ const normalizeSavedDraftLabel = (label: string) => {
   return trimmed ? trimmed.slice(0, 48) : undefined;
 };
 
-const prioritizePinnedSavedDraftSlots = (slots: SavedDraftSlot[]) => [
-  ...slots.filter((slot) => slot.pinned),
-  ...slots.filter((slot) => !slot.pinned),
+const prioritizeSavedDraftSlots = (slots: SavedDraftSlot[]) => [
+  ...slots.filter((slot) => !slot.archived && slot.pinned),
+  ...slots.filter((slot) => !slot.archived && !slot.pinned),
+  ...slots.filter((slot) => slot.archived && slot.pinned),
+  ...slots.filter((slot) => slot.archived && !slot.pinned),
 ];
 
 export default function App() {
@@ -113,6 +116,8 @@ export default function App() {
   const allStarterIssuesApproved = reviewedStarterIssues.length === approvedStarterIssueCount;
   const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
+  const activeSavedDraftSlots = useMemo(() => savedDraftSlots.filter((slot) => !slot.archived), [savedDraftSlots]);
+  const archivedSavedDraftSlots = useMemo(() => savedDraftSlots.filter((slot) => slot.archived), [savedDraftSlots]);
 
   const resetReviewState = () => {
     setStarterFileDraftState({ drafts: {}, planKey: '' });
@@ -135,7 +140,7 @@ export default function App() {
       savedAt,
     };
 
-    setSavedDraftSlots((currentSlots) => prioritizePinnedSavedDraftSlots([draftSlot, ...currentSlots].slice(0, 5)));
+    setSavedDraftSlots((currentSlots) => prioritizeSavedDraftSlots([draftSlot, ...currentSlots].slice(0, 5)));
   };
 
   const restoreDraftSnapshot = (snapshot: RideDraftSnapshot) => {
@@ -151,21 +156,32 @@ export default function App() {
 
   const handleMoveSavedDraftSlot = (slotId: string, direction: 'up' | 'down') => {
     setSavedDraftSlots((currentSlots) => {
-      const currentIndex = currentSlots.findIndex((slot) => slot.id === slotId);
-      if (currentIndex === -1) return currentSlots;
+      const selectedSlot = currentSlots.find((slot) => slot.id === slotId);
+      if (!selectedSlot) return currentSlots;
 
-      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      if (targetIndex < 0 || targetIndex >= currentSlots.length) return currentSlots;
+      const sameArchiveGroup = currentSlots.filter((slot) => Boolean(slot.archived) === Boolean(selectedSlot.archived));
+      const currentGroupIndex = sameArchiveGroup.findIndex((slot) => slot.id === slotId);
+      const targetGroupIndex = direction === 'up' ? currentGroupIndex - 1 : currentGroupIndex + 1;
+      const targetSlot = sameArchiveGroup[targetGroupIndex];
+      if (!targetSlot) return currentSlots;
 
+      const currentIndex = currentSlots.findIndex((slot) => slot.id === selectedSlot.id);
+      const targetIndex = currentSlots.findIndex((slot) => slot.id === targetSlot.id);
       const nextSlots = [...currentSlots];
       [nextSlots[currentIndex], nextSlots[targetIndex]] = [nextSlots[targetIndex], nextSlots[currentIndex]];
-      return prioritizePinnedSavedDraftSlots(nextSlots);
+      return prioritizeSavedDraftSlots(nextSlots);
     });
   };
 
   const handleToggleSavedDraftSlotPin = (slotId: string) => {
-    setSavedDraftSlots((currentSlots) => prioritizePinnedSavedDraftSlots(currentSlots.map((slot) => (
+    setSavedDraftSlots((currentSlots) => prioritizeSavedDraftSlots(currentSlots.map((slot) => (
       slot.id === slotId ? { ...slot, pinned: !slot.pinned } : slot
+    ))));
+  };
+
+  const handleToggleSavedDraftSlotArchive = (slotId: string) => {
+    setSavedDraftSlots((currentSlots) => prioritizeSavedDraftSlots(currentSlots.map((slot) => (
+      slot.id === slotId ? { ...slot, archived: !slot.archived } : slot
     ))));
   };
 
@@ -299,7 +315,14 @@ export default function App() {
         />
         <SavedDraftPinningCard
           onTogglePinnedSlot={handleToggleSavedDraftSlotPin}
-          slots={savedDraftSlots}
+          slots={activeSavedDraftSlots}
+        />
+        <SavedDraftArchiveCard
+          activeSlots={activeSavedDraftSlots}
+          archivedSlots={archivedSavedDraftSlots}
+          onDeleteSlot={handleDeleteSavedDraftSlot}
+          onRestoreSlot={(slot) => restoreDraftSnapshot(slot.draftSnapshot)}
+          onToggleArchivedSlot={handleToggleSavedDraftSlotArchive}
         />
         <SavedDraftSlotsCard
           onClearSlots={() => setSavedDraftSlots([])}
@@ -311,7 +334,7 @@ export default function App() {
           onRestoreSlot={(slot) => restoreDraftSnapshot(slot.draftSnapshot)}
           onSaveCurrentDraft={() => saveDraftSnapshotSlot(buildCurrentDraftSnapshot())}
           onSaveImportPreview={saveDraftSnapshotSlot}
-          slots={savedDraftSlots}
+          slots={activeSavedDraftSlots}
         />
         <RepoPlanCard plan={repoPlan} safetyReport={safetyReport} />
         <StarterFilePreviewCard
