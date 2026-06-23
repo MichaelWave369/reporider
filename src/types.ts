@@ -111,8 +111,14 @@ export type GithubCreateRepoResult = {
   summary: GithubCreateRepoSummary;
 };
 
+export type RideDraftSnapshot = {
+  idea: string;
+  planOverrides: RepoPlanOverrides;
+};
+
 export type RideHistoryEntry = {
   id: string;
   completedAt: string;
+  draftSnapshot?: RideDraftSnapshot;
   result: GithubCreateRepoResult;
 };
