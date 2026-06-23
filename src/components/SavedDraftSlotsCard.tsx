@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   buildMarkdownSavedDraftSnapshot,
@@ -11,6 +11,7 @@ type SavedDraftSlotsCardProps = {
   onClearSlots: () => void;
   onDeleteSlot: (slotId: string) => void;
   onImportSnapshot: (snapshot: RideDraftSnapshot) => void;
+  onRenameSlot: (slotId: string, label: string) => void;
   onRestoreSlot: (slot: SavedDraftSlot) => void;
   onSaveCurrentDraft: () => void;
   onSaveImportPreview: (snapshot: RideDraftSnapshot) => void;
@@ -34,10 +35,14 @@ const summarizeOverrides = (overrides: RepoPlanOverrides) => {
   return values.length > 0 ? values.join(' · ') : 'No steering overrides saved';
 };
 
+const slotDisplayTitle = (slot: SavedDraftSlot, index: number, total: number) =>
+  slot.label?.trim() || `Slot #${total - index}`;
+
 export const SavedDraftSlotsCard = ({
   onClearSlots,
   onDeleteSlot,
   onImportSnapshot,
+  onRenameSlot,
   onRestoreSlot,
   onSaveCurrentDraft,
   onSaveImportPreview,
@@ -49,15 +54,25 @@ export const SavedDraftSlotsCard = ({
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [importPreview, setImportPreview] = useState<RideDraftSnapshot | null>(null);
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [renameLabel, setRenameLabel] = useState('');
+  const [renameMessage, setRenameMessage] = useState<string | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const selectedSlot = useMemo(
     () => slots.find((slot) => slot.id === selectedSlotId) ?? slots[0],
     [selectedSlotId, slots],
   );
+  const selectedSlotIndex = selectedSlot
+    ? slots.findIndex((slot) => slot.id === selectedSlot.id)
+    : -1;
   const markdownSnapshot = useMemo(
     () => (selectedSlot ? buildMarkdownSavedDraftSnapshot(selectedSlot) : ''),
     [selectedSlot],
   );
+
+  useEffect(() => {
+    setRenameLabel(selectedSlot?.label ?? '');
+    setRenameMessage(null);
+  }, [selectedSlot?.id, selectedSlot?.label]);
 
   const resetImportState = () => {
     setImportMessage(null);
@@ -106,14 +121,23 @@ export const SavedDraftSlotsCard = ({
     setImportPreview(null);
   };
 
+  const saveSelectedLabel = () => {
+    if (!selectedSlot) {
+      return;
+    }
+
+    onRenameSlot(selectedSlot.id, renameLabel);
+    setRenameMessage(renameLabel.trim() ? 'Slot label saved.' : 'Slot label cleared.');
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Saved Drafts</Text>
-          <Text style={styles.heading}>Park or import an in-progress ride</Text>
+          <Text style={styles.heading}>Park, label, or import an in-progress ride</Text>
           <Text style={styles.helper}>
-            Save, export, preview, import, or park pasted draft snapshots before create. Slots and imports are session-only and never include approvals, edited files, edited issues, or create results.
+            Save, rename, export, preview, import, or park pasted draft snapshots before create. Labels are session-only metadata and never change approvals, edited files, edited issues, or create results.
           </Text>
         </View>
         <View style={styles.countBadge}>
@@ -219,7 +243,8 @@ export const SavedDraftSlotsCard = ({
                   }}
                   style={[styles.slotButton, selected && styles.slotButtonSelected]}
                 >
-                  <Text style={styles.slotTitle}>Slot #{slots.length - index}</Text>
+                  <Text style={styles.slotTitle}>{slotDisplayTitle(slot, index, slots.length)}</Text>
+                  <Text style={styles.slotMeta}>{slot.label ? 'custom label' : 'unlabeled session slot'}</Text>
                   <Text style={styles.slotMeta}>{formatSavedAt(slot.savedAt)}</Text>
                   <Text numberOfLines={2} style={styles.slotIdea}>{slot.draftSnapshot.idea}</Text>
                 </Pressable>
@@ -229,11 +254,41 @@ export const SavedDraftSlotsCard = ({
 
           <View style={styles.selectedCard}>
             <Text style={styles.sectionTitle}>Selected draft slot</Text>
+            <Text style={styles.slotTitle}>{slotDisplayTitle(selectedSlot, selectedSlotIndex, slots.length)}</Text>
             <Text style={styles.ideaPreview}>{selectedSlot.draftSnapshot.idea}</Text>
             <Text style={styles.overrideSummary}>{summarizeOverrides(selectedSlot.draftSnapshot.planOverrides)}</Text>
             <Text style={styles.helperSmall}>
               Restore reloads the idea and steering controls only. Review state resets for a fresh ride.
             </Text>
+
+            <View style={styles.renameCard}>
+              <Text style={styles.previewKicker}>Slot Label</Text>
+              <Text style={styles.helperSmall}>Add a short session label to recognize this saved draft. Renaming does not change the saved idea or controls.</Text>
+              <TextInput
+                onChangeText={setRenameLabel}
+                placeholder="Example: Camping app v2"
+                placeholderTextColor="#64748b"
+                style={styles.renameInput}
+                value={renameLabel}
+              />
+              {renameMessage ? <Text style={styles.successMessage}>{renameMessage}</Text> : null}
+              <View style={styles.actionRow}>
+                <Pressable accessibilityRole="button" onPress={saveSelectedLabel} style={styles.secondaryButton}>
+                  <Text style={styles.secondaryButtonText}>Save Slot Label</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    setRenameLabel('');
+                    onRenameSlot(selectedSlot.id, '');
+                    setRenameMessage('Slot label cleared.');
+                  }}
+                  style={styles.clearLabelButton}
+                >
+                  <Text style={styles.clearButtonText}>Clear Label</Text>
+                </Pressable>
+              </View>
+            </View>
 
             <View style={styles.exportCard}>
               <View style={styles.headerRow}>
@@ -251,6 +306,7 @@ export const SavedDraftSlotsCard = ({
                 <Text style={styles.metaPill}>{markdownSnapshot.length} chars</Text>
                 <Text style={styles.metaPill}>pre-create</Text>
                 <Text style={styles.metaPill}>session-only</Text>
+                <Text style={styles.metaPill}>{selectedSlot.label ? 'labeled' : 'unlabeled'}</Text>
               </View>
               <Pressable accessibilityRole="button" onPress={() => setExportExpanded((current) => !current)} style={styles.secondaryButton}>
                 <Text style={styles.secondaryButtonText}>{exportExpanded ? 'Hide Saved Draft Markdown' : 'Show Saved Draft Markdown'}</Text>
@@ -501,6 +557,28 @@ const styles = StyleSheet.create({
     color: '#fde68a',
     fontSize: 12,
     lineHeight: 17,
+  },
+  renameCard: {
+    backgroundColor: '#020617',
+    borderColor: '#facc15',
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 10,
+    padding: 12,
+  },
+  renameInput: {
+    backgroundColor: '#0f172a',
+    borderColor: '#334155',
+    borderRadius: 14,
+    borderWidth: 1,
+    color: '#f8fafc',
+    padding: 12,
+  },
+  clearLabelButton: {
+    backgroundColor: '#334155',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
   exportCard: {
     backgroundColor: '#020617',
