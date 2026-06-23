@@ -1,86 +1,136 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { buildStarterFilePreviews } from '../lib/starterFilePreview';
-import type { RepoPlan, StarterFilePreview } from '../types';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { summarizeStarterFileDrafts } from '../lib/starterFilePreview';
+import type { StarterFilePreview } from '../types';
 
 type StarterFilePreviewCardProps = {
-  plan: RepoPlan;
+  draftPreviews: StarterFilePreview[];
+  generatedPreviews: StarterFilePreview[];
+  onDraftContentChange: (path: string, content: string) => void;
+  onResetAllDrafts: () => void;
+  onResetFileDraft: (path: string) => void;
 };
-
-const previewLineLimit = 30;
 
 const previewLabel = (preview: StarterFilePreview) => `${preview.path} · ${preview.language} · ${preview.riskLevel}`;
 
-export const StarterFilePreviewCard = ({ plan }: StarterFilePreviewCardProps) => {
+export const StarterFilePreviewCard = ({
+  draftPreviews,
+  generatedPreviews,
+  onDraftContentChange,
+  onResetAllDrafts,
+  onResetFileDraft,
+}: StarterFilePreviewCardProps) => {
   const [activePath, setActivePath] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
-  const previews = useMemo(() => buildStarterFilePreviews(plan), [plan]);
-  const selectedPreview = previews.find((preview) => preview.path === activePath) ?? previews[0];
-  const previewLines = selectedPreview.content.split('\n');
-  const visibleContent = expanded
-    ? selectedPreview.content
-    : previewLines.slice(0, previewLineLimit).join('\n');
-  const canExpand = previewLines.length > previewLineLimit;
+  const selectedPreview = draftPreviews.find((preview) => preview.path === activePath) ?? draftPreviews[0];
+  const generatedPreview = generatedPreviews.find((preview) => preview.path === selectedPreview.path) ?? selectedPreview;
+  const draftSummary = useMemo(
+    () => summarizeStarterFileDrafts(generatedPreviews, draftPreviews),
+    [draftPreviews, generatedPreviews],
+  );
+  const selectedFileChanged = generatedPreview.content !== selectedPreview.content;
+  const badgeLabel = draftSummary.editedCount > 0
+    ? `${draftSummary.editedCount}/${draftSummary.totalFiles} edited`
+    : `${draftSummary.totalFiles} files`;
 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Starter Files</Text>
-          <Text style={styles.heading}>Preview the seed package</Text>
+          <Text style={styles.heading}>Preview and edit the seed package</Text>
           <Text style={styles.helper}>
-            Inspect every planned starter file before approval. These previews are deterministic, local, and tied to the current repo plan.
+            Inspect or tweak every planned starter file before approval. Generated content stays separate from the rider-approved draft.
           </Text>
         </View>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{previews.length} files</Text>
+        <View style={[styles.badge, draftSummary.editedCount > 0 && styles.badgeEdited]}>
+          <Text style={styles.badgeText}>{badgeLabel}</Text>
         </View>
       </View>
 
       <View style={styles.fileRail}>
-        {previews.map((preview) => {
+        {draftPreviews.map((preview) => {
           const selected = preview.path === selectedPreview.path;
+          const generated = generatedPreviews.find((candidate) => candidate.path === preview.path);
+          const changed = generated ? generated.content !== preview.content : false;
 
           return (
             <Pressable
               accessibilityLabel={`Preview ${preview.path}`}
               accessibilityRole="button"
               key={preview.path}
-              onPress={() => {
-                setActivePath(preview.path);
-                setExpanded(false);
-              }}
+              onPress={() => setActivePath(preview.path)}
               style={({ pressed }) => [
                 styles.fileChip,
                 selected && styles.fileChipSelected,
+                changed && styles.fileChipEdited,
                 pressed && styles.fileChipPressed,
               ]}
             >
-              <Text style={[styles.fileChipText, selected && styles.fileChipTextSelected]}>{preview.path}</Text>
+              <Text style={[styles.fileChipText, selected && styles.fileChipTextSelected]}>
+                {preview.path}{changed ? ' *' : ''}
+              </Text>
             </Pressable>
           );
         })}
       </View>
 
       <View style={styles.metaBox}>
-        <Text style={styles.metaTitle}>{previewLabel(selectedPreview)}</Text>
+        <View style={styles.metaHeader}>
+          <Text style={styles.metaTitle}>{previewLabel(selectedPreview)}</Text>
+          <Text style={[styles.changeBadge, selectedFileChanged && styles.changeBadgeEdited]}>
+            {selectedFileChanged ? 'edited draft' : 'generated draft'}
+          </Text>
+        </View>
         <Text style={styles.metaText}>{selectedPreview.purpose}</Text>
+        {draftSummary.editedCount > 0 ? (
+          <Text style={styles.metaText}>
+            Edited files: {draftSummary.editedPaths.join(', ')} · {draftSummary.totalEditedCharacters} drafted characters
+          </Text>
+        ) : null}
       </View>
 
-      <View style={styles.previewBox}>
-        <Text style={styles.previewText}>{visibleContent}</Text>
-        {!expanded && canExpand ? <Text style={styles.fadeText}>…</Text> : null}
-      </View>
+      <TextInput
+        accessibilityLabel={`Edit starter file ${selectedPreview.path}`}
+        autoCapitalize="none"
+        autoCorrect={false}
+        multiline
+        onChangeText={(content) => onDraftContentChange(selectedPreview.path, content)}
+        scrollEnabled
+        spellCheck={false}
+        style={styles.editor}
+        textAlignVertical="top"
+        value={selectedPreview.content}
+      />
 
-      {canExpand ? (
+      <View style={styles.actionRow}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => setExpanded((current) => !current)}
-          style={({ pressed }) => [styles.toggleButton, pressed && styles.toggleButtonPressed]}
+          disabled={!selectedFileChanged}
+          onPress={() => onResetFileDraft(selectedPreview.path)}
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            selectedFileChanged && styles.secondaryButtonActive,
+            pressed && styles.buttonPressed,
+            !selectedFileChanged && styles.buttonDisabled,
+          ]}
         >
-          <Text style={styles.toggleText}>{expanded ? 'Collapse File Preview' : 'Show Full File Preview'}</Text>
+          <Text style={styles.secondaryButtonText}>Reset This File</Text>
         </Pressable>
-      ) : null}
+
+        <Pressable
+          accessibilityRole="button"
+          disabled={draftSummary.editedCount === 0}
+          onPress={onResetAllDrafts}
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            draftSummary.editedCount > 0 && styles.secondaryButtonActive,
+            pressed && styles.buttonPressed,
+            draftSummary.editedCount === 0 && styles.buttonDisabled,
+          ]}
+        >
+          <Text style={styles.secondaryButtonText}>Reset All Drafts</Text>
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -127,6 +177,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
+  badgeEdited: {
+    backgroundColor: '#854d0e',
+  },
   badgeText: {
     color: '#ecfeff',
     fontSize: 12,
@@ -150,6 +203,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#0891b2',
     borderColor: '#67e8f9',
   },
+  fileChipEdited: {
+    borderColor: '#facc15',
+  },
   fileChipPressed: {
     opacity: 0.78,
   },
@@ -167,8 +223,15 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: 12,
   },
+  metaHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'space-between',
+  },
   metaTitle: {
     color: '#e0f2fe',
+    flex: 1,
     fontSize: 13,
     fontWeight: '900',
   },
@@ -177,26 +240,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  previewBox: {
+  changeBadge: {
+    backgroundColor: '#1e293b',
+    borderRadius: 999,
+    color: '#cbd5e1',
+    fontSize: 11,
+    fontWeight: '900',
+    overflow: 'hidden',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    textTransform: 'uppercase',
+  },
+  changeBadgeEdited: {
+    backgroundColor: '#854d0e',
+    color: '#fef9c3',
+  },
+  editor: {
     backgroundColor: '#020617',
     borderColor: '#1e293b',
     borderRadius: 18,
     borderWidth: 1,
-    padding: 14,
-  },
-  previewText: {
     color: '#dbeafe',
     fontFamily: 'monospace',
     fontSize: 12,
     lineHeight: 18,
+    maxHeight: 460,
+    minHeight: 240,
+    padding: 14,
   },
-  fadeText: {
-    color: '#67e8f9',
-    fontSize: 20,
-    fontWeight: '900',
-    marginTop: 2,
+  actionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  toggleButton: {
+  secondaryButton: {
     alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: '#1e293b',
@@ -206,12 +283,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  toggleButtonPressed: {
-    opacity: 0.78,
+  secondaryButtonActive: {
+    borderColor: '#67e8f9',
   },
-  toggleText: {
+  secondaryButtonText: {
     color: '#e0f2fe',
     fontSize: 13,
     fontWeight: '900',
+  },
+  buttonPressed: {
+    opacity: 0.78,
+  },
+  buttonDisabled: {
+    opacity: 0.42,
   },
 });
