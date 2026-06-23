@@ -1,6 +1,15 @@
-import type { RepoFilePlan, RepoIssuePlan, RepoPlan, RepoVisibility, StarterStack } from '../types';
+import type {
+  RepoFilePlan,
+  RepoIssuePlan,
+  RepoPlan,
+  RepoPlanOverrides,
+  RepoVisibility,
+  StarterStack,
+} from '../types';
 
 const fallbackIdea = 'New mobile build idea';
+
+const maxIssueCount = 5;
 
 const fillerWords = new Set([
   'a',
@@ -29,6 +38,16 @@ const fillerWords = new Set([
   'with',
 ]);
 
+export const starterStackLabels: Record<StarterStack, string> = {
+  'expo-react-native': 'Expo / React Native',
+  'react-vite': 'React / Vite',
+  nextjs: 'Next.js',
+  'node-cli': 'Node CLI',
+  'docs-only': 'Docs only',
+};
+
+export const starterStackOptions = Object.keys(starterStackLabels) as StarterStack[];
+
 const cleanIdea = (idea: string) => idea.trim() || fallbackIdea;
 
 const tokenizeIdea = (idea: string) =>
@@ -38,6 +57,16 @@ const tokenizeIdea = (idea: string) =>
     .split(/\s+/)
     .map((word) => word.replace(/^-+|-+$/g, ''))
     .filter(Boolean);
+
+const normalizeRepoSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9-_\s]/g, '')
+    .trim()
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 96);
 
 const normalizeRepoName = (idea: string) => {
   const meaningfulWords = tokenizeIdea(idea)
@@ -50,7 +79,23 @@ const normalizeRepoName = (idea: string) => {
     return 'new-idea-repo';
   }
 
-  return words.join('-').replace(/-+/g, '-');
+  return normalizeRepoSlug(words.join('-')) || 'new-idea-repo';
+};
+
+const normalizeManualRepoName = (name: string | undefined, fallbackName: string) => {
+  if (!name) {
+    return fallbackName;
+  }
+
+  return normalizeRepoSlug(name) || fallbackName;
+};
+
+const clampIssueCount = (issueCount: number | undefined) => {
+  if (typeof issueCount !== 'number' || Number.isNaN(issueCount)) {
+    return 3;
+  }
+
+  return Math.max(0, Math.min(maxIssueCount, Math.round(issueCount)));
 };
 
 const inferVisibility = (idea: string): RepoVisibility => {
@@ -146,36 +191,53 @@ const buildStarterFiles = (stack: StarterStack): RepoFilePlan[] => [
   },
 ];
 
-const buildStarterIssues = (idea: string, stack: StarterStack): RepoIssuePlan[] => [
-  {
-    title: 'Define MVP user journey',
-    body: `Document the smallest complete path for this idea: ${cleanIdea(idea)}`,
-    labels: ['mvp', 'product'],
-  },
-  {
-    title: `Scaffold ${stack} starter`,
-    body: 'Create the initial files, setup commands, and first runnable screen or entry point.',
-    labels: ['engineering', 'starter'],
-  },
-  {
-    title: 'Run safety scan before first commit',
-    body: 'Review generated files for secrets, credentials, unsafe defaults, and accidental public exposure.',
-    labels: ['safety', 'ledger'],
-  },
-];
+const buildStarterIssues = (idea: string, stack: StarterStack, issueCount: number): RepoIssuePlan[] => {
+  const baseIssues: RepoIssuePlan[] = [
+    {
+      title: 'Define MVP user journey',
+      body: `Document the smallest complete path for this idea: ${cleanIdea(idea)}`,
+      labels: ['mvp', 'product'],
+    },
+    {
+      title: `Scaffold ${stack} starter`,
+      body: 'Create the initial files, setup commands, and first runnable screen or entry point.',
+      labels: ['engineering', 'starter'],
+    },
+    {
+      title: 'Run safety scan before first commit',
+      body: 'Review generated files for secrets, credentials, unsafe defaults, and accidental public exposure.',
+      labels: ['safety', 'ledger'],
+    },
+    {
+      title: 'Draft README and setup path',
+      body: 'Write the first README with project purpose, local setup, and the first safe build command.',
+      labels: ['docs', 'starter'],
+    },
+    {
+      title: 'Plan first release checkpoint',
+      body: 'Define what must be true before this starter repo is ready for a first public or private release.',
+      labels: ['release', 'planning'],
+    },
+  ];
 
-export const buildRepoPlan = (idea: string): RepoPlan => {
+  return baseIssues.slice(0, issueCount);
+};
+
+export const buildRepoPlan = (idea: string, overrides: RepoPlanOverrides = {}): RepoPlan => {
   const normalizedIdea = cleanIdea(idea);
-  const stack = inferStack(normalizedIdea);
-  const name = normalizeRepoName(normalizedIdea);
+  const suggestedStack = inferStack(normalizedIdea);
+  const stack = overrides.stack ?? suggestedStack;
+  const suggestedName = normalizeRepoName(normalizedIdea);
+  const name = normalizeManualRepoName(overrides.name, suggestedName);
+  const issueCount = clampIssueCount(overrides.issueCount);
 
   return {
     name,
     description: `Starter repository generated from idea: ${normalizedIdea}`,
-    visibility: inferVisibility(normalizedIdea),
+    visibility: overrides.visibility ?? inferVisibility(normalizedIdea),
     stack,
     approvalRequired: true,
     files: buildStarterFiles(stack),
-    issues: buildStarterIssues(normalizedIdea, stack),
+    issues: buildStarterIssues(normalizedIdea, stack, issueCount),
   };
 };
