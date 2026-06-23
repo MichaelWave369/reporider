@@ -1,34 +1,56 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
-  buildStarterFileApprovalReceiptEntries,
-  summarizeStarterFileApprovalReceiptEntries,
+  buildUnifiedApprovalReceiptEntries,
+  summarizeUnifiedApprovalReceiptEntries,
 } from '../lib/approvalReceipt';
-import type { StarterFileApprovalMap, StarterFilePreview } from '../types';
+import type {
+  RepoIssuePlan,
+  StarterFileApprovalMap,
+  StarterFilePreview,
+  StarterIssueApprovalMap,
+} from '../types';
 
 type ApprovalReceiptPreviewCardProps = {
   approvedDraftFingerprints: StarterFileApprovalMap;
+  approvedIssueFingerprints: StarterIssueApprovalMap;
+  draftIssues: RepoIssuePlan[];
   draftPreviews: StarterFilePreview[];
+  generatedIssues: RepoIssuePlan[];
   generatedPreviews: StarterFilePreview[];
 };
 
 export const ApprovalReceiptPreviewCard = ({
   approvedDraftFingerprints,
+  approvedIssueFingerprints,
+  draftIssues,
   draftPreviews,
+  generatedIssues,
   generatedPreviews,
 }: ApprovalReceiptPreviewCardProps) => {
   const entries = useMemo(
-    () => buildStarterFileApprovalReceiptEntries(
+    () => buildUnifiedApprovalReceiptEntries(
       generatedPreviews,
       draftPreviews,
       approvedDraftFingerprints,
+      generatedIssues,
+      draftIssues,
+      approvedIssueFingerprints,
     ),
-    [approvedDraftFingerprints, draftPreviews, generatedPreviews],
+    [
+      approvedDraftFingerprints,
+      approvedIssueFingerprints,
+      draftIssues,
+      draftPreviews,
+      generatedIssues,
+      generatedPreviews,
+    ],
   );
-  const summary = useMemo(() => summarizeStarterFileApprovalReceiptEntries(entries), [entries]);
+  const summary = useMemo(() => summarizeUnifiedApprovalReceiptEntries(entries), [entries]);
+  const pendingCount = summary.totalCount - summary.approvedCount;
   const badgeLabel = summary.allApproved
     ? `${summary.approvedCount}/${summary.totalCount} approved`
-    : `${summary.totalCount - summary.approvedCount} pending`;
+    : `${pendingCount} pending`;
 
   if (entries.length === 0) {
     return null;
@@ -39,9 +61,9 @@ export const ApprovalReceiptPreviewCard = ({
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Approval Ledger</Text>
-          <Text style={styles.heading}>Review the file approval receipt before create</Text>
+          <Text style={styles.heading}>Review the full write receipt before create</Text>
           <Text style={styles.helper}>
-            This read-only ledger summarizes the exact starter drafts currently approved for the ride.
+            This read-only ledger summarizes the exact starter files and starter issues currently approved for the ride.
           </Text>
         </View>
         <View style={[styles.badge, summary.allApproved ? styles.badgeApproved : styles.badgePending]}>
@@ -50,26 +72,33 @@ export const ApprovalReceiptPreviewCard = ({
       </View>
 
       <View style={styles.summaryBox}>
-        <Text style={styles.summaryText}>{summary.approvedCount} approved files</Text>
-        <Text style={styles.summaryText}>{summary.editedCount} rider-edited drafts</Text>
-        <Text style={styles.summaryText}>{summary.totalCount} total starter files</Text>
+        <Text style={styles.summaryText}>{summary.approvedFileCount}/{summary.totalFileCount} approved files</Text>
+        <Text style={styles.summaryText}>{summary.approvedIssueCount}/{summary.totalIssueCount} approved issues</Text>
+        <Text style={styles.summaryText}>{summary.editedFileCount} edited file drafts</Text>
+        <Text style={styles.summaryText}>{summary.editedIssueCount} edited issue drafts</Text>
       </View>
 
       {entries.map((entry) => (
-        <View key={entry.path} style={styles.receiptRow}>
+        <View key={`${entry.kind}:${entry.id}`} style={styles.receiptRow}>
           <View style={styles.receiptHeader}>
-            <Text style={styles.path}>{entry.path}</Text>
+            <View style={styles.receiptTitleGroup}>
+              <Text style={styles.path}>{entry.primaryLabel}</Text>
+              <Text style={styles.secondaryLabel}>{entry.secondaryLabel}</Text>
+            </View>
             <Text style={[styles.status, entry.approved ? styles.statusApproved : styles.statusPending]}>
               {entry.approved ? 'approved' : 'needs approval'}
             </Text>
           </View>
           <View style={styles.pillRow}>
+            <Text style={[styles.kindPill, entry.kind === 'starter-file' ? styles.filePill : styles.issuePill]}>
+              {entry.kind === 'starter-file' ? 'file' : 'issue'}
+            </Text>
             <Text style={[styles.pill, entry.edited ? styles.pillEdited : styles.pillGenerated]}>
               {entry.edited ? 'edited' : 'generated'}
             </Text>
-            <Text style={styles.pill}>{entry.language}</Text>
-            <Text style={styles.pill}>{entry.riskLevel} risk</Text>
-            <Text style={styles.pill}>{entry.characterCount} chars</Text>
+            {entry.pills.map((pill) => (
+              <Text key={`${entry.id}:${pill}`} style={styles.pill}>{pill}</Text>
+            ))}
           </View>
           <Text style={styles.fingerprint}>fingerprint · {entry.fingerprint}</Text>
         </View>
@@ -156,11 +185,20 @@ const styles = StyleSheet.create({
     gap: 10,
     justifyContent: 'space-between',
   },
+  receiptTitleGroup: {
+    flex: 1,
+    gap: 4,
+  },
   path: {
     color: '#f8fafc',
-    flex: 1,
     fontSize: 14,
     fontWeight: '900',
+  },
+  secondaryLabel: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   status: {
     fontSize: 12,
@@ -186,6 +224,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     paddingHorizontal: 9,
     paddingVertical: 5,
+  },
+  kindPill: {
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: '900',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    textTransform: 'uppercase',
+  },
+  filePill: {
+    backgroundColor: '#164e63',
+    color: '#cffafe',
+  },
+  issuePill: {
+    backgroundColor: '#713f12',
+    color: '#fef3c7',
   },
   pillEdited: {
     backgroundColor: '#581c87',
