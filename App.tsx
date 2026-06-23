@@ -143,6 +143,20 @@ export default function App() {
     saveDraftSnapshotSlot(slot.draftSnapshot, duplicateLabel);
   };
 
+  const handleMoveSavedDraftSlot = (slotId: string, direction: 'up' | 'down') => {
+    setSavedDraftSlots((currentSlots) => {
+      const currentIndex = currentSlots.findIndex((slot) => slot.id === slotId);
+      if (currentIndex === -1) return currentSlots;
+
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= currentSlots.length) return currentSlots;
+
+      const nextSlots = [...currentSlots];
+      [nextSlots[currentIndex], nextSlots[targetIndex]] = [nextSlots[targetIndex], nextSlots[currentIndex]];
+      return nextSlots;
+    });
+  };
+
   const handleRenameSavedDraftSlot = (slotId: string, nextLabel: string) => {
     const normalizedLabel = normalizeSavedDraftLabel(nextLabel);
     setSavedDraftSlots((currentSlots) => currentSlots.map((slot) => (
@@ -276,6 +290,7 @@ export default function App() {
           onDeleteSlot={handleDeleteSavedDraftSlot}
           onDuplicateSlot={handleDuplicateSavedDraftSlot}
           onImportSnapshot={restoreDraftSnapshot}
+          onMoveSlot={handleMoveSavedDraftSlot}
           onRenameSlot={handleRenameSavedDraftSlot}
           onRestoreSlot={(slot) => restoreDraftSnapshot(slot.draftSnapshot)}
           onSaveCurrentDraft={() => saveDraftSnapshotSlot(buildCurrentDraftSnapshot())}
