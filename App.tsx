@@ -135,15 +135,8 @@ export default function App() {
     planOverrides: { ...planOverrides },
   });
 
-  const restoreDraftSnapshot = (snapshot: RideDraftSnapshot) => {
-    setIdea(snapshot.idea);
-    setPlanOverrides(snapshot.planOverrides);
-    resetReviewState();
-  };
-
-  const handleSaveCurrentDraftSlot = () => {
+  const saveDraftSnapshotSlot = (draftSnapshot: RideDraftSnapshot) => {
     const savedAt = new Date().toISOString();
-    const draftSnapshot = buildCurrentDraftSnapshot();
     const draftSlot: SavedDraftSlot = {
       draftSnapshot,
       id: buildSavedDraftSlotId(draftSnapshot, savedAt),
@@ -151,6 +144,20 @@ export default function App() {
     };
 
     setSavedDraftSlots((currentSlots) => [draftSlot, ...currentSlots].slice(0, 5));
+  };
+
+  const restoreDraftSnapshot = (snapshot: RideDraftSnapshot) => {
+    setIdea(snapshot.idea);
+    setPlanOverrides(snapshot.planOverrides);
+    resetReviewState();
+  };
+
+  const handleSaveCurrentDraftSlot = () => {
+    saveDraftSnapshotSlot(buildCurrentDraftSnapshot());
+  };
+
+  const handleSaveImportedPreviewSlot = (snapshot: RideDraftSnapshot) => {
+    saveDraftSnapshotSlot(snapshot);
   };
 
   const handleRestoreSavedDraftSlot = (slot: SavedDraftSlot) => {
@@ -316,6 +323,7 @@ export default function App() {
           onImportSnapshot={restoreDraftSnapshot}
           onRestoreSlot={handleRestoreSavedDraftSlot}
           onSaveCurrentDraft={handleSaveCurrentDraftSlot}
+          onSaveImportPreview={handleSaveImportedPreviewSlot}
           slots={savedDraftSlots}
         />
         <RepoPlanCard plan={repoPlan} safetyReport={safetyReport} />
