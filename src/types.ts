@@ -125,6 +125,7 @@ export type RideHistoryEntry = {
 
 export type SavedDraftSlot = {
   id: string;
+  label?: string;
   savedAt: string;
   draftSnapshot: RideDraftSnapshot;
 };
