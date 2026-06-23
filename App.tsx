@@ -12,6 +12,7 @@ import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
 import { RepoPlanControls } from './src/components/RepoPlanControls';
 import { RideHistoryCard } from './src/components/RideHistoryCard';
+import { SafetyPolicyGateCard } from './src/components/SafetyPolicyGateCard';
 import { SavedDraftArchiveCard } from './src/components/SavedDraftArchiveCard';
 import { SavedDraftPinningCard } from './src/components/SavedDraftPinningCard';
 import { SavedDraftSlotsCard } from './src/components/SavedDraftSlotsCard';
@@ -343,6 +344,7 @@ export default function App() {
         <TokenStorageStatusCard snapshot={tokenStorageSnapshot} />
         <LiveModeStateCard state={liveModeState} />
         <DryRunWriterCard result={dryRunWriterResult} />
+        <SafetyPolicyGateCard report={safetyReport} />
         <IdeaCapture idea={idea} onIdeaChange={handleIdeaChange} />
         <RepoPlanControls
           overrides={planOverrides}
