@@ -5,6 +5,8 @@ import { mockGitHubWriteBoundary } from '../lib/github/types';
 import type { GithubCreateRepoResult, Receipt, RepoPlan, SafetyReport, StarterFilePreview } from '../types';
 
 type CreateRepoPanelProps = {
+  allStarterFilesApproved: boolean;
+  approvedStarterFileCount: number;
   plan: RepoPlan;
   safetyReport: SafetyReport;
   starterFiles: StarterFilePreview[];
@@ -41,7 +43,16 @@ const buildStages = (
   phase: RidePhase,
   result: GithubCreateRepoResult | null,
   safetyReport: SafetyReport,
+  approvedStarterFileCount: number,
+  totalStarterFileCount: number,
+  allStarterFilesApproved: boolean,
 ): RideStage[] => [
+  {
+    id: 'starter-file-approval',
+    label: 'Starter file approvals',
+    detail: `${approvedStarterFileCount}/${totalStarterFileCount} reviewed starter files approved for this exact draft set.`,
+    status: allStarterFilesApproved ? 'completed' : phase === 'blocked' ? 'blocked' : 'planned',
+  },
   {
     id: 'human-approval',
     label: 'Human approval',
@@ -65,7 +76,7 @@ const buildStages = (
   {
     id: 'repo-created',
     label: 'Repo creation',
-    detail: result ? `Prepared ${result.repositoryUrl}` : 'Create repo call is ready to simulate.',
+    detail: result ? `Prepared ${result.repositoryUrl}` : 'Create repo call is ready to simulate after file approvals.',
     status: result ? 'completed' : phase === 'blocked' ? 'blocked' : 'planned',
   },
 ];
@@ -75,7 +86,13 @@ const formatReceiptLine = (receipt: Receipt) => `${receipt.status.toUpperCase()}
 const buildStarterFilesKey = (starterFiles: StarterFilePreview[]) =>
   starterFiles.map((file) => `${file.path}:${file.content}`).join('\n---reporider-file---\n');
 
-export const CreateRepoPanel = ({ plan, safetyReport, starterFiles }: CreateRepoPanelProps) => {
+export const CreateRepoPanel = ({
+  allStarterFilesApproved,
+  approvedStarterFileCount,
+  plan,
+  safetyReport,
+  starterFiles,
+}: CreateRepoPanelProps) => {
   const [phase, setPhase] = useState<RidePhase>('idle');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GithubCreateRepoResult | null>(null);
@@ -94,10 +111,25 @@ export const CreateRepoPanel = ({ plan, safetyReport, starterFiles }: CreateRepo
     plan.issues.length,
     safetyReport.status,
     starterFilesKey,
+    approvedStarterFileCount,
+    allStarterFilesApproved,
   ]);
 
-  const stages = useMemo(() => buildStages(phase, result, safetyReport), [phase, result, safetyReport]);
-  const canRide = phase !== 'running' && safetyReport.status !== 'blocked';
+  const stages = useMemo(
+    () => buildStages(
+      phase,
+      result,
+      safetyReport,
+      approvedStarterFileCount,
+      starterFiles.length,
+      allStarterFilesApproved,
+    ),
+    [allStarterFilesApproved, approvedStarterFileCount, phase, result, safetyReport, starterFiles.length],
+  );
+  const canRide = phase !== 'running' && safetyReport.status !== 'blocked' && allStarterFilesApproved;
+  const approvalHelper = allStarterFilesApproved
+    ? 'All reviewed starter files are approved for this ride.'
+    : `Approve ${starterFiles.length - approvedStarterFileCount} more starter files to unlock repo creation.`;
 
   const rideMockCreateRepo = async () => {
     setError(null);
@@ -108,7 +140,7 @@ export const CreateRepoPanel = ({ plan, safetyReport, starterFiles }: CreateRepo
       const mockResult = await createMockGitHubRepository({
         plan,
         safetyReport,
-        approvedByUser: true,
+        approvedByUser: allStarterFilesApproved,
         starterFiles,
       });
 
@@ -127,7 +159,10 @@ export const CreateRepoPanel = ({ plan, safetyReport, starterFiles }: CreateRepo
           <Text style={styles.kicker}>Ride Preview</Text>
           <Text style={styles.heading}>Approve & Create Repo</Text>
           <Text style={styles.helper}>
-            This is the first complete repo creation lane. It proves approval, editable starter drafts, safety, GitHub boundary, and receipts in mock mode before live OAuth lands.
+            This is the first complete repo creation lane. It proves file-by-file approval, editable starter drafts, safety, GitHub boundary, and receipts in mock mode before live OAuth lands.
+          </Text>
+          <Text style={[styles.approvalHelper, allStarterFilesApproved && styles.approvalHelperReady]}>
+            {approvalHelper}
           </Text>
         </View>
         <View style={styles.modeBadge}>
@@ -145,7 +180,13 @@ export const CreateRepoPanel = ({ plan, safetyReport, starterFiles }: CreateRepo
           !canRide && styles.buttonDisabled,
         ]}
       >
-        <Text style={styles.buttonText}>{phase === 'running' ? 'Riding...' : 'Simulate Create Repo'}</Text>
+        <Text style={styles.buttonText}>
+          {phase === 'running'
+            ? 'Riding...'
+            : allStarterFilesApproved
+              ? 'Simulate Create Repo'
+              : 'Approve Files First'}
+        </Text>
       </Pressable>
 
       {stages.map((stage) => (
@@ -208,6 +249,15 @@ const styles = StyleSheet.create({
     color: '#cbd5e1',
     fontSize: 14,
     lineHeight: 20,
+  },
+  approvalHelper: {
+    color: '#fef3c7',
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 18,
+  },
+  approvalHelperReady: {
+    color: '#bbf7d0',
   },
   modeBadge: {
     alignSelf: 'flex-start',
