@@ -90,6 +90,17 @@ export type GithubCreateRepoRequest = {
   starterIssues?: RepoIssuePlan[];
 };
 
+export type GithubCreateRepoSummary = {
+  approvedFileCount: number;
+  approvedIssueCount: number;
+  editedFileCount: number;
+  editedIssueCount: number;
+  receiptCount: number;
+  totalFileDraftCharacters: number;
+  totalIssueDraftCharacters: number;
+  writeArtifactCount: number;
+};
+
 export type GithubCreateRepoResult = {
   mode: 'mock' | 'live';
   repositoryUrl: string;
@@ -97,4 +108,5 @@ export type GithubCreateRepoResult = {
   createdFiles: string[];
   openedIssues: string[];
   receipts: Receipt[];
+  summary: GithubCreateRepoSummary;
 };
