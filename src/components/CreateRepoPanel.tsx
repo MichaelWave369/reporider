@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { RideCompleteSummaryCard } from './RideCompleteSummaryCard';
 import { createMockGitHubRepository } from '../lib/github/mockGitHubClient';
 import { mockGitHubWriteBoundary } from '../lib/github/types';
-import type { GithubCreateRepoResult, Receipt, RepoIssuePlan, RepoPlan, SafetyReport, StarterFilePreview } from '../types';
+import type { GithubCreateRepoResult, RepoIssuePlan, RepoPlan, SafetyReport, StarterFilePreview } from '../types';
 
 type CreateRepoPanelProps = {
   allStarterFilesApproved: boolean;
@@ -92,8 +93,6 @@ const buildStages = (
     status: result ? 'completed' : phase === 'blocked' ? 'blocked' : 'planned',
   },
 ];
-
-const formatReceiptLine = (receipt: Receipt) => `${receipt.status.toUpperCase()} · ${receipt.action}`;
 
 const buildStarterFilesKey = (starterFiles: StarterFilePreview[]) =>
   starterFiles.map((file) => `${file.path}:${file.content}`).join('\n---reporider-file---\n');
@@ -244,16 +243,7 @@ export const CreateRepoPanel = ({
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      {result ? (
-        <View style={styles.resultBox}>
-          <Text style={styles.resultTitle}>Mock repo ready</Text>
-          <Text style={styles.resultText}>{result.repositoryUrl}</Text>
-          <Text style={styles.resultText}>{result.createdFiles.length} files · {result.openedIssues.length} issues · branch {result.defaultBranch}</Text>
-          {result.receipts.map((receipt) => (
-            <Text key={receipt.id} style={styles.receiptLine}>{formatReceiptLine(receipt)}</Text>
-          ))}
-        </View>
-      ) : null}
+      {result ? <RideCompleteSummaryCard result={result} /> : null}
     </View>
   );
 };
@@ -366,27 +356,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     lineHeight: 18,
-  },
-  resultBox: {
-    backgroundColor: '#082f49',
-    borderRadius: 18,
-    gap: 6,
-    padding: 14,
-  },
-  resultTitle: {
-    color: '#ecfeff',
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  resultText: {
-    color: '#cffafe',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  receiptLine: {
-    color: '#a5f3fc',
-    fontSize: 12,
-    fontWeight: '800',
-    lineHeight: 17,
   },
 });
