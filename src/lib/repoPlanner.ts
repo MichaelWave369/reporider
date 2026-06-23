@@ -172,6 +172,20 @@ const stackEntryFile = (stack: StarterStack): RepoFilePlan => {
   }
 };
 
+const packageFileForStack = (stack: StarterStack): RepoFilePlan[] => {
+  if (stack === 'docs-only') {
+    return [];
+  }
+
+  return [
+    {
+      path: 'package.json',
+      purpose: 'Define scripts and dependencies for the selected starter stack.',
+      riskLevel: 'low',
+    },
+  ];
+};
+
 const buildStarterFiles = (stack: StarterStack): RepoFilePlan[] => [
   {
     path: 'README.md',
@@ -183,6 +197,7 @@ const buildStarterFiles = (stack: StarterStack): RepoFilePlan[] => [
     purpose: 'Prevent local files, logs, and secrets from entering Git history.',
     riskLevel: 'low',
   },
+  ...packageFileForStack(stack),
   stackEntryFile(stack),
   {
     path: 'docs/RECEIPTS.md',
