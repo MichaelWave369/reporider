@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { createMockGitHubRepository } from '../lib/github/mockGitHubClient';
 import { mockGitHubWriteBoundary } from '../lib/github/types';
@@ -75,6 +75,12 @@ export const CreateRepoPanel = ({ plan, safetyReport }: CreateRepoPanelProps) =>
   const [phase, setPhase] = useState<RidePhase>('idle');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GithubCreateRepoResult | null>(null);
+
+  useEffect(() => {
+    setPhase('idle');
+    setError(null);
+    setResult(null);
+  }, [plan.name, plan.description, plan.stack, plan.visibility, safetyReport.status]);
 
   const stages = useMemo(() => buildStages(phase, result, safetyReport), [phase, result, safetyReport]);
   const canRide = phase !== 'running' && safetyReport.status !== 'blocked';
