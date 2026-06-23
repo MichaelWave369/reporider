@@ -141,6 +141,8 @@ export type SafetyPolicyCheck = {
 export type SafetyReviewedScope = {
   fileCount: number;
   issueCount: number;
+  reviewedFileContentCount: number;
+  reviewedFileContentCharacters: number;
   stack: StarterStack;
   visibility: RepoVisibility;
 };
