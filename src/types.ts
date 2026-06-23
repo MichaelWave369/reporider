@@ -120,16 +120,42 @@ export type RepoPlanOverrides = {
   issueCount?: number;
 };
 
+export type SafetyFindingSeverity = 'info' | 'warning' | 'blocker';
+
 export type SafetyFinding = {
   id: string;
-  severity: 'info' | 'warning' | 'blocker';
+  severity: SafetyFindingSeverity;
   message: string;
   path?: string;
 };
 
+export type SafetyPolicyCheckStatus = 'pass' | 'warning' | 'blocker';
+
+export type SafetyPolicyCheck = {
+  id: string;
+  label: string;
+  status: SafetyPolicyCheckStatus;
+  summary: string;
+};
+
+export type SafetyReviewedScope = {
+  fileCount: number;
+  issueCount: number;
+  stack: StarterStack;
+  visibility: RepoVisibility;
+};
+
 export type SafetyReport = {
   status: 'pass' | 'needs-review' | 'blocked';
+  policyVersion: string;
+  summary: string;
+  warningCount: number;
+  blockerCount: number;
+  reviewedScope: SafetyReviewedScope;
+  checks: SafetyPolicyCheck[];
   findings: SafetyFinding[];
+  requiredGates: string[];
+  boundaryNotes: string[];
 };
 
 export type Receipt = {
