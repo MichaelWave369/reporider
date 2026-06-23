@@ -45,6 +45,26 @@ export type TokenStorageAdapter = {
   clearTokenUnavailable: () => TokenStorageSnapshot;
 };
 
+export type LiveModeStateStatus =
+  | 'mock_only'
+  | 'live_available'
+  | 'live_armed'
+  | 'writing'
+  | 'write_complete'
+  | 'write_failed';
+
+export type LiveModeState = {
+  status: LiveModeStateStatus;
+  label: string;
+  summary: string;
+  canArmLiveMode: boolean;
+  canStartWrite: boolean;
+  canRetryWrite: boolean;
+  isTerminal: boolean;
+  requiredGates: string[];
+  boundaryNotes: string[];
+};
+
 export type RepoFilePlan = {
   path: string;
   purpose: string;
