@@ -18,6 +18,15 @@ export type StarterFilePreview = RepoFilePlan & {
   content: string;
 };
 
+export type StarterFileDraftMap = Record<string, string>;
+
+export type StarterFileDraftSummary = {
+  editedCount: number;
+  editedPaths: string[];
+  totalFiles: number;
+  totalEditedCharacters: number;
+};
+
 export type RepoIssuePlan = {
   title: string;
   body: string;
@@ -65,6 +74,7 @@ export type GithubCreateRepoRequest = {
   plan: RepoPlan;
   safetyReport: SafetyReport;
   approvedByUser: boolean;
+  starterFiles?: StarterFilePreview[];
 };
 
 export type GithubCreateRepoResult = {
