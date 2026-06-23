@@ -4,7 +4,7 @@ import {
   buildMarkdownSavedDraftSnapshot,
   parseMarkdownSavedDraftSnapshot,
 } from '../lib/savedDraftMarkdown';
-import type { RideDraftSnapshot, SavedDraftSlot } from '../types';
+import type { RepoPlanOverrides, RideDraftSnapshot, SavedDraftSlot } from '../types';
 
 type SavedDraftSlotsCardProps = {
   slots: SavedDraftSlot[];
@@ -19,21 +19,15 @@ const countLines = (content: string) => content.split('\n').length;
 
 const formatSavedAt = (timestamp: string) => {
   const parsedDate = new Date(timestamp);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return timestamp;
-  }
-
-  return parsedDate.toLocaleString();
+  return Number.isNaN(parsedDate.getTime()) ? timestamp : parsedDate.toLocaleString();
 };
 
-const summarizeOverrides = (slot: SavedDraftSlot) => {
-  const { planOverrides } = slot.draftSnapshot;
+const summarizeOverrides = (overrides: RepoPlanOverrides) => {
   const values = [
-    planOverrides.name ? `name: ${planOverrides.name}` : null,
-    planOverrides.visibility ? `visibility: ${planOverrides.visibility}` : null,
-    planOverrides.stack ? `stack: ${planOverrides.stack}` : null,
-    typeof planOverrides.issueCount === 'number' ? `issues: ${planOverrides.issueCount}` : null,
+    overrides.name ? `name: ${overrides.name}` : null,
+    overrides.visibility ? `visibility: ${overrides.visibility}` : null,
+    overrides.stack ? `stack: ${overrides.stack}` : null,
+    typeof overrides.issueCount === 'number' ? `issues: ${overrides.issueCount}` : null,
   ].filter(Boolean);
 
   return values.length > 0 ? values.join(' · ') : 'No steering overrides saved';
@@ -51,6 +45,7 @@ export const SavedDraftSlotsCard = ({
   const [importExpanded, setImportExpanded] = useState(false);
   const [importMarkdown, setImportMarkdown] = useState('');
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [importPreview, setImportPreview] = useState<RideDraftSnapshot | null>(null);
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const selectedSlot = useMemo(
@@ -62,19 +57,39 @@ export const SavedDraftSlotsCard = ({
     [selectedSlot],
   );
 
-  const importSnapshot = () => {
+  const resetImportState = () => {
+    setImportMessage(null);
+    setImportPreview(null);
+    setImportStatus('idle');
+  };
+
+  const previewImport = () => {
     const result = parseMarkdownSavedDraftSnapshot(importMarkdown);
 
     if (!result.ok) {
+      setImportPreview(null);
       setImportStatus('error');
       setImportMessage(result.error);
       return;
     }
 
-    onImportSnapshot(result.draftSnapshot);
+    setImportPreview(result.draftSnapshot);
     setImportStatus('success');
-    setImportMessage('Saved draft snapshot imported as a new draft. Review gates were reset.');
+    setImportMessage('Import preview ready. Review the extracted idea and steering controls before restore.');
+  };
+
+  const restoreImportPreview = () => {
+    if (!importPreview) {
+      setImportStatus('error');
+      setImportMessage('Preview the saved draft before restoring it as a new draft.');
+      return;
+    }
+
+    onImportSnapshot(importPreview);
+    setImportStatus('success');
+    setImportMessage('Preview restored as a new draft. Review gates were reset.');
     setImportMarkdown('');
+    setImportPreview(null);
   };
 
   return (
@@ -84,7 +99,7 @@ export const SavedDraftSlotsCard = ({
           <Text style={styles.kicker}>Saved Drafts</Text>
           <Text style={styles.heading}>Park or import an in-progress ride</Text>
           <Text style={styles.helper}>
-            Save, export, or import the current idea and steering controls before create. Slots and imports are session-only and never include approvals, edited files, edited issues, or create results.
+            Save, export, preview, or import the current idea and steering controls before create. Slots and imports are session-only and never include approvals, edited files, edited issues, or create results.
           </Text>
         </View>
         <View style={styles.countBadge}>
@@ -93,22 +108,17 @@ export const SavedDraftSlotsCard = ({
         </View>
       </View>
 
-      <View style={styles.topActions}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={onSaveCurrentDraft}
-          style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}
-        >
+      <View style={styles.actionRow}>
+        <Pressable accessibilityRole="button" onPress={onSaveCurrentDraft} style={styles.primaryButton}>
           <Text style={styles.primaryButtonText}>Save Current Draft Slot</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
           onPress={() => {
             setImportExpanded((current) => !current);
-            setImportMessage(null);
-            setImportStatus('idle');
+            resetImportState();
           }}
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+          style={styles.secondaryButton}
         >
           <Text style={styles.secondaryButtonText}>{importExpanded ? 'Hide Import' : 'Import Markdown'}</Text>
         </Pressable>
@@ -117,15 +127,14 @@ export const SavedDraftSlotsCard = ({
       {importExpanded ? (
         <View style={styles.importCard}>
           <Text style={styles.sectionTitle}>Import saved draft Markdown</Text>
-          <Text style={styles.restoreHelper}>
-            Paste a RepoRider saved draft export. Import restores idea text and steering controls only, then resets files, issues, approvals, ledgers, and create state for fresh review.
+          <Text style={styles.helperSmall}>
+            Paste a RepoRider saved draft export, preview the extracted idea and controls, then restore only after review.
           </Text>
           <TextInput
             multiline
             onChangeText={(value) => {
               setImportMarkdown(value);
-              setImportMessage(null);
-              setImportStatus('idle');
+              resetImportState();
             }}
             placeholder="Paste # RepoRider Saved Draft Snapshot here..."
             placeholderTextColor="#64748b"
@@ -135,27 +144,41 @@ export const SavedDraftSlotsCard = ({
           <View style={styles.metaRow}>
             <Text style={styles.metaPill}>{countLines(importMarkdown || ' ')} lines</Text>
             <Text style={styles.metaPill}>{importMarkdown.length} chars</Text>
-            <Text style={styles.metaPill}>pre-create import</Text>
+            <Text style={styles.metaPill}>preview required</Text>
           </View>
           {importMessage ? (
             <Text style={importStatus === 'error' ? styles.errorMessage : styles.successMessage}>{importMessage}</Text>
           ) : null}
-          <Pressable
-            accessibilityRole="button"
-            onPress={importSnapshot}
-            style={({ pressed }) => [styles.importButton, pressed && styles.buttonPressed]}
-          >
-            <Text style={styles.importButtonText}>Import as New Draft</Text>
-          </Pressable>
+          {importPreview ? (
+            <View style={styles.previewCard}>
+              <Text style={styles.previewKicker}>Import Preview</Text>
+              <Text style={styles.ideaPreview}>{importPreview.idea || 'No idea text imported.'}</Text>
+              <Text style={styles.overrideSummary}>{summarizeOverrides(importPreview.planOverrides)}</Text>
+              <Text style={styles.helperSmall}>
+                Restore reloads planning inputs only. Files, issues, approvals, ledgers, create state, and receipts stay reset.
+              </Text>
+            </View>
+          ) : null}
+          <View style={styles.actionRow}>
+            <Pressable accessibilityRole="button" onPress={previewImport} style={styles.importButton}>
+              <Text style={styles.importButtonText}>Preview Import</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={!importPreview}
+              onPress={restoreImportPreview}
+              style={[styles.restoreButton, !importPreview && styles.disabledButton]}
+            >
+              <Text style={styles.restoreButtonText}>Restore Preview as New Draft</Text>
+            </Pressable>
+          </View>
         </View>
       ) : null}
 
       {slots.length === 0 || !selectedSlot ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>No saved draft slots yet</Text>
-          <Text style={styles.emptyCopy}>
-            Save the current idea/controls when you want to park a ride before approving files or creating a mock repo.
-          </Text>
+          <Text style={styles.sectionTitle}>No saved draft slots yet</Text>
+          <Text style={styles.helperSmall}>Save the current idea and steering controls when you want to park a ride before approval.</Text>
         </View>
       ) : (
         <>
@@ -171,11 +194,7 @@ export const SavedDraftSlotsCard = ({
                     setSelectedSlotId(slot.id);
                     setExportExpanded(false);
                   }}
-                  style={({ pressed }) => [
-                    styles.slotButton,
-                    selected && styles.slotButtonSelected,
-                    pressed && styles.buttonPressed,
-                  ]}
+                  style={[styles.slotButton, selected && styles.slotButtonSelected]}
                 >
                   <Text style={styles.slotTitle}>Slot #{slots.length - index}</Text>
                   <Text style={styles.slotMeta}>{formatSavedAt(slot.savedAt)}</Text>
@@ -188,77 +207,53 @@ export const SavedDraftSlotsCard = ({
           <View style={styles.selectedCard}>
             <Text style={styles.sectionTitle}>Selected draft slot</Text>
             <Text style={styles.ideaPreview}>{selectedSlot.draftSnapshot.idea}</Text>
-            <Text style={styles.overrideSummary}>{summarizeOverrides(selectedSlot)}</Text>
-            <Text style={styles.restoreHelper}>
-              Restore reloads the idea and steering controls only. File drafts, issue drafts, approvals, ledger state, and create state reset for a fresh review.
+            <Text style={styles.overrideSummary}>{summarizeOverrides(selectedSlot.draftSnapshot.planOverrides)}</Text>
+            <Text style={styles.helperSmall}>
+              Restore reloads the idea and steering controls only. Review state resets for a fresh ride.
             </Text>
 
             <View style={styles.exportCard}>
-              <View style={styles.exportHeaderRow}>
+              <View style={styles.headerRow}>
                 <View style={styles.headerCopy}>
-                  <Text style={styles.exportKicker}>Draft Export</Text>
-                  <Text style={styles.exportTitle}>Copy-ready planning snapshot</Text>
-                  <Text style={styles.exportHelper}>
-                    Export the saved idea and steering controls before create. This is not an approval receipt.
-                  </Text>
+                  <Text style={styles.previewKicker}>Draft Export</Text>
+                  <Text style={styles.sectionTitle}>Copy-ready planning snapshot</Text>
+                  <Text style={styles.helperSmall}>This pre-create export is not an approval receipt.</Text>
                 </View>
-                <View style={styles.exportBadge}>
-                  <Text style={styles.exportBadgeValue}>{countLines(markdownSnapshot)}</Text>
-                  <Text style={styles.exportBadgeLabel}>lines</Text>
+                <View style={styles.countBadgeBlue}>
+                  <Text style={styles.countValue}>{countLines(markdownSnapshot)}</Text>
+                  <Text style={styles.countLabel}>lines</Text>
                 </View>
               </View>
-
               <View style={styles.metaRow}>
                 <Text style={styles.metaPill}>{markdownSnapshot.length} chars</Text>
                 <Text style={styles.metaPill}>pre-create</Text>
                 <Text style={styles.metaPill}>session-only</Text>
               </View>
-
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setExportExpanded((current) => !current)}
-                style={({ pressed }) => [styles.exportToggle, pressed && styles.buttonPressed]}
-              >
-                <Text style={styles.exportToggleText}>{exportExpanded ? 'Hide Saved Draft Markdown' : 'Show Saved Draft Markdown'}</Text>
+              <Pressable accessibilityRole="button" onPress={() => setExportExpanded((current) => !current)} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>{exportExpanded ? 'Hide Saved Draft Markdown' : 'Show Saved Draft Markdown'}</Text>
               </Pressable>
-
               {exportExpanded ? (
-                <View style={styles.exportBox}>
-                  <Text style={styles.exportHelpText}>Tap into the box, then use your device/browser select and copy controls.</Text>
-                  <TextInput
-                    editable={false}
-                    multiline
-                    selectTextOnFocus
-                    style={styles.markdownInput}
-                    value={markdownSnapshot}
-                  />
-                </View>
+                <TextInput
+                  editable={false}
+                  multiline
+                  selectTextOnFocus
+                  style={styles.markdownInput}
+                  value={markdownSnapshot}
+                />
               ) : null}
             </View>
 
             <View style={styles.actionRow}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => onRestoreSlot(selectedSlot)}
-                style={({ pressed }) => [styles.restoreButton, pressed && styles.buttonPressed]}
-              >
+              <Pressable accessibilityRole="button" onPress={() => onRestoreSlot(selectedSlot)} style={styles.restoreButton}>
                 <Text style={styles.restoreButtonText}>Restore Slot as Draft</Text>
               </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => onDeleteSlot(selectedSlot.id)}
-                style={({ pressed }) => [styles.deleteButton, pressed && styles.buttonPressed]}
-              >
+              <Pressable accessibilityRole="button" onPress={() => onDeleteSlot(selectedSlot.id)} style={styles.deleteButton}>
                 <Text style={styles.deleteButtonText}>Delete Slot</Text>
               </Pressable>
             </View>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={onClearSlots}
-            style={({ pressed }) => [styles.clearButton, pressed && styles.buttonPressed]}
-          >
+          <Pressable accessibilityRole="button" onPress={onClearSlots} style={styles.clearButton}>
             <Text style={styles.clearButtonText}>Clear Saved Draft Slots</Text>
           </Pressable>
         </>
@@ -302,6 +297,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  helperSmall: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    lineHeight: 17,
+  },
   countBadge: {
     alignItems: 'center',
     alignSelf: 'flex-start',
@@ -311,8 +311,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
+  countBadgeBlue: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#075985',
+    borderRadius: 14,
+    minWidth: 56,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+  },
   countValue: {
-    color: '#fefce8',
+    color: '#f8fafc',
     fontSize: 18,
     fontWeight: '900',
   },
@@ -322,7 +331,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     textTransform: 'uppercase',
   },
-  topActions: {
+  actionRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
@@ -373,6 +382,21 @@ const styles = StyleSheet.create({
     padding: 12,
     textAlignVertical: 'top',
   },
+  previewCard: {
+    backgroundColor: '#052e16',
+    borderColor: '#22c55e',
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 7,
+    padding: 12,
+  },
+  previewKicker: {
+    color: '#86efac',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
+  },
   importButton: {
     alignItems: 'center',
     alignSelf: 'flex-start',
@@ -403,16 +427,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     gap: 6,
     padding: 12,
-  },
-  emptyTitle: {
-    color: '#f8fafc',
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  emptyCopy: {
-    color: '#cbd5e1',
-    fontSize: 12,
-    lineHeight: 17,
   },
   slotList: {
     gap: 8,
@@ -465,11 +479,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
   },
-  restoreHelper: {
-    color: '#cbd5e1',
-    fontSize: 12,
-    lineHeight: 17,
-  },
   exportCard: {
     backgroundColor: '#020617',
     borderColor: '#38bdf8',
@@ -477,48 +486,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 10,
     padding: 12,
-  },
-  exportHeaderRow: {
-    flexDirection: 'row',
-    gap: 10,
-    justifyContent: 'space-between',
-  },
-  exportKicker: {
-    color: '#7dd3fc',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  exportTitle: {
-    color: '#f8fafc',
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  exportHelper: {
-    color: '#cbd5e1',
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  exportBadge: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: '#075985',
-    borderRadius: 14,
-    minWidth: 56,
-    paddingHorizontal: 9,
-    paddingVertical: 7,
-  },
-  exportBadgeValue: {
-    color: '#f8fafc',
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  exportBadgeLabel: {
-    color: '#bae6fd',
-    fontSize: 9,
-    fontWeight: '900',
-    textTransform: 'uppercase',
   },
   metaRow: {
     flexDirection: 'row',
@@ -534,26 +501,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  exportToggle: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#0e7490',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-  exportToggleText: {
-    color: '#ecfeff',
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  exportBox: {
-    gap: 8,
-  },
-  exportHelpText: {
-    color: '#bae6fd',
-    fontSize: 11,
-    lineHeight: 16,
-  },
   markdownInput: {
     backgroundColor: '#0f172a',
     borderColor: '#334155',
@@ -564,11 +511,6 @@ const styles = StyleSheet.create({
     minHeight: 220,
     padding: 12,
     textAlignVertical: 'top',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
   },
   restoreButton: {
     backgroundColor: '#0369a1',
@@ -604,7 +546,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
-  buttonPressed: {
-    opacity: 0.82,
+  disabledButton: {
+    opacity: 0.45,
   },
 });
