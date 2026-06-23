@@ -1,6 +1,12 @@
 import { starterStackLabels } from './repoPlanner';
 import { buildReadmePreview } from './readmePreview';
-import type { RepoPlan, StarterFilePreview, StarterStack } from '../types';
+import type {
+  RepoPlan,
+  StarterFileDraftMap,
+  StarterFileDraftSummary,
+  StarterFilePreview,
+  StarterStack,
+} from '../types';
 
 const titleFromRepoName = (name: string) =>
   name
@@ -314,3 +320,34 @@ export const buildStarterFilePreviews = (plan: RepoPlan): StarterFilePreview[] =
     language: languageForPath(file.path),
     content: contentForPath(plan, file.path),
   }));
+
+export const applyStarterFileDrafts = (
+  generatedPreviews: StarterFilePreview[],
+  drafts: StarterFileDraftMap,
+): StarterFilePreview[] =>
+  generatedPreviews.map((preview) => ({
+    ...preview,
+    content: drafts[preview.path] ?? preview.content,
+  }));
+
+export const summarizeStarterFileDrafts = (
+  generatedPreviews: StarterFilePreview[],
+  draftPreviews: StarterFilePreview[],
+): StarterFileDraftSummary => {
+  const generatedByPath = new Map(generatedPreviews.map((preview) => [preview.path, preview.content]));
+  const editedPaths = draftPreviews
+    .filter((preview) => generatedByPath.get(preview.path) !== preview.content)
+    .map((preview) => preview.path);
+  const totalEditedCharacters = editedPaths.reduce((total, path) => {
+    const draft = draftPreviews.find((preview) => preview.path === path);
+
+    return total + (draft?.content.length ?? 0);
+  }, 0);
+
+  return {
+    editedCount: editedPaths.length,
+    editedPaths,
+    totalFiles: draftPreviews.length,
+    totalEditedCharacters,
+  };
+};
