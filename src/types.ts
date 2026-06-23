@@ -13,6 +13,11 @@ export type RepoFilePlan = {
   riskLevel: 'low' | 'medium' | 'high';
 };
 
+export type StarterFilePreview = RepoFilePlan & {
+  language: 'markdown' | 'typescript' | 'json' | 'text';
+  content: string;
+};
+
 export type RepoIssuePlan = {
   title: string;
   body: string;
