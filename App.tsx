@@ -7,6 +7,7 @@ import { IdeaCapture } from './src/components/IdeaCapture';
 import { ReceiptTimeline } from './src/components/ReceiptTimeline';
 import { RepoPlanCard } from './src/components/RepoPlanCard';
 import { RepoPlanControls } from './src/components/RepoPlanControls';
+import { RideHistoryCard } from './src/components/RideHistoryCard';
 import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard';
 import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
 import { buildRepoPlan } from './src/lib/repoPlanner';
@@ -24,9 +25,11 @@ import {
   starterIssueKeyForIndex,
 } from './src/lib/starterIssuePreview';
 import type {
+  GithubCreateRepoResult,
   RepoIssuePlan,
   RepoPlan,
   RepoPlanOverrides,
+  RideHistoryEntry,
   StarterFileApprovalMap,
   StarterFileDraftMap,
   StarterIssueApprovalMap,
@@ -46,9 +49,13 @@ const createStarterPlanKey = (plan: RepoPlan) =>
     issues: plan.issues,
   });
 
+const buildRideHistoryId = (result: GithubCreateRepoResult, completedAt: string) =>
+  `${result.repositoryUrl}:${completedAt}:${result.summary.writeArtifactCount}:${result.summary.receiptCount}`;
+
 export default function App() {
   const [idea, setIdea] = useState(starterIdea);
   const [planOverrides, setPlanOverrides] = useState<RepoPlanOverrides>({});
+  const [rideHistory, setRideHistory] = useState<RideHistoryEntry[]>([]);
   const [starterFileDraftState, setStarterFileDraftState] = useState<{
     drafts: StarterFileDraftMap;
     planKey: string;
@@ -108,6 +115,20 @@ export default function App() {
   const allStarterIssuesApproved = reviewedStarterIssues.length === approvedStarterIssueCount;
   const safetyReport = useMemo(() => scanRepoPlan(repoPlan), [repoPlan]);
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
+
+  const handleRideComplete = (result: GithubCreateRepoResult) => {
+    const completedAt = result.receipts.at(-1)?.timestamp ?? new Date().toISOString();
+    const historyEntry: RideHistoryEntry = {
+      completedAt,
+      id: buildRideHistoryId(result, completedAt),
+      result,
+    };
+
+    setRideHistory((currentHistory) => [
+      historyEntry,
+      ...currentHistory.filter((entry) => entry.id !== historyEntry.id),
+    ].slice(0, 5));
+  };
 
   const handleIdeaChange = (nextIdea: string) => {
     setIdea(nextIdea);
@@ -272,11 +293,13 @@ export default function App() {
           allStarterIssuesApproved={allStarterIssuesApproved}
           approvedStarterFileCount={approvedStarterFileCount}
           approvedStarterIssueCount={approvedStarterIssueCount}
+          onRideComplete={handleRideComplete}
           plan={repoPlan}
           safetyReport={safetyReport}
           starterFiles={reviewedStarterFiles}
           starterIssues={reviewedStarterIssues}
         />
+        <RideHistoryCard history={rideHistory} onClearHistory={() => setRideHistory([])} />
         <ReceiptTimeline receipts={receipts} />
       </ScrollView>
     </SafeAreaView>
