@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { starterStackLabels } from '../lib/repoPlanner';
 import type { RepoPlan, SafetyReport } from '../types';
 
 type RepoPlanCardProps = {
@@ -20,7 +21,11 @@ export const RepoPlanCard = ({ plan, safetyReport }: RepoPlanCardProps) => {
       </View>
       <View style={styles.row}>
         <Text style={styles.key}>Stack</Text>
-        <Text style={styles.value}>{plan.stack}</Text>
+        <Text style={styles.value}>{starterStackLabels[plan.stack]}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.key}>Starter issues</Text>
+        <Text style={styles.value}>{plan.issues.length}</Text>
       </View>
 
       <Text style={styles.sectionTitle}>Starter files</Text>
@@ -30,6 +35,18 @@ export const RepoPlanCard = ({ plan, safetyReport }: RepoPlanCardProps) => {
           <Text style={styles.filePurpose}>{file.purpose}</Text>
         </View>
       ))}
+
+      <Text style={styles.sectionTitle}>Starter issues</Text>
+      {plan.issues.length > 0 ? (
+        plan.issues.map((issue) => (
+          <View key={issue.title} style={styles.fileItem}>
+            <Text style={styles.filePath}>{issue.title}</Text>
+            <Text style={styles.filePurpose}>{issue.labels.join(' · ')}</Text>
+          </View>
+        ))
+      ) : (
+        <Text style={styles.emptyState}>No starter issues selected for this ride.</Text>
+      )}
 
       <Text style={styles.sectionTitle}>Safety</Text>
       <View style={styles.safetyBadge}>
@@ -97,6 +114,12 @@ const styles = StyleSheet.create({
   filePurpose: {
     color: '#cbd5e1',
     fontSize: 13,
+    lineHeight: 18,
+  },
+  emptyState: {
+    color: '#cbd5e1',
+    fontSize: 13,
+    fontStyle: 'italic',
     lineHeight: 18,
   },
   safetyBadge: {
