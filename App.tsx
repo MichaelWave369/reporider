@@ -58,6 +58,11 @@ const buildRideHistoryId = (result: GithubCreateRepoResult, completedAt: string)
 const buildSavedDraftSlotId = (snapshot: RideDraftSnapshot, savedAt: string) =>
   `${savedAt}:${snapshot.idea}:${JSON.stringify(snapshot.planOverrides)}`;
 
+const normalizeSavedDraftLabel = (label: string) => {
+  const trimmed = label.trim().replace(/\s+/g, ' ');
+  return trimmed ? trimmed.slice(0, 48) : undefined;
+};
+
 export default function App() {
   const [idea, setIdea] = useState(starterIdea);
   const [planOverrides, setPlanOverrides] = useState<RepoPlanOverrides>({});
@@ -135,11 +140,12 @@ export default function App() {
     planOverrides: { ...planOverrides },
   });
 
-  const saveDraftSnapshotSlot = (draftSnapshot: RideDraftSnapshot) => {
+  const saveDraftSnapshotSlot = (draftSnapshot: RideDraftSnapshot, label?: string) => {
     const savedAt = new Date().toISOString();
     const draftSlot: SavedDraftSlot = {
       draftSnapshot,
       id: buildSavedDraftSlotId(draftSnapshot, savedAt),
+      label: normalizeSavedDraftLabel(label ?? ''),
       savedAt,
     };
 
@@ -158,6 +164,16 @@ export default function App() {
 
   const handleSaveImportedPreviewSlot = (snapshot: RideDraftSnapshot) => {
     saveDraftSnapshotSlot(snapshot);
+  };
+
+  const handleRenameSavedDraftSlot = (slotId: string, nextLabel: string) => {
+    const normalizedLabel = normalizeSavedDraftLabel(nextLabel);
+
+    setSavedDraftSlots((currentSlots) => currentSlots.map((slot) => (
+      slot.id === slotId
+        ? { ...slot, label: normalizedLabel }
+        : slot
+    )));
   };
 
   const handleRestoreSavedDraftSlot = (slot: SavedDraftSlot) => {
@@ -321,6 +337,7 @@ export default function App() {
           onClearSlots={() => setSavedDraftSlots([])}
           onDeleteSlot={handleDeleteSavedDraftSlot}
           onImportSnapshot={restoreDraftSnapshot}
+          onRenameSlot={handleRenameSavedDraftSlot}
           onRestoreSlot={handleRestoreSavedDraftSlot}
           onSaveCurrentDraft={handleSaveCurrentDraftSlot}
           onSaveImportPreview={handleSaveImportedPreviewSlot}
