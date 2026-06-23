@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { summarizeStarterFileDrafts } from '../lib/starterFilePreview';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { buildStarterFileDiff, summarizeStarterFileDrafts } from '../lib/starterFilePreview';
 import type { StarterFilePreview } from '../types';
 
 type StarterFilePreviewCardProps = {
@@ -10,6 +10,8 @@ type StarterFilePreviewCardProps = {
   onResetAllDrafts: () => void;
   onResetFileDraft: (path: string) => void;
 };
+
+type PreviewMode = 'edit' | 'diff';
 
 const previewLabel = (preview: StarterFilePreview) => `${preview.path} · ${preview.language} · ${preview.riskLevel}`;
 
@@ -21,6 +23,7 @@ export const StarterFilePreviewCard = ({
   onResetFileDraft,
 }: StarterFilePreviewCardProps) => {
   const [activePath, setActivePath] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('edit');
   const selectedPreview = draftPreviews.find((preview) => preview.path === activePath) ?? draftPreviews[0];
   const generatedPreview = generatedPreviews.find((preview) => preview.path === selectedPreview.path) ?? selectedPreview;
   const draftSummary = useMemo(
@@ -28,6 +31,11 @@ export const StarterFilePreviewCard = ({
     [draftPreviews, generatedPreviews],
   );
   const selectedFileChanged = generatedPreview.content !== selectedPreview.content;
+  const selectedDiff = useMemo(
+    () => buildStarterFileDiff(generatedPreview.content, selectedPreview.content),
+    [generatedPreview.content, selectedPreview.content],
+  );
+  const selectedDiffCount = selectedDiff.filter((line) => line.status !== 'same').length;
   const badgeLabel = draftSummary.editedCount > 0
     ? `${draftSummary.editedCount}/${draftSummary.totalFiles} edited`
     : `${draftSummary.totalFiles} files`;
@@ -37,9 +45,9 @@ export const StarterFilePreviewCard = ({
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Starter Files</Text>
-          <Text style={styles.heading}>Preview and edit the seed package</Text>
+          <Text style={styles.heading}>Preview, edit, and diff the seed package</Text>
           <Text style={styles.helper}>
-            Inspect or tweak every planned starter file before approval. Generated content stays separate from the rider-approved draft.
+            Inspect, tweak, and compare every planned starter file before approval. Generated content stays separate from the rider-approved draft.
           </Text>
         </View>
         <View style={[styles.badge, draftSummary.editedCount > 0 && styles.badgeEdited]}>
@@ -89,18 +97,114 @@ export const StarterFilePreviewCard = ({
         ) : null}
       </View>
 
-      <TextInput
-        accessibilityLabel={`Edit starter file ${selectedPreview.path}`}
-        autoCapitalize="none"
-        autoCorrect={false}
-        multiline
-        onChangeText={(content) => onDraftContentChange(selectedPreview.path, content)}
-        scrollEnabled
-        spellCheck={false}
-        style={styles.editor}
-        textAlignVertical="top"
-        value={selectedPreview.content}
-      />
+      <View style={styles.modeRow}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setPreviewMode('edit')}
+          style={({ pressed }) => [
+            styles.modeButton,
+            previewMode === 'edit' && styles.modeButtonActive,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={[styles.modeButtonText, previewMode === 'edit' && styles.modeButtonTextActive]}>
+            Edit Draft
+          </Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setPreviewMode('diff')}
+          style={({ pressed }) => [
+            styles.modeButton,
+            previewMode === 'diff' && styles.modeButtonActive,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={[styles.modeButtonText, previewMode === 'diff' && styles.modeButtonTextActive]}>
+            Diff View
+          </Text>
+        </Pressable>
+      </View>
+
+      {previewMode === 'edit' ? (
+        <TextInput
+          accessibilityLabel={`Edit starter file ${selectedPreview.path}`}
+          autoCapitalize="none"
+          autoCorrect={false}
+          multiline
+          onChangeText={(content) => onDraftContentChange(selectedPreview.path, content)}
+          scrollEnabled
+          spellCheck={false}
+          style={styles.editor}
+          textAlignVertical="top"
+          value={selectedPreview.content}
+        />
+      ) : (
+        <View style={styles.diffPanel}>
+          <View style={styles.diffLegend}>
+            <Text style={styles.diffLegendText}>
+              {selectedFileChanged ? `${selectedDiffCount} changed line slots` : 'No draft changes in this file'}
+            </Text>
+            <Text style={styles.diffLegendText}>- generated · + rider draft</Text>
+          </View>
+
+          <ScrollView style={styles.diffBox} nestedScrollEnabled>
+            {selectedFileChanged ? (
+              selectedDiff.map((line) => {
+                if (line.status === 'changed') {
+                  return (
+                    <View key={`${line.lineNumber}-changed`} style={styles.diffPair}>
+                      <View style={[styles.diffLineRow, styles.diffLineRemoved]}>
+                        <Text style={styles.diffLineNumber}>{line.lineNumber}</Text>
+                        <Text style={styles.diffLinePrefix}>-</Text>
+                        <Text style={styles.diffLineText}>{line.generated}</Text>
+                      </View>
+                      <View style={[styles.diffLineRow, styles.diffLineAdded]}>
+                        <Text style={styles.diffLineNumber}>{line.lineNumber}</Text>
+                        <Text style={styles.diffLinePrefix}>+</Text>
+                        <Text style={styles.diffLineText}>{line.draft}</Text>
+                      </View>
+                    </View>
+                  );
+                }
+
+                if (line.status === 'added') {
+                  return (
+                    <View key={`${line.lineNumber}-added`} style={[styles.diffLineRow, styles.diffLineAdded]}>
+                      <Text style={styles.diffLineNumber}>{line.lineNumber}</Text>
+                      <Text style={styles.diffLinePrefix}>+</Text>
+                      <Text style={styles.diffLineText}>{line.draft}</Text>
+                    </View>
+                  );
+                }
+
+                if (line.status === 'removed') {
+                  return (
+                    <View key={`${line.lineNumber}-removed`} style={[styles.diffLineRow, styles.diffLineRemoved]}>
+                      <Text style={styles.diffLineNumber}>{line.lineNumber}</Text>
+                      <Text style={styles.diffLinePrefix}>-</Text>
+                      <Text style={styles.diffLineText}>{line.generated}</Text>
+                    </View>
+                  );
+                }
+
+                return (
+                  <View key={`${line.lineNumber}-same`} style={styles.diffLineRow}>
+                    <Text style={styles.diffLineNumber}>{line.lineNumber}</Text>
+                    <Text style={styles.diffLinePrefix}> </Text>
+                    <Text style={styles.diffLineText}>{line.generated}</Text>
+                  </View>
+                );
+              })
+            ) : (
+              <Text style={styles.emptyDiffText}>
+                This rider draft matches the generated baseline. Edit the draft to see a before/after diff here.
+              </Text>
+            )}
+          </ScrollView>
+        </View>
+      )}
 
       <View style={styles.actionRow}>
         <Pressable
@@ -255,6 +359,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#854d0e',
     color: '#fef9c3',
   },
+  modeRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modeButton: {
+    alignItems: 'center',
+    backgroundColor: '#0f172a',
+    borderColor: '#334155',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  modeButtonActive: {
+    backgroundColor: '#0891b2',
+    borderColor: '#67e8f9',
+  },
+  modeButtonText: {
+    color: '#cbd5e1',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  modeButtonTextActive: {
+    color: '#ecfeff',
+  },
   editor: {
     backgroundColor: '#020617',
     borderColor: '#1e293b',
@@ -267,6 +396,74 @@ const styles = StyleSheet.create({
     maxHeight: 460,
     minHeight: 240,
     padding: 14,
+  },
+  diffPanel: {
+    gap: 10,
+  },
+  diffLegend: {
+    backgroundColor: '#0f172a',
+    borderRadius: 14,
+    gap: 4,
+    padding: 10,
+  },
+  diffLegendText: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  diffBox: {
+    backgroundColor: '#020617',
+    borderColor: '#1e293b',
+    borderRadius: 18,
+    borderWidth: 1,
+    maxHeight: 460,
+    minHeight: 240,
+    padding: 10,
+  },
+  diffPair: {
+    gap: 2,
+    marginBottom: 4,
+  },
+  diffLineRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  diffLineAdded: {
+    backgroundColor: '#052e16',
+    borderRadius: 8,
+  },
+  diffLineRemoved: {
+    backgroundColor: '#450a0a',
+    borderRadius: 8,
+  },
+  diffLineNumber: {
+    color: '#64748b',
+    fontFamily: 'monospace',
+    fontSize: 11,
+    minWidth: 28,
+  },
+  diffLinePrefix: {
+    color: '#e0f2fe',
+    fontFamily: 'monospace',
+    fontSize: 12,
+    fontWeight: '900',
+    minWidth: 10,
+  },
+  diffLineText: {
+    color: '#dbeafe',
+    flex: 1,
+    fontFamily: 'monospace',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  emptyDiffText: {
+    color: '#cbd5e1',
+    fontSize: 13,
+    lineHeight: 19,
+    padding: 12,
   },
   actionRow: {
     flexDirection: 'row',
