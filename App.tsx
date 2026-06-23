@@ -15,6 +15,7 @@ import { SavedDraftPinningCard } from './src/components/SavedDraftPinningCard';
 import { SavedDraftSlotsCard } from './src/components/SavedDraftSlotsCard';
 import { StarterFilePreviewCard } from './src/components/StarterFilePreviewCard';
 import { StarterIssuePreviewCard } from './src/components/StarterIssuePreviewCard';
+import { TokenStorageStatusCard } from './src/components/TokenStorageStatusCard';
 import { buildMockAuthCapability } from './src/lib/authCapability';
 import { buildRepoPlan } from './src/lib/repoPlanner';
 import { createSeedReceipts } from './src/lib/receiptLedger';
@@ -30,6 +31,7 @@ import {
   buildStarterIssuePreviews,
   starterIssueKeyForIndex,
 } from './src/lib/starterIssuePreview';
+import { nullTokenStorageAdapter } from './src/lib/tokenStorage';
 import type {
   GithubCreateRepoResult,
   RepoIssuePlan,
@@ -84,7 +86,8 @@ export default function App() {
   const [starterIssueDraftState, setStarterIssueDraftState] = useState<{ drafts: StarterIssueDraftMap; planKey: string }>({ drafts: {}, planKey: '' });
   const [starterIssueApprovalState, setStarterIssueApprovalState] = useState<{ approvals: StarterIssueApprovalMap; planKey: string }>({ approvals: {}, planKey: '' });
 
-  const authCapability = useMemo(() => buildMockAuthCapability(), []);
+  const tokenStorageSnapshot = useMemo(() => nullTokenStorageAdapter.getSnapshot(), []);
+  const authCapability = useMemo(() => buildMockAuthCapability(tokenStorageSnapshot), [tokenStorageSnapshot]);
   const suggestedPlan = useMemo(() => buildRepoPlan(idea), [idea]);
   const repoPlan = useMemo(() => buildRepoPlan(idea, planOverrides), [idea, planOverrides]);
   const starterPlanKey = useMemo(() => createStarterPlanKey(repoPlan), [repoPlan]);
@@ -311,6 +314,7 @@ export default function App() {
 
         <PermissionExplainerCard />
         <AuthCapabilityCard capability={authCapability} />
+        <TokenStorageStatusCard snapshot={tokenStorageSnapshot} />
         <IdeaCapture idea={idea} onIdeaChange={handleIdeaChange} />
         <RepoPlanControls
           overrides={planOverrides}
@@ -418,11 +422,10 @@ const styles = StyleSheet.create({
     color: '#f8fafc',
     fontSize: 34,
     fontWeight: '900',
-    lineHeight: 39,
   },
   subtitle: {
     color: '#cbd5e1',
     fontSize: 16,
-    lineHeight: 23,
+    lineHeight: 22,
   },
 });
