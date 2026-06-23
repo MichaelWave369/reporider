@@ -6,7 +6,7 @@ RepoRider is a mobile-first, voice-friendly GitHub creation assistant for builde
 
 The goal is simple:
 
-> Speak an idea on your phone, review the repo plan, steer the final settings, preview, edit, and diff the starter files, approve the seed package, and publish a safe starter repository with receipts.
+> Speak an idea on your phone, review the repo plan, steer the final settings, preview, edit, diff, and approve every starter file, then publish a safe starter repository with receipts.
 
 ## What this skeleton includes
 
@@ -18,9 +18,11 @@ The goal is simple:
 - Generated starter file previews before approval
 - Editable starter-file drafts with reset controls
 - Inline generated-vs-draft diff view
+- File-by-file starter approval gate
+- Content-sensitive approval fingerprints that stale out after edits
 - Code-stack `package.json` planning
 - Safety scan placeholder for generated files
-- Mock create-repo ride flow that receives reviewed drafts
+- Mock create-repo ride flow that receives reviewed and approved drafts
 - GitHub write boundary model
 - Receipt ledger model for every meaningful action
 - Product spec and architecture docs
@@ -43,8 +45,8 @@ That means the app can simulate the full ride from approval to repo creation wit
 5. **Preview** — user inspects the generated starter files that would be committed.
 6. **Edit** — user can tweak starter-file drafts before approval.
 7. **Diff** — user compares generated baselines against rider-reviewed drafts.
-8. **Guard** — safety checks catch secrets, dangerous file names, and risky defaults.
-9. **Approve** — human approval unlocks the ride.
+8. **Approve files** — every current starter-file draft must be approved before create unlocks.
+9. **Guard** — safety checks catch secrets, dangerous file names, and risky defaults.
 10. **Create** — approved starter files are pushed to GitHub once live mode exists.
 11. **Receipt** — every action gets a human-readable audit trail.
 
@@ -52,7 +54,7 @@ That means the app can simulate the full ride from approval to repo creation wit
 
 The current planner is local and deterministic. As the idea text changes, RepoRider regenerates the suggested repo plan, safety report, approval state, receipt preview, and generated starter file previews.
 
-The rider can override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, edit starter-file drafts, and compare generated vs rider-edited drafts before approval. Editing the idea resets plan overrides and isolates old starter-file drafts so the suggestion and safety scan stay aligned.
+The rider can override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, edit starter-file drafts, compare generated vs rider-edited drafts, and approve each file before creation. Editing a file after approval makes that file require approval again, because approvals are tied to the current draft content.
 
 It keeps repositories private by default, infers likely starter stacks from idea text, chooses starter files from the selected stack, includes `package.json` for code stacks, generates a first starter file preview set, and creates a small first issue set. It does not write to GitHub by itself.
 
@@ -63,7 +65,7 @@ The first version is intentionally small:
 - No full IDE.
 - No blind commits.
 - Private-first repo creation recommendation.
-- Human approval before GitHub writes.
+- File-by-file human approval before GitHub writes.
 - Voice capture can begin as device dictation or typed notes.
 
 ## Development
@@ -89,6 +91,7 @@ npm run typecheck
 - [Starter File Previews](docs/STARTER_FILE_PREVIEWS.md)
 - [Editable Drafts](docs/EDITABLE_DRAFTS.md)
 - [Inline Draft Diff View](docs/INLINE_DIFF_VIEW.md)
+- [Starter File Approval Gate](docs/FILE_APPROVALS.md)
 
 ## Product principle
 
