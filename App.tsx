@@ -261,7 +261,10 @@ export default function App() {
         />
         <ApprovalReceiptPreviewCard
           approvedDraftFingerprints={starterFileApprovals}
+          approvedIssueFingerprints={starterIssueApprovals}
+          draftIssues={reviewedStarterIssues}
           draftPreviews={reviewedStarterFiles}
+          generatedIssues={generatedStarterIssues}
           generatedPreviews={generatedStarterFiles}
         />
         <CreateRepoPanel
