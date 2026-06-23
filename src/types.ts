@@ -7,6 +7,18 @@ export type StarterStack =
   | 'node-cli'
   | 'docs-only';
 
+export type AuthCapabilityStatus = 'mock_only' | 'auth_unavailable' | 'auth_ready';
+
+export type AuthCapability = {
+  status: AuthCapabilityStatus;
+  label: string;
+  summary: string;
+  canRequestOAuth: boolean;
+  canStoreToken: boolean;
+  canAttemptLiveWrites: boolean;
+  requiredGates: string[];
+};
+
 export type RepoFilePlan = {
   path: string;
   purpose: string;
