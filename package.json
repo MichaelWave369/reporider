@@ -10,7 +10,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test:safety": "tsc --project tsconfig.safety-tests.json && node .safety-test-build/test/safetyScan.fixtures.js && rm -rf .safety-test-build"
+    "test:safety": "tsc --project tsconfig.safety-tests.json && node .safety-test-build/test/safetyScan.fixtures.js && node .safety-test-build/test/safetyAbsolutePath.fixtures.js && rm -rf .safety-test-build"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",
