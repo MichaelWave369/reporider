@@ -1,5 +1,7 @@
 import type { GithubCreateRepoResult, Receipt } from '../types';
 
+export const RIDE_RECEIPT_JSON_FORMAT = 'reporider.ride-receipt.v1' as const;
+
 const latestReceiptTimestamp = (result: GithubCreateRepoResult) => (
   result.receipts.at(-1)?.timestamp ?? 'unknown'
 );
@@ -45,7 +47,7 @@ export const buildTypedRideReceiptJson = (result: GithubCreateRepoResult) => ({
     mode: result.mode,
     notes: boundaryNotes,
   },
-  format: 'reporider.ride-receipt.v1' as const,
+  format: RIDE_RECEIPT_JSON_FORMAT,
   generatedAt: latestReceiptTimestamp(result),
   queuedFiles: result.createdFiles.map((path) => ({ path })),
   queuedIssues: result.openedIssues.map((title) => ({ title })),
@@ -63,5 +65,7 @@ export const buildTypedRideReceiptJson = (result: GithubCreateRepoResult) => ({
     warningCount: result.summary.safetyWarningCount,
   },
 });
+
+export type TypedRideReceiptJson = ReturnType<typeof buildTypedRideReceiptJson>;
 
 export const buildJsonRideReceipt = (result: GithubCreateRepoResult) => `${JSON.stringify(buildTypedRideReceiptJson(result), null, 2)}\n`;
