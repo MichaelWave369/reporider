@@ -21,6 +21,13 @@ export const DryRunWriterCard = ({ result }: DryRunWriterCardProps) => (
       </View>
     </View>
 
+    <View style={styles.policyBox}>
+      <Text style={styles.policyTitle}>Safety receipt coupling</Text>
+      <Text style={styles.policyText}>Policy · {result.requestSummary.safetyPolicyVersion}</Text>
+      <Text style={styles.policyText}>Status · {result.requestSummary.safetyStatus}</Text>
+      <Text style={styles.policyText}>Warnings / blockers · {result.requestSummary.warningCount} / {result.requestSummary.blockerCount}</Text>
+    </View>
+
     <View style={styles.stateGrid}>
       <View style={styles.statePill}>
         <Text style={styles.stateLabel}>Would create repo</Text>
@@ -123,6 +130,25 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
+  },
+  policyBox: {
+    backgroundColor: '#0f172a',
+    borderColor: '#fbbf24',
+    borderRadius: 18,
+    borderWidth: 1,
+    gap: 5,
+    padding: 12,
+  },
+  policyTitle: {
+    color: '#fef3c7',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  policyText: {
+    color: '#fffbeb',
+    fontSize: 12,
+    fontWeight: '800',
+    lineHeight: 17,
   },
   stateGrid: {
     gap: 8,
