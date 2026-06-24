@@ -2,7 +2,7 @@
 
 RepoRider includes a lightweight local safety fixture suite for the safety policy gate.
 
-The suite exercises known-safe, warning, blocker, absolute-path, and remediation examples without adding a heavyweight test framework.
+The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, and remediation examples without adding a heavyweight test framework.
 
 ## Current command
 
@@ -105,6 +105,43 @@ The current fixture suite covers:
   - Expected category: `remote-execution`
   - Expected remediation: avoid pipe-to-shell instructions
 
+- **Package manifest pass**
+  - Safe reviewed `package.json` with simple local scripts and pinned registry dependency
+  - Expected status: `pass`
+  - Expected named check: `package-manifest-policy` is `pass`
+
+- **Package lifecycle hook warning**
+  - `postinstall`, `install`, `preinstall`, `prepare`, or publish lifecycle scripts
+  - Expected status: `needs-review`
+  - Expected category: `package-lifecycle-hook`
+  - Expected named check: `package-manifest-policy` is `warning`
+
+- **Package script blocker**
+  - package script with remote shell pipe, destructive root command, or broad permissions
+  - Expected status: `blocked`
+  - Expected category: `package-script-risk`
+  - Expected named check: `package-manifest-policy` is `blocker`
+
+- **Package-manager command warning**
+  - package script using global installs, force installs/audit fix, or `npx` execution
+  - Expected status: `needs-review`
+  - Expected category: `package-manager-command-risk`
+
+- **Package dependency name warning**
+  - dependency names with suspicious or credential-like wording
+  - Expected status: `needs-review`
+  - Expected category: `package-dependency-name-risk`
+
+- **Package dependency source warning**
+  - dependency versions using `git+`, `file:`, or URL sources
+  - Expected status: `needs-review`
+  - Expected category: `package-dependency-source-risk`
+
+- **Package manifest parse warning**
+  - invalid `package.json` content
+  - Expected status: `needs-review`
+  - Expected category: `package-manifest-parse`
+
 - **Empty reviewed issue body warning**
   - Empty reviewed starter-issue body
   - Expected status: `needs-review`
@@ -133,9 +170,11 @@ The current fixture suite covers:
 
 ## Remediation coverage
 
-The fixture suite now asserts that every finding produced by the main safety fixture suite includes non-empty rider-facing remediation guidance.
+The fixture suite asserts that every finding produced by the main safety fixture suite includes non-empty rider-facing remediation guidance.
 
 The absolute-path suite additionally asserts that Unix, Windows drive-letter, and Windows UNC path blockers include explicit safe repo-relative path guidance.
+
+The package-manifest suite asserts that package warnings and blockers include remediation and flow into the named `package-manifest-policy` check.
 
 ## CI relationship
 
@@ -146,7 +185,7 @@ npm run typecheck
 npm run test:safety
 ```
 
-This means the green check now verifies TypeScript validity, safety fixture behavior, and remediation guidance coverage.
+This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, and remediation guidance coverage.
 
 ## Boundary
 
@@ -156,6 +195,8 @@ They do not:
 
 - Request OAuth.
 - Read, store, or validate real tokens.
+- Install dependencies.
+- Contact a package registry.
 - Create repositories.
 - Push files.
 - Open issues.
@@ -163,7 +204,7 @@ They do not:
 - Prove a future repository is safe to publish.
 - Grant write authority.
 
-A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, and remediation examples.
+A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, and remediation examples.
 
 ## Future fixture expansion
 
