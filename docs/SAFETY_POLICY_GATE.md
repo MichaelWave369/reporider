@@ -1,12 +1,12 @@
 # Safety Policy Gate
 
-RepoRider now has a strengthened local safety policy gate for generated repository plans.
+RepoRider now has a strengthened local safety policy gate for generated repository plans **and reviewed starter-file draft contents**.
 
 This is still a **planning and review gate**, not proof that a repository is safe and not permission to write to GitHub.
 
 ## Current mode
 
-The current implementation runs locally in mock mode. It reviews the generated `RepoPlan` and returns a policy-versioned `SafetyReport`.
+The current implementation runs locally in mock mode. It reviews the generated `RepoPlan`, the current reviewed starter-file drafts, and returns a policy-versioned `SafetyReport`.
 
 The scanner does not request OAuth, read credentials, create repositories, push files, open issues, or contact GitHub.
 
@@ -15,19 +15,21 @@ The scanner does not request OAuth, read credentials, create repositories, push 
 Current version:
 
 ```text
-safety-policy-gate-v0.2
+safety-policy-gate-v0.3
 ```
 
 The version is included in the safety report so future live-mode work can tell which policy produced a decision.
 
 ## Reviewed scope
 
-Each report records the generated plan scope:
+Each report records the generated plan and reviewed content scope:
 
 - Repository visibility
 - Starter stack
 - Starter file count
 - Starter issue count
+- Reviewed starter-file content count
+- Reviewed starter-file content character count
 
 This keeps safety receipts tied to the package that was actually reviewed.
 
@@ -53,7 +55,23 @@ The scanner currently emits named checks for:
 4. **File risk policy**
    - Warns on high-risk generated files.
 
-5. **Starter issue policy**
+5. **Reviewed file content policy**
+   - Blocks private-key-like blocks.
+   - Blocks GitHub token-like values.
+   - Blocks fine-grained GitHub token-like values.
+   - Blocks AWS access key-like values.
+   - Blocks Slack token-like values.
+   - Blocks npm token-like values.
+   - Blocks inline credential-like assignments.
+   - Blocks destructive root filesystem commands.
+   - Warns on empty reviewed file content.
+   - Warns on unusually large starter file drafts.
+   - Warns on remote-script-to-shell patterns.
+   - Warns on broad permission commands.
+   - Warns on credential-like environment variable references.
+   - Warns on bearer authorization header examples.
+
+6. **Starter issue policy**
    - Warns on large generated issue sets.
    - Warns when issue text appears to mention credentials, tokens, API keys, or secrets.
 
@@ -75,6 +93,7 @@ The report includes required gates that future live-mode work must respect:
 
 - Every generated starter file must have a fresh content-bound approval.
 - Every generated starter issue must have a fresh content-bound approval.
+- The reviewed starter-file contents must pass local credential/destructive-command checks.
 - The dry-run writer must summarize the exact reviewed package before live mode can be considered.
 - Any blocker finding must be resolved before mock create or future live writes proceed.
 - Future live writes still require OAuth, secure token storage, and an armed live-mode state.
@@ -83,7 +102,9 @@ The report includes required gates that future live-mode work must respect:
 
 The safety policy gate does not grant write authority.
 
-A passing report does not mean live writes can happen. It only means the current local policy did not find warnings or blockers in the generated plan.
+A passing report does not mean live writes can happen. It only means the current local policy did not find warnings or blockers in the generated plan or reviewed starter-file contents.
+
+Reviewed file content is scanned locally from the current app state. This gate does not send reviewed content to GitHub.
 
 Saved drafts, imported Markdown, restored rides, and exported receipts do not carry safety approval forward. Review state is reset when planning inputs are restored.
 
@@ -99,9 +120,9 @@ If blockers exist, the dry-run writer includes the blocker count in its blocking
 
 Before real live writes exist, the safety policy should be expanded again to include:
 
-- Full content scanning of reviewed file drafts.
-- Generated issue body risk classification.
+- Generated issue body risk classification beyond credential-like text.
 - Protected file path allow/deny lists.
 - Large write-set review gates.
 - Explicit user confirmation for public repos.
-- Receipt hashes tied to the exact policy version.
+- Receipt hashes tied to the exact policy version and reviewed content package.
+- Test fixtures for known-safe and known-blocked reviewed file contents.
