@@ -1,4 +1,5 @@
 import type {
+  RepoIssuePlan,
   RepoPlan,
   SafetyFinding,
   SafetyPolicyCheck,
@@ -7,75 +8,171 @@ import type {
   StarterFilePreview,
 } from '../types';
 
-const policyVersion = 'safety-policy-gate-v0.3';
+const policyVersion = 'safety-policy-gate-v0.4';
 
 const secretLikePatterns = [/\.env$/i, /secret/i, /token/i, /api[_-]?key/i, /credential/i, /password/i, /private[_-]?key/i];
 const unsafePathPatterns = [/^\//, /\.\./, /~\//, /\.pem$/i, /\.key$/i, /id_rsa/i];
-const issueCredentialPatterns = [/secret/i, /token/i, /api[_-]?key/i, /credential/i, /password/i, /private key/i];
 
-const reviewedContentBlockerPatterns = [
+type RiskPattern = {
+  category: string;
+  id: string;
+  message: string;
+  pattern: RegExp;
+};
+
+const reviewedContentBlockerPatterns: RiskPattern[] = [
   {
+    category: 'credential-material',
     id: 'private-key-block',
     message: 'Reviewed file content appears to contain a private key block. Remove it before any write package can proceed.',
     pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/i,
   },
   {
+    category: 'credential-material',
     id: 'github-token-prefix',
     message: 'Reviewed file content appears to contain a GitHub token-like value. Remove it before any write package can proceed.',
     pattern: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}\b/,
   },
   {
+    category: 'credential-material',
     id: 'github-fine-grained-token',
     message: 'Reviewed file content appears to contain a fine-grained GitHub token-like value. Remove it before any write package can proceed.',
     pattern: /\bgithub_pat_[A-Za-z0-9_]{30,}\b/,
   },
   {
+    category: 'credential-material',
     id: 'aws-access-key',
     message: 'Reviewed file content appears to contain an AWS access key-like value. Remove it before any write package can proceed.',
     pattern: /\bAKIA[0-9A-Z]{16}\b/,
   },
   {
+    category: 'credential-material',
     id: 'slack-token',
     message: 'Reviewed file content appears to contain a Slack token-like value. Remove it before any write package can proceed.',
     pattern: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/,
   },
   {
+    category: 'credential-material',
     id: 'npm-token',
     message: 'Reviewed file content appears to contain an npm token-like value. Remove it before any write package can proceed.',
     pattern: /\bnpm_[A-Za-z0-9]{20,}\b/,
   },
   {
+    category: 'credential-material',
     id: 'inline-secret-assignment',
     message: 'Reviewed file content appears to assign a credential-like value. Replace it with a placeholder before any write package can proceed.',
     pattern: /\b(?:api[_-]?key|token|secret|password|credential)\b\s*[:=]\s*['"][^'"\s]{8,}['"]/i,
   },
   {
+    category: 'destructive-command',
     id: 'destructive-root-command',
     message: 'Reviewed file content appears to contain a destructive root filesystem command. Remove it before any write package can proceed.',
     pattern: /\brm\s+-rf\s+\/\s*(?:$|[;&|])/im,
   },
 ];
 
-const reviewedContentWarningPatterns = [
+const reviewedContentWarningPatterns: RiskPattern[] = [
   {
+    category: 'remote-execution',
     id: 'remote-shell-pipe',
     message: 'Reviewed file content appears to pipe remote script output into a shell. Review before any future write.',
     pattern: /\b(?:curl|wget)\b[^\n|]*\|\s*(?:sh|bash)\b/i,
   },
   {
+    category: 'permission-risk',
     id: 'broad-permission-command',
     message: 'Reviewed file content appears to set broad 777 permissions. Review before any future write.',
     pattern: /\bchmod\s+777\b/i,
   },
   {
+    category: 'credential-reference',
     id: 'environment-variable-credential-reference',
     message: 'Reviewed file content references credential-like environment variables. Confirm they are placeholders only.',
     pattern: /process\.env\.[A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|API_KEY|CREDENTIAL)[A-Z0-9_]*/,
   },
   {
+    category: 'credential-reference',
     id: 'bearer-header-example',
     message: 'Reviewed file content mentions a bearer authorization header. Confirm it contains no live credential.',
     pattern: /authorization\s*:\s*bearer/i,
+  },
+];
+
+const issueBodyBlockerPatterns: RiskPattern[] = [
+  {
+    category: 'credential-material',
+    id: 'issue-private-key-block',
+    message: 'Reviewed issue body appears to contain a private key block. Remove it before any issue can be opened.',
+    pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/i,
+  },
+  {
+    category: 'credential-material',
+    id: 'issue-github-token-prefix',
+    message: 'Reviewed issue body appears to contain a GitHub token-like value. Remove it before any issue can be opened.',
+    pattern: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}\b/,
+  },
+  {
+    category: 'credential-material',
+    id: 'issue-github-fine-grained-token',
+    message: 'Reviewed issue body appears to contain a fine-grained GitHub token-like value. Remove it before any issue can be opened.',
+    pattern: /\bgithub_pat_[A-Za-z0-9_]{30,}\b/,
+  },
+  {
+    category: 'credential-material',
+    id: 'issue-aws-access-key',
+    message: 'Reviewed issue body appears to contain an AWS access key-like value. Remove it before any issue can be opened.',
+    pattern: /\bAKIA[0-9A-Z]{16}\b/,
+  },
+  {
+    category: 'credential-material',
+    id: 'issue-inline-secret-assignment',
+    message: 'Reviewed issue body appears to assign a credential-like value. Replace it with a placeholder before any issue can be opened.',
+    pattern: /\b(?:api[_-]?key|token|secret|password|credential)\b\s*[:=]\s*['"][^'"\s]{8,}['"]/i,
+  },
+  {
+    category: 'destructive-command',
+    id: 'issue-destructive-root-command',
+    message: 'Reviewed issue body appears to contain a destructive root filesystem command. Remove it before any issue can be opened.',
+    pattern: /\brm\s+-rf\s+\/\s*(?:$|[;&|])/im,
+  },
+];
+
+const issueBodyWarningPatterns: RiskPattern[] = [
+  {
+    category: 'credential-reference',
+    id: 'issue-credential-reference',
+    message: 'Reviewed issue text references credentials, tokens, API keys, passwords, or secrets. Confirm it is guidance only and contains placeholders.',
+    pattern: /\b(?:secret|token|api[_ -]?key|credential|password|private key)\b/i,
+  },
+  {
+    category: 'security-disclosure',
+    id: 'issue-security-disclosure',
+    message: 'Reviewed issue text appears to discuss vulnerability/security disclosure work. Review before opening publicly or in bulk.',
+    pattern: /\b(?:vulnerability|exploit|cve|zero[- ]?day|security disclosure|responsible disclosure)\b/i,
+  },
+  {
+    category: 'privileged-operation',
+    id: 'issue-privileged-command',
+    message: 'Reviewed issue text mentions privileged or destructive setup commands. Confirm they are safe instructions before opening.',
+    pattern: /\b(?:sudo|chmod\s+777|chown\s+-R|rm\s+-rf|format\s+disk|drop\s+database)\b/i,
+  },
+  {
+    category: 'remote-execution',
+    id: 'issue-remote-shell-pipe',
+    message: 'Reviewed issue text appears to pipe remote script output into a shell. Review before opening.',
+    pattern: /\b(?:curl|wget)\b[^\n|]*\|\s*(?:sh|bash)\b/i,
+  },
+  {
+    category: 'production-impact',
+    id: 'issue-production-impact',
+    message: 'Reviewed issue text references production/deployment/migration work. Confirm this starter issue cannot be mistaken for live ops instructions.',
+    pattern: /\b(?:production|deploy|deployment|migration|migrate|rollback|incident|outage)\b/i,
+  },
+  {
+    category: 'auth-flow-risk',
+    id: 'issue-auth-flow-risk',
+    message: 'Reviewed issue text references OAuth, tokens, scopes, or login flows. Confirm it preserves RepoRider write-boundary language.',
+    pattern: /\b(?:oauth|access token|refresh token|scope|login|authorization code)\b/i,
   },
 ];
 
@@ -83,15 +180,16 @@ const requiredGates = [
   'Every generated starter file must have a fresh content-bound approval.',
   'Every generated starter issue must have a fresh content-bound approval.',
   'The reviewed starter-file contents must pass local credential/destructive-command checks.',
+  'The reviewed starter-issue bodies must pass local credential/destructive/security/ops risk classification.',
   'The dry-run writer must summarize the exact reviewed package before live mode can be considered.',
   'Any blocker finding must be resolved before mock create or future live writes proceed.',
   'Future live writes still require OAuth, secure token storage, and an armed live-mode state.',
 ];
 
 const boundaryNotes = [
-  'Safety policy findings are local planning and reviewed-content checks, not proof that a repository is safe to publish.',
+  'Safety policy findings are local planning, reviewed file-content, and reviewed issue-body checks, not proof that a repository is safe to publish.',
   'A passing safety report does not grant write authority and does not bypass human approvals.',
-  'Reviewed file content is scanned locally in the current app state and is not sent to GitHub by this gate.',
+  'Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.',
   'Saved drafts, imported Markdown, and restored rides always reset review state and never carry safety approval forward.',
   'Future live write mode must treat any warning as an explicit review prompt and any blocker as a hard stop.',
 ];
@@ -118,6 +216,7 @@ const summarizePolicy = (
   warningCount: number,
   blockerCount: number,
   reviewedFileContentCount: number,
+  reviewedIssueContentCount: number,
 ) => {
   if (status === 'blocked') {
     return `${blockerCount} blocker(s) must be resolved before the write package can proceed.`;
@@ -127,10 +226,12 @@ const summarizePolicy = (
     return `${warningCount} warning(s) require explicit review before any future live write can be considered.`;
   }
 
-  return `No policy blockers or warnings were found across the current generated plan and ${reviewedFileContentCount} reviewed file draft(s).`;
+  return `No policy blockers or warnings were found across the current generated plan, ${reviewedFileContentCount} reviewed file draft(s), and ${reviewedIssueContentCount} reviewed issue draft(s).`;
 };
 
 const contentFindingId = (kind: string, path: string, id: string) => `${kind}:${id}:${path}`;
+const issueFindingId = (kind: string, issueIndex: number, id: string) => `${kind}:${id}:issue-${issueIndex + 1}`;
+const issuePath = (issueIndex: number, issue: RepoIssuePlan) => `issue:${issueIndex + 1}:${issue.title}`;
 
 const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => {
   const findings: SafetyFinding[] = [];
@@ -143,6 +244,7 @@ const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => 
         id: contentFindingId('empty-reviewed-file', file.path, 'empty-content'),
         severity: 'warning',
         path: file.path,
+        category: 'empty-content',
         message: 'Reviewed file content is empty. Confirm this is intentional before any future write.',
       });
     }
@@ -152,6 +254,7 @@ const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => 
         id: contentFindingId('large-reviewed-file', file.path, 'large-content'),
         severity: 'warning',
         path: file.path,
+        category: 'large-content',
         message: 'Reviewed file content is unusually large for a starter file. Review before any future write.',
       });
     }
@@ -162,6 +265,7 @@ const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => 
           id: contentFindingId('reviewed-content-blocker', file.path, check.id),
           severity: 'blocker',
           path: file.path,
+          category: check.category,
           message: check.message,
         });
       }
@@ -173,6 +277,7 @@ const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => 
           id: contentFindingId('reviewed-content-warning', file.path, check.id),
           severity: 'warning',
           path: file.path,
+          category: check.category,
           message: check.message,
         });
       }
@@ -182,7 +287,66 @@ const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => 
   return findings;
 };
 
-export const scanRepoPlan = (plan: RepoPlan, reviewedStarterFiles: StarterFilePreview[] = []): SafetyReport => {
+const scanReviewedIssueBodies = (reviewedStarterIssues: RepoIssuePlan[]) => {
+  const findings: SafetyFinding[] = [];
+
+  reviewedStarterIssues.forEach((issue, index) => {
+    const issueText = `${issue.title}\n${issue.body}\n${issue.labels.join(' ')}`;
+    const path = issuePath(index, issue);
+
+    if (issue.body.trim().length === 0) {
+      findings.push({
+        id: issueFindingId('issue-body-warning', index, 'empty-body'),
+        severity: 'warning',
+        path,
+        category: 'empty-body',
+        message: 'Reviewed issue body is empty. Confirm this is intentional before any future issue creation.',
+      });
+    }
+
+    if (issueText.length > 5000) {
+      findings.push({
+        id: issueFindingId('issue-body-warning', index, 'large-body'),
+        severity: 'warning',
+        path,
+        category: 'large-body',
+        message: 'Reviewed issue text is unusually large for a starter issue. Review before any future issue creation.',
+      });
+    }
+
+    for (const check of issueBodyBlockerPatterns) {
+      if (check.pattern.test(issueText)) {
+        findings.push({
+          id: issueFindingId('issue-body-blocker', index, check.id),
+          severity: 'blocker',
+          path,
+          category: check.category,
+          message: check.message,
+        });
+      }
+    }
+
+    for (const check of issueBodyWarningPatterns) {
+      if (check.pattern.test(issueText)) {
+        findings.push({
+          id: issueFindingId('issue-body-warning', index, check.id),
+          severity: 'warning',
+          path,
+          category: check.category,
+          message: check.message,
+        });
+      }
+    }
+  });
+
+  return findings;
+};
+
+export const scanRepoPlan = (
+  plan: RepoPlan,
+  reviewedStarterFiles: StarterFilePreview[] = [],
+  reviewedStarterIssues: RepoIssuePlan[] = plan.issues,
+): SafetyReport => {
   const findings: SafetyFinding[] = [];
 
   const repoNameLooksUnsafe = !plan.name.trim() || plan.name.includes('/') || plan.name.includes('..');
@@ -198,6 +362,7 @@ export const scanRepoPlan = (plan: RepoPlan, reviewedStarterFiles: StarterFilePr
     findings.push({
       id: 'public-repo-review',
       severity: 'warning',
+      category: 'visibility-review',
       message: 'Public repositories should receive extra review before generated files are committed.',
     });
   }
@@ -211,6 +376,7 @@ export const scanRepoPlan = (plan: RepoPlan, reviewedStarterFiles: StarterFilePr
         id: `secret-like-path:${file.path}`,
         severity: 'blocker',
         path: file.path,
+        category: 'secret-like-path',
         message: 'This path looks like it may contain secrets or credentials. Block commit until reviewed.',
       });
     }
@@ -220,6 +386,7 @@ export const scanRepoPlan = (plan: RepoPlan, reviewedStarterFiles: StarterFilePr
         id: `unsafe-path:${file.path}`,
         severity: 'blocker',
         path: file.path,
+        category: 'unsafe-path',
         message: 'Generated file paths must stay repo-relative and must not reference key files or traversal paths.',
       });
     }
@@ -229,38 +396,33 @@ export const scanRepoPlan = (plan: RepoPlan, reviewedStarterFiles: StarterFilePr
         id: `high-risk-file:${file.path}`,
         severity: 'warning',
         path: file.path,
+        category: 'high-risk-file',
         message: 'High-risk generated file requires explicit human approval.',
       });
     }
   }
 
-  if (plan.issues.length > 10) {
+  if (reviewedStarterIssues.length > 10) {
     findings.push({
       id: 'large-generated-issue-set',
       severity: 'warning',
+      category: 'large-issue-set',
       message: 'Large generated issue sets should be reviewed carefully before any future bulk issue creation.',
     });
-  }
-
-  for (const issue of plan.issues) {
-    const issueText = `${issue.title}\n${issue.body}\n${issue.labels.join(' ')}`;
-    if (issueCredentialPatterns.some((pattern) => pattern.test(issueText))) {
-      findings.push({
-        id: `credential-like-issue:${issue.title}`,
-        severity: 'warning',
-        message: 'Starter issue text appears to mention credentials or secrets and should be reviewed before opening.',
-      });
-    }
   }
 
   const reviewedContentFindings = scanReviewedFileContent(reviewedStarterFiles);
   findings.push(...reviewedContentFindings);
 
+  const reviewedIssueFindings = scanReviewedIssueBodies(reviewedStarterIssues);
+  findings.push(...reviewedIssueFindings);
+
   if (findings.length === 0) {
     findings.push({
       id: 'baseline-pass',
       severity: 'info',
-      message: 'No obvious safety blockers found in the starter repo plan or reviewed starter-file contents.',
+      category: 'baseline',
+      message: 'No obvious safety blockers found in the starter repo plan, reviewed starter-file contents, or reviewed starter-issue bodies.',
     });
   }
 
@@ -268,9 +430,16 @@ export const scanRepoPlan = (plan: RepoPlan, reviewedStarterFiles: StarterFilePr
   const blockerCount = countSeverity(findings, 'blocker');
   const status = mostSevereStatus(findings);
   const reviewedFileContentCharacters = reviewedStarterFiles.reduce((total, file) => total + file.content.length, 0);
+  const reviewedIssueContentCharacters = reviewedStarterIssues.reduce((total, issue) => (
+    total + issue.title.length + issue.body.length + issue.labels.join(' ').length
+  ), 0);
   const contentBlockerCount = reviewedContentFindings.filter((finding) => finding.severity === 'blocker').length;
   const contentWarningCount = reviewedContentFindings.filter((finding) => finding.severity === 'warning').length;
   const contentCheckStatus: SafetyPolicyCheckStatus = contentBlockerCount > 0 ? 'blocker' : contentWarningCount > 0 ? 'warning' : 'pass';
+  const issueRiskBlockerCount = reviewedIssueFindings.filter((finding) => finding.severity === 'blocker').length;
+  const issueRiskWarningCount = reviewedIssueFindings.filter((finding) => finding.severity === 'warning').length;
+  const issueRiskCheckStatus: SafetyPolicyCheckStatus = issueRiskBlockerCount > 0 ? 'blocker' : issueRiskWarningCount > 0 ? 'warning' : 'pass';
+  const issueCountCheckStatus: SafetyPolicyCheckStatus = reviewedStarterIssues.length > 10 ? 'warning' : 'pass';
 
   const checks: SafetyPolicyCheck[] = [
     buildCheck(
@@ -308,17 +477,23 @@ export const scanRepoPlan = (plan: RepoPlan, reviewedStarterFiles: StarterFilePr
       `Reviewed ${reviewedStarterFiles.length} file draft(s) and ${reviewedFileContentCharacters} character(s) for credential-like or destructive content signals.`,
     ),
     buildCheck(
-      'issue-policy',
-      'Starter issue policy',
-      findings.some((finding) => finding.id.startsWith('credential-like-issue') || finding.id === 'large-generated-issue-set') ? 'warning' : 'pass',
-      'Starter issue count and text were checked for bulk-creation and credential-like review signals.',
+      'starter-issue-count-policy',
+      'Starter issue count policy',
+      issueCountCheckStatus,
+      'Starter issue count was checked for future bulk-creation review needs.',
+    ),
+    buildCheck(
+      'reviewed-issue-body-risk-policy',
+      'Reviewed issue body risk policy',
+      issueRiskCheckStatus,
+      `Reviewed ${reviewedStarterIssues.length} issue draft(s) and ${reviewedIssueContentCharacters} character(s) for credential, destructive, disclosure, ops, auth, and remote-execution risk signals.`,
     ),
   ];
 
   return {
     status,
     policyVersion,
-    summary: summarizePolicy(status, warningCount, blockerCount, reviewedStarterFiles.length),
+    summary: summarizePolicy(status, warningCount, blockerCount, reviewedStarterFiles.length, reviewedStarterIssues.length),
     warningCount,
     blockerCount,
     reviewedScope: {
@@ -326,6 +501,8 @@ export const scanRepoPlan = (plan: RepoPlan, reviewedStarterFiles: StarterFilePr
       issueCount: plan.issues.length,
       reviewedFileContentCharacters,
       reviewedFileContentCount: reviewedStarterFiles.length,
+      reviewedIssueContentCharacters,
+      reviewedIssueContentCount: reviewedStarterIssues.length,
       stack: plan.stack,
       visibility: plan.visibility,
     },
