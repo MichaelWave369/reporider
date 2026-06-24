@@ -83,9 +83,23 @@ export const RideReceiptExportCard = ({ result }: RideReceiptExportCardProps) =>
 
       <View style={styles.verifyBox}>
         <Text style={styles.verifyHeading}>JSON receipt check</Text>
-        <Text style={styles.verifyHelp}>
-          Paste a RepoRider JSON receipt to check its format, policy fields, fingerprints, and receipt-chain links locally. This does not restore approvals or contact GitHub.
-        </Text>
+        <Text style={styles.verifyHelp}>Check JSON receipt format, policy fields, fingerprints, and receipt-chain links locally.</Text>
+        <View style={styles.buttonRow}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setReceiptCheckSource(jsonReceipt)}
+            style={({ pressed }) => [styles.secondaryButton, pressed && styles.toggleButtonPressed]}
+          >
+            <Text style={styles.secondaryButtonText}>Use current JSON</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setReceiptCheckSource('')}
+            style={({ pressed }) => [styles.secondaryButton, pressed && styles.toggleButtonPressed]}
+          >
+            <Text style={styles.secondaryButtonText}>Clear check</Text>
+          </Pressable>
+        </View>
         <TextInput
           multiline
           onChangeText={setReceiptCheckSource}
@@ -209,6 +223,22 @@ const styles = StyleSheet.create({
   toggleText: {
     color: '#082f49',
     fontSize: 13,
+    fontWeight: '900',
+  },
+  secondaryButton: {
+    alignItems: 'center',
+    backgroundColor: '#1e293b',
+    borderColor: '#38bdf8',
+    borderRadius: 12,
+    borderWidth: 1,
+    flex: 1,
+    minWidth: 130,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  secondaryButtonText: {
+    color: '#e0f2fe',
+    fontSize: 12,
     fontWeight: '900',
   },
   exportBox: {
