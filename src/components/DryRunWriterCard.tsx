@@ -28,6 +28,14 @@ export const DryRunWriterCard = ({ result }: DryRunWriterCardProps) => (
       <Text style={styles.policyText}>Warnings / blockers · {result.requestSummary.warningCount} / {result.requestSummary.blockerCount}</Text>
     </View>
 
+    <View style={styles.policyBox}>
+      <Text style={styles.policyTitle}>Artifact fingerprints</Text>
+      <Text style={styles.policyText}>Ride · {result.requestSummary.rideArtifactFingerprint}</Text>
+      <Text style={styles.policyText}>Files · {result.requestSummary.approvedFilesFingerprint}</Text>
+      <Text style={styles.policyText}>Issues · {result.requestSummary.approvedIssuesFingerprint}</Text>
+      <Text style={styles.policyText}>Receipt preview · {result.requestSummary.receiptPreviewFingerprint}</Text>
+    </View>
+
     <View style={styles.stateGrid}>
       <View style={styles.statePill}>
         <Text style={styles.stateLabel}>Would create repo</Text>
