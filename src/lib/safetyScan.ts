@@ -8,7 +8,7 @@ import type {
   StarterFilePreview,
 } from '../types';
 
-const policyVersion = 'safety-policy-gate-v0.6';
+const policyVersion = 'safety-policy-gate-v0.7';
 
 const secretLikePatterns = [/\.env$/i, /secret/i, /token/i, /api[_-]?key/i, /credential/i, /password/i, /private[_-]?key/i];
 const unsafePathPatterns = [
@@ -185,11 +185,60 @@ const issueBodyWarningPatterns: RiskPattern[] = [
   },
 ];
 
+const packageLifecycleScripts = new Set(['preinstall', 'install', 'postinstall', 'prepare', 'prepublish', 'prepublishOnly']);
+const dependencySections = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const;
+
+const packageScriptBlockerPatterns: RiskPattern[] = [
+  {
+    category: 'package-script-risk',
+    id: 'package-script-remote-shell-pipe',
+    message: 'package.json script pipes remote output into a shell. Remove or replace with a reviewed local command.',
+    pattern: /\b(?:curl|wget)\b[^\n|]*\|\s*(?:sh|bash)\b/i,
+  },
+  {
+    category: 'package-script-risk',
+    id: 'package-script-destructive-root-command',
+    message: 'package.json script contains a destructive root filesystem command. Remove it before approval.',
+    pattern: /\brm\s+-rf\s+\/\s*(?:$|[;&|])/im,
+  },
+  {
+    category: 'package-script-risk',
+    id: 'package-script-broad-permission-command',
+    message: 'package.json script sets broad 777 permissions. Replace it with narrower reviewed permissions.',
+    pattern: /\bchmod\s+777\b/i,
+  },
+];
+
+const packageManagerWarningPatterns: RiskPattern[] = [
+  {
+    category: 'package-manager-command-risk',
+    id: 'package-manager-global-install',
+    message: 'package.json script runs a global package install. Review before any generated package can proceed.',
+    pattern: /\b(?:npm|pnpm|yarn)\s+(?:install|add|global\s+add)\b[^\n]*\s(?:-g|--global)\b/i,
+  },
+  {
+    category: 'package-manager-command-risk',
+    id: 'package-manager-force-install',
+    message: 'package.json script uses a force install or force audit fix. Review before approval.',
+    pattern: /\b(?:npm|pnpm|yarn)\b[^\n]*(?:--force|audit\s+fix\s+--force)\b/i,
+  },
+  {
+    category: 'package-manager-command-risk',
+    id: 'package-manager-npx-execution',
+    message: 'package.json script runs npx. Confirm the package and version are pinned and expected.',
+    pattern: /\bnpx\s+[^\n]+/i,
+  },
+];
+
+const suspiciousDependencyNamePattern = /(?:^|[-_/@])(?:token|secret|password|credential|stealer|malware)(?:$|[-_/@])/i;
+const dependencySourceWarningPattern = /^(?:git\+|file:|https?:\/\/)/i;
+
 const requiredGates = [
   'Every generated starter file must have a fresh content-bound approval.',
   'Every generated starter issue must have a fresh content-bound approval.',
   'Every safety warning or blocker must include rider-facing remediation guidance.',
   'The reviewed starter-file contents must pass local credential/destructive-command checks.',
+  'The reviewed package manifest contents must pass local script/dependency risk checks.',
   'The reviewed starter-issue bodies must pass local credential/destructive/security/ops risk classification.',
   'The dry-run writer must summarize the exact reviewed package before live mode can be considered.',
   'Any blocker finding must be resolved before mock create or future live writes proceed.',
@@ -197,10 +246,11 @@ const requiredGates = [
 ];
 
 const boundaryNotes = [
-  'Safety policy findings are local planning, reviewed file-content, and reviewed issue-body checks, not proof that a repository is safe to publish.',
+  'Safety policy findings are local planning, reviewed file-content, package-manifest, and reviewed issue-body checks, not proof that a repository is safe to publish.',
   'A passing safety report does not grant write authority and does not bypass human approvals.',
   'Remediation guidance is a local cleanup prompt for the rider and is not automatic repair or approval.',
   'Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.',
+  'Package manifest checks are local heuristics for starter package review and do not install dependencies or contact a package registry.',
   'Saved drafts, imported Markdown, and restored rides always reset review state and never carry safety approval forward.',
   'Future live write mode must treat any warning as an explicit review prompt and any blocker as a hard stop.',
 ];
@@ -243,6 +293,7 @@ const summarizePolicy = (
 const contentFindingId = (kind: string, path: string, id: string) => `${kind}:${id}:${path}`;
 const issueFindingId = (kind: string, issueIndex: number, id: string) => `${kind}:${id}:issue-${issueIndex + 1}`;
 const issuePath = (issueIndex: number, issue: RepoIssuePlan) => `issue:${issueIndex + 1}:${issue.title}`;
+const isPackageManifestFile = (path: string) => /(?:^|\/)package\.json$/i.test(path);
 
 const remediationForFinding = (finding: SafetyFinding) => {
   if (finding.id === 'baseline-pass') {
@@ -290,6 +341,18 @@ const remediationForFinding = (finding: SafetyFinding) => {
       return 'Add a clear issue body with safe acceptance criteria or remove the empty issue from the starter package.';
     case 'large-body':
       return 'Shorten or split the issue body so the starter issue remains reviewable before any future issue creation.';
+    case 'package-manifest-parse':
+      return 'Fix package.json syntax before approval. The package manifest must parse locally before it can be reviewed.';
+    case 'package-lifecycle-hook':
+      return 'Review lifecycle scripts such as install/postinstall/prepare. Remove broad setup hooks unless the rider explicitly approves them.';
+    case 'package-script-risk':
+      return 'Rewrite this package script to remove destructive, remote-shell, or broad-permission behavior before approval.';
+    case 'package-manager-command-risk':
+      return 'Avoid package-manager commands that install globally, force changes, or run unpinned packages. Replace them with reviewed local instructions.';
+    case 'package-dependency-name-risk':
+      return 'Review the dependency name. Remove suspicious or credential-like package names unless the rider explicitly approves the package.';
+    case 'package-dependency-source-risk':
+      return 'Use registry-pinned dependency versions where possible. Review git, file, or URL dependencies before approval.';
     case 'baseline':
       return 'No cleanup needed. Continue with fresh review and approval gates.';
     default:
@@ -303,6 +366,110 @@ const withRemediation = (finding: SafetyFinding): SafetyFinding => ({
   ...finding,
   remediation: finding.remediation ?? remediationForFinding(finding),
 });
+
+const scanPackageManifest = (file: StarterFilePreview) => {
+  const findings: SafetyFinding[] = [];
+
+  if (!isPackageManifestFile(file.path)) return findings;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(file.content);
+  } catch {
+    findings.push({
+      id: contentFindingId('package-manifest-warning', file.path, 'package-json-parse'),
+      severity: 'warning',
+      path: file.path,
+      category: 'package-manifest-parse',
+      message: 'Reviewed package.json content could not be parsed. Fix JSON syntax before package approval.',
+    });
+    return findings;
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    findings.push({
+      id: contentFindingId('package-manifest-warning', file.path, 'package-json-shape'),
+      severity: 'warning',
+      path: file.path,
+      category: 'package-manifest-parse',
+      message: 'Reviewed package.json content is not an object. Fix package manifest shape before approval.',
+    });
+    return findings;
+  }
+
+  const manifest = parsed as Record<string, unknown>;
+  const scripts = manifest.scripts && typeof manifest.scripts === 'object' && !Array.isArray(manifest.scripts)
+    ? manifest.scripts as Record<string, unknown>
+    : {};
+
+  Object.entries(scripts).forEach(([scriptName, command]) => {
+    if (typeof command !== 'string') return;
+
+    if (packageLifecycleScripts.has(scriptName)) {
+      findings.push({
+        id: contentFindingId('package-lifecycle-warning', file.path, scriptName),
+        severity: 'warning',
+        path: file.path,
+        category: 'package-lifecycle-hook',
+        message: `package.json lifecycle script "${scriptName}" requires explicit review before approval.`,
+      });
+    }
+
+    packageScriptBlockerPatterns.forEach((check) => {
+      if (check.pattern.test(command)) {
+        findings.push({
+          id: contentFindingId('package-script-blocker', file.path, `${scriptName}:${check.id}`),
+          severity: 'blocker',
+          path: file.path,
+          category: check.category,
+          message: `${check.message} Script: "${scriptName}".`,
+        });
+      }
+    });
+
+    packageManagerWarningPatterns.forEach((check) => {
+      if (check.pattern.test(command)) {
+        findings.push({
+          id: contentFindingId('package-manager-warning', file.path, `${scriptName}:${check.id}`),
+          severity: 'warning',
+          path: file.path,
+          category: check.category,
+          message: `${check.message} Script: "${scriptName}".`,
+        });
+      }
+    });
+  });
+
+  dependencySections.forEach((section) => {
+    const dependencies = manifest[section];
+
+    if (!dependencies || typeof dependencies !== 'object' || Array.isArray(dependencies)) return;
+
+    Object.entries(dependencies as Record<string, unknown>).forEach(([dependencyName, version]) => {
+      if (suspiciousDependencyNamePattern.test(dependencyName)) {
+        findings.push({
+          id: contentFindingId('package-dependency-warning', file.path, `${section}:${dependencyName}`),
+          severity: 'warning',
+          path: file.path,
+          category: 'package-dependency-name-risk',
+          message: `Dependency "${dependencyName}" in ${section} contains suspicious or credential-like wording. Review before approval.`,
+        });
+      }
+
+      if (typeof version === 'string' && dependencySourceWarningPattern.test(version)) {
+        findings.push({
+          id: contentFindingId('package-dependency-source-warning', file.path, `${section}:${dependencyName}`),
+          severity: 'warning',
+          path: file.path,
+          category: 'package-dependency-source-risk',
+          message: `Dependency "${dependencyName}" in ${section} uses a git/file/URL source. Review before approval.`,
+        });
+      }
+    });
+  });
+
+  return findings;
+};
 
 const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => {
   const findings: SafetyFinding[] = [];
@@ -353,6 +520,8 @@ const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => 
         });
       }
     }
+
+    findings.push(...scanPackageManifest(file));
   }
 
   return findings;
@@ -493,7 +662,7 @@ export const scanRepoPlan = (
       id: 'baseline-pass',
       severity: 'info',
       category: 'baseline',
-      message: 'No obvious safety blockers found in the starter repo plan, reviewed starter-file contents, or reviewed starter-issue bodies.',
+      message: 'No obvious safety blockers found in the starter repo plan, reviewed starter-file contents, package manifests, or reviewed starter-issue bodies.',
     });
   }
 
@@ -515,6 +684,11 @@ export const scanRepoPlan = (
   const pathPolicyStatus: SafetyPolicyCheckStatus = findingsWithRemediation.some((finding) => (
     finding.id.startsWith('secret-like-path') || finding.id.startsWith('unsafe-path')
   )) ? 'blocker' : 'pass';
+  const packageManifestCount = reviewedStarterFiles.filter((file) => isPackageManifestFile(file.path)).length;
+  const packageFindings = reviewedContentFindings.filter((finding) => finding.category?.startsWith('package-'));
+  const packageBlockerCount = packageFindings.filter((finding) => finding.severity === 'blocker').length;
+  const packageWarningCount = packageFindings.filter((finding) => finding.severity === 'warning').length;
+  const packageManifestCheckStatus: SafetyPolicyCheckStatus = packageBlockerCount > 0 ? 'blocker' : packageWarningCount > 0 ? 'warning' : 'pass';
 
   const checks: SafetyPolicyCheck[] = [
     buildCheck(
@@ -549,7 +723,13 @@ export const scanRepoPlan = (
       'reviewed-file-content-policy',
       'Reviewed file content policy',
       contentCheckStatus,
-      `Reviewed ${reviewedStarterFiles.length} file draft(s) and ${reviewedFileContentCharacters} character(s) for credential-like or destructive content signals.`,
+      `Reviewed ${reviewedStarterFiles.length} file draft(s) and ${reviewedFileContentCharacters} character(s) for credential-like, destructive, and package-manifest risk signals.`,
+    ),
+    buildCheck(
+      'package-manifest-policy',
+      'Package manifest policy',
+      packageManifestCheckStatus,
+      `Reviewed ${packageManifestCount} package manifest draft(s) for lifecycle scripts, package-manager command risk, dependency names, and dependency sources.`,
     ),
     buildCheck(
       'starter-issue-count-policy',
