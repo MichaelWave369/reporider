@@ -16,7 +16,7 @@ The scanner does not request OAuth, read credentials, install dependencies, reso
 safety-policy-gate-v0.8
 ```
 
-The version is included in the safety report, dry-run writer summary, seed receipts, mock-create receipts, Ride Complete summary, and Markdown ride receipt export so future live-mode work can tell which policy produced a decision.
+The version is included in the safety report, dry-run writer summary, seed receipts, mock-create receipts, Ride Complete summary, Markdown ride receipt export, and typed JSON ride receipt export so future live-mode work can tell which policy produced a decision.
 
 ## Reviewed scope
 
@@ -187,12 +187,31 @@ Policy coupling is part of the receipt contract:
 - Mock-create results carry the same safety metadata in the summary.
 - Mock-create receipts include a dedicated safety policy receipt.
 - Markdown ride receipts export the policy version, safety status, warnings, blockers, and receipt-level policy metadata.
+- Typed JSON ride receipts export the same policy metadata, artifact fingerprints, receipt hashes, and boundary notes in a machine-readable shape.
 
 This is still not write authority. It only proves which local safety policy reviewed the current ride package.
 
+## Typed JSON receipt verification
+
+RepoRider includes a local typed JSON receipt verifier for `reporider.ride-receipt.v1` exports.
+
+The verifier checks:
+
+- JSON parseability.
+- Format id.
+- Safety policy version and status presence.
+- Ride, file, issue, and receipt-chain fingerprint presence.
+- Receipt list presence.
+- Receipt `previousReceiptHash` links.
+- Recomputed per-receipt hashes.
+- Final receipt-chain hash consistency.
+- Boundary-note presence.
+
+Verification does not restore approvals, import state, create repositories, write files, open issues, sign receipts, or anchor hashes remotely. It only reports local internal consistency for a pasted JSON receipt payload.
+
 ## Fixture coverage
 
-The safety fixture suite covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, reviewed package manifest, reviewed issue body, remediation, and receipt policy-coupling examples.
+The safety fixture suite covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, reviewed package manifest, reviewed issue body, remediation, receipt policy-coupling, receipt fingerprint, typed JSON export, and typed JSON verification examples.
 
 Covered package-manifest examples include:
 
@@ -214,6 +233,8 @@ Covered receipt-coupling examples include:
 - Mock-create summary policy metadata.
 - Mock-create receipt policy metadata.
 - Markdown export policy metadata.
+- Typed JSON export policy metadata.
+- Typed JSON verification for valid, tampered, broken-chain, missing-boundary, and parse-failure payloads.
 
 Run the suite with:
 
@@ -221,7 +242,7 @@ Run the suite with:
 npm run test:safety
 ```
 
-The fixture suite is not exhaustive and does not prove a future repository is safe. It only confirms that the covered safety policy behaviors continue to trigger expected warnings, blockers, remediation guidance, and policy-coupled receipt metadata.
+The fixture suite is not exhaustive and does not prove a future repository is safe. It only confirms that the covered safety policy behaviors continue to trigger expected warnings, blockers, remediation guidance, policy-coupled receipt metadata, receipt fingerprints, JSON exports, and JSON verification results.
 
 ## Boundary notes
 
@@ -231,6 +252,7 @@ The fixture suite is not exhaustive and does not prove a future repository is sa
 - Remediation guidance is a local cleanup prompt for the rider and is not automatic repair or approval.
 - Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.
 - Package manifest checks do not install dependencies, resolve dependency ranges, validate license compatibility, or contact a package registry.
+- Typed JSON verification does not import approvals, restore review state, or certify a remote repository.
 - Saved drafts, imported Markdown, and restored rides always reset review state and never carry safety approval forward.
 - Future live write mode must treat any warning as an explicit review prompt and any blocker as a hard stop.
 
@@ -246,5 +268,5 @@ Future policy waves can add:
 
 - More language-aware file scanners.
 - License-sensitive content checks.
-- Receipt hashes tying policy version + approved artifacts together.
 - One-click local remediation helpers that propose edits without applying them automatically.
+- Optional signed receipt envelopes if live-write authority is ever introduced.
