@@ -10,8 +10,18 @@ const formatReceiptSafety = (receipt: Receipt) => (
     : ''
 );
 
+const formatReceiptHashes = (receipt: Receipt) => {
+  const parts = [
+    receipt.artifactFingerprint ? `artifact ${receipt.artifactFingerprint}` : undefined,
+    receipt.previousReceiptHash ? `previous ${receipt.previousReceiptHash}` : undefined,
+    receipt.receiptHash ? `hash ${receipt.receiptHash}` : undefined,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? ` — ${parts.join(' · ')}` : '';
+};
+
 const formatReceipt = (receipt: Receipt) => (
-  `- **${receipt.status.toUpperCase()}** · ${receipt.action} — ${receipt.detail}${formatReceiptSafety(receipt)}`
+  `- **${receipt.status.toUpperCase()}** · ${receipt.action} — ${receipt.detail}${formatReceiptSafety(receipt)}${formatReceiptHashes(receipt)}`
 );
 
 const formatReceipts = (receipts: Receipt[]) => (receipts.length > 0
@@ -46,6 +56,13 @@ export const buildMarkdownRideReceipt = (result: GithubCreateRepoResult) => `# R
 - **Warnings:** ${result.summary.safetyWarningCount}
 - **Blockers:** ${result.summary.safetyBlockerCount}
 
+## Artifact Fingerprints
+
+- **Ride artifact:** ${result.summary.rideArtifactFingerprint}
+- **Approved files:** ${result.summary.approvedFilesFingerprint}
+- **Approved issues:** ${result.summary.approvedIssuesFingerprint}
+- **Receipt chain:** ${result.summary.receiptChainHash}
+
 ## Approval Summary
 
 - **Write artifacts:** ${result.summary.writeArtifactCount}
@@ -71,5 +88,5 @@ ${formatReceipts(result.receipts)}
 
 ## Boundary
 
-RepoRider generated this Markdown from the same typed create result shown on the Ride Complete screen. In mock mode, no token is requested, no remote repository is created, no files are pushed, and no issues are opened. The safety policy section records which local policy version reviewed the ride package.
+RepoRider generated this Markdown from the same typed create result shown on the Ride Complete screen. In mock mode, no token is requested, no remote repository is created, no files are pushed, and no issues are opened. The safety policy section records which local policy version reviewed the ride package, and the artifact fingerprint section ties the approved file/issue package to the receipt chain.
 `;
