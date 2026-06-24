@@ -57,6 +57,16 @@ The current fixture suite covers:
   - Expected status: `needs-review`
   - Expected category: `high-risk-file`
 
+- **Empty reviewed file warning**
+  - Empty reviewed starter-file content
+  - Expected status: `needs-review`
+  - Expected category: `empty-content`
+
+- **Large reviewed file warning**
+  - Unusually large reviewed starter-file content
+  - Expected status: `needs-review`
+  - Expected category: `large-content`
+
 - **Reviewed file blocker**
   - Private-key-like block in reviewed starter-file content
   - Expected status: `blocked`
@@ -66,6 +76,21 @@ The current fixture suite covers:
   - Remote script piped into shell in reviewed starter-file content
   - Expected status: `needs-review`
   - Expected category: `remote-execution`
+
+- **Empty reviewed issue body warning**
+  - Empty reviewed starter-issue body
+  - Expected status: `needs-review`
+  - Expected category: `empty-body`
+
+- **Large reviewed issue body warning**
+  - Unusually large reviewed starter-issue text
+  - Expected status: `needs-review`
+  - Expected category: `large-body`
+
+- **Large generated issue set warning**
+  - More than 10 starter issues in the reviewed issue set
+  - Expected status: `needs-review`
+  - Expected category: `large-issue-set`
 
 - **Reviewed issue blocker**
   - GitHub-token-like value inside reviewed issue text
@@ -109,8 +134,6 @@ A passing fixture suite only confirms that the current safety scanner still reco
 Future fixture waves should add coverage for:
 
 - Absolute paths.
-- Large issue sets.
-- Empty reviewed files and issue bodies.
 - Credential-reference warning examples.
 - Security disclosure warning examples.
 - Privileged-operation warning examples.
