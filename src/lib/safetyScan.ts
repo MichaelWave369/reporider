@@ -8,7 +8,7 @@ import type {
   StarterFilePreview,
 } from '../types';
 
-const policyVersion = 'safety-policy-gate-v0.7';
+const policyVersion = 'safety-policy-gate-v0.8';
 
 const secretLikePatterns = [/\.env$/i, /secret/i, /token/i, /api[_-]?key/i, /credential/i, /password/i, /private[_-]?key/i];
 const unsafePathPatterns = [
@@ -231,14 +231,15 @@ const packageManagerWarningPatterns: RiskPattern[] = [
 ];
 
 const suspiciousDependencyNamePattern = /(?:^|[-_/@])(?:token|secret|password|credential|stealer|malware)(?:$|[-_/@])/i;
-const dependencySourceWarningPattern = /^(?:git\+|file:|https?:\/\/)/i;
+const dependencySourceWarningPattern = /^(?:git\+|github:|file:|https?:\/\/)/i;
+const unpinnedDependencyRangePattern = /(?:^\s*(?:[~^*]|latest\s*$|next\s*$|canary\s*$|>|<|>=|<=)|\bx\b|\*|\|\|)/i;
 
 const requiredGates = [
   'Every generated starter file must have a fresh content-bound approval.',
   'Every generated starter issue must have a fresh content-bound approval.',
   'Every safety warning or blocker must include rider-facing remediation guidance.',
   'The reviewed starter-file contents must pass local credential/destructive-command checks.',
-  'The reviewed package manifest contents must pass local script/dependency risk checks.',
+  'The reviewed package manifest contents must pass local script, dependency, license, private-flag, version-range, and source checks.',
   'The reviewed starter-issue bodies must pass local credential/destructive/security/ops risk classification.',
   'The dry-run writer must summarize the exact reviewed package before live mode can be considered.',
   'Any blocker finding must be resolved before mock create or future live writes proceed.',
@@ -250,7 +251,7 @@ const boundaryNotes = [
   'A passing safety report does not grant write authority and does not bypass human approvals.',
   'Remediation guidance is a local cleanup prompt for the rider and is not automatic repair or approval.',
   'Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.',
-  'Package manifest checks are local heuristics for starter package review and do not install dependencies or contact a package registry.',
+  'Package manifest checks are local heuristics for starter package review and do not install dependencies, resolve versions, validate licenses externally, or contact a package registry.',
   'Saved drafts, imported Markdown, and restored rides always reset review state and never carry safety approval forward.',
   'Future live write mode must treat any warning as an explicit review prompt and any blocker as a hard stop.',
 ];
@@ -294,6 +295,18 @@ const contentFindingId = (kind: string, path: string, id: string) => `${kind}:${
 const issueFindingId = (kind: string, issueIndex: number, id: string) => `${kind}:${id}:issue-${issueIndex + 1}`;
 const issuePath = (issueIndex: number, issue: RepoIssuePlan) => `issue:${issueIndex + 1}:${issue.title}`;
 const isPackageManifestFile = (path: string) => /(?:^|\/)package\.json$/i.test(path);
+
+const dependencySourceKind = (version: string) => {
+  if (/^git\+/i.test(version) || /^github:/i.test(version)) return 'git-source';
+  if (/^file:/i.test(version)) return 'file-source';
+  if (/^https?:\/\//i.test(version)) return 'url-source';
+  return null;
+};
+
+const isUnpinnedDependencyRange = (version: string) => {
+  if (dependencySourceWarningPattern.test(version)) return false;
+  return unpinnedDependencyRangePattern.test(version.trim());
+};
 
 const remediationForFinding = (finding: SafetyFinding) => {
   if (finding.id === 'baseline-pass') {
@@ -353,6 +366,12 @@ const remediationForFinding = (finding: SafetyFinding) => {
       return 'Review the dependency name. Remove suspicious or credential-like package names unless the rider explicitly approves the package.';
     case 'package-dependency-source-risk':
       return 'Use registry-pinned dependency versions where possible. Review git, file, or URL dependencies before approval.';
+    case 'package-license-review':
+      return 'Add an explicit license value or document why this package should remain unlicensed before approval.';
+    case 'package-private-visibility-risk':
+      return 'Align package privacy with repo intent. Private-first starter packages should set private: true unless publishability is intentionally reviewed.';
+    case 'package-dependency-range-risk':
+      return 'Pin dependency versions exactly for starter packages, or document why the range is intentional before approval.';
     case 'baseline':
       return 'No cleanup needed. Continue with fresh review and approval gates.';
     default:
@@ -367,7 +386,7 @@ const withRemediation = (finding: SafetyFinding): SafetyFinding => ({
   remediation: finding.remediation ?? remediationForFinding(finding),
 });
 
-const scanPackageManifest = (file: StarterFilePreview) => {
+const scanPackageManifest = (file: StarterFilePreview, planVisibility: RepoPlan['visibility']) => {
   const findings: SafetyFinding[] = [];
 
   if (!isPackageManifestFile(file.path)) return findings;
@@ -401,6 +420,36 @@ const scanPackageManifest = (file: StarterFilePreview) => {
   const scripts = manifest.scripts && typeof manifest.scripts === 'object' && !Array.isArray(manifest.scripts)
     ? manifest.scripts as Record<string, unknown>
     : {};
+
+  if (typeof manifest.license !== 'string' || manifest.license.trim().length === 0) {
+    findings.push({
+      id: contentFindingId('package-license-warning', file.path, 'package-license-missing'),
+      severity: 'warning',
+      path: file.path,
+      category: 'package-license-review',
+      message: 'Reviewed package.json is missing an explicit license field. Review before approval.',
+    });
+  }
+
+  if (planVisibility === 'private' && manifest.private !== true) {
+    findings.push({
+      id: contentFindingId('package-private-warning', file.path, 'private-repo-package-not-private'),
+      severity: 'warning',
+      path: file.path,
+      category: 'package-private-visibility-risk',
+      message: 'Private repo plan has a package.json that is not marked private. Review publishability before approval.',
+    });
+  }
+
+  if (planVisibility === 'public' && manifest.private === true) {
+    findings.push({
+      id: contentFindingId('package-private-warning', file.path, 'public-repo-package-private'),
+      severity: 'warning',
+      path: file.path,
+      category: 'package-private-visibility-risk',
+      message: 'Public repo plan has a package.json marked private. Confirm this mismatch is intentional before approval.',
+    });
+  }
 
   Object.entries(scripts).forEach(([scriptName, command]) => {
     if (typeof command !== 'string') return;
@@ -456,13 +505,27 @@ const scanPackageManifest = (file: StarterFilePreview) => {
         });
       }
 
-      if (typeof version === 'string' && dependencySourceWarningPattern.test(version)) {
+      if (typeof version !== 'string') return;
+
+      const sourceKind = dependencySourceKind(version);
+      if (sourceKind) {
         findings.push({
-          id: contentFindingId('package-dependency-source-warning', file.path, `${section}:${dependencyName}`),
+          id: contentFindingId('package-dependency-source-warning', file.path, `${section}:${dependencyName}:${sourceKind}`),
           severity: 'warning',
           path: file.path,
           category: 'package-dependency-source-risk',
-          message: `Dependency "${dependencyName}" in ${section} uses a git/file/URL source. Review before approval.`,
+          message: `Dependency "${dependencyName}" in ${section} uses a ${sourceKind.replace('-', ' ')} dependency source. Review before approval.`,
+        });
+        return;
+      }
+
+      if (isUnpinnedDependencyRange(version)) {
+        findings.push({
+          id: contentFindingId('package-dependency-range-warning', file.path, `${section}:${dependencyName}`),
+          severity: 'warning',
+          path: file.path,
+          category: 'package-dependency-range-risk',
+          message: `Dependency "${dependencyName}" in ${section} uses an unpinned version range. Pin or explicitly review before approval.`,
         });
       }
     });
@@ -471,7 +534,7 @@ const scanPackageManifest = (file: StarterFilePreview) => {
   return findings;
 };
 
-const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => {
+const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[], planVisibility: RepoPlan['visibility']) => {
   const findings: SafetyFinding[] = [];
 
   for (const file of reviewedStarterFiles) {
@@ -521,7 +584,7 @@ const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => 
       }
     }
 
-    findings.push(...scanPackageManifest(file));
+    findings.push(...scanPackageManifest(file, planVisibility));
   }
 
   return findings;
@@ -651,7 +714,7 @@ export const scanRepoPlan = (
     });
   }
 
-  const reviewedContentFindings = scanReviewedFileContent(reviewedStarterFiles);
+  const reviewedContentFindings = scanReviewedFileContent(reviewedStarterFiles, plan.visibility);
   findings.push(...reviewedContentFindings);
 
   const reviewedIssueFindings = scanReviewedIssueBodies(reviewedStarterIssues);
@@ -729,7 +792,7 @@ export const scanRepoPlan = (
       'package-manifest-policy',
       'Package manifest policy',
       packageManifestCheckStatus,
-      `Reviewed ${packageManifestCount} package manifest draft(s) for lifecycle scripts, package-manager command risk, dependency names, and dependency sources.`,
+      `Reviewed ${packageManifestCount} package manifest draft(s) for lifecycle scripts, package-manager command risk, dependency names, dependency versions, dependency sources, licenses, and private flags.`,
     ),
     buildCheck(
       'starter-issue-count-policy',
