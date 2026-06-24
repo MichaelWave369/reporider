@@ -128,6 +128,7 @@ export type SafetyFinding = {
   message: string;
   path?: string;
   category?: string;
+  remediation?: string;
 };
 
 export type SafetyPolicyCheckStatus = 'pass' | 'warning' | 'blocker';
