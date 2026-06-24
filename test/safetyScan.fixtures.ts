@@ -24,6 +24,12 @@ const hasFinding = (
   finding.id.includes(idFragment)
 ));
 
+const hasFindingId = (
+  report: ReturnType<typeof scanRepoPlan>,
+  severity: SafetyFindingSeverity,
+  id: string,
+) => report.findings.some((finding) => finding.severity === severity && finding.id === id);
+
 const basePlan: RepoPlan = {
   name: 'camping-checklist',
   description: 'Mobile-first camping checklist app.',
@@ -67,6 +73,118 @@ assertEqual(safeReport.blockerCount, 0, 'Known-safe fixture should not produce b
 assertEqual(safeReport.reviewedScope.reviewedFileContentCount, 1, 'Known-safe fixture should count reviewed file content');
 assertEqual(safeReport.reviewedScope.reviewedIssueContentCount, 1, 'Known-safe fixture should count reviewed issue content');
 assert(safeReport.findings.some((finding) => finding.id === 'baseline-pass'), 'Known-safe fixture should include baseline pass finding');
+
+const unsafeRepoNameReport = scanRepoPlan(
+  {
+    ...basePlan,
+    name: '../camping-checklist',
+  },
+  [safeReviewedFile],
+  [safeReviewedIssue],
+);
+assertEqual(unsafeRepoNameReport.status, 'blocked', 'Unsafe repo name fixture should block');
+assert(
+  hasFindingId(unsafeRepoNameReport, 'blocker', 'unsafe-repo-name'),
+  'Unsafe repo name fixture should produce unsafe-repo-name blocker',
+);
+
+const publicVisibilityReport = scanRepoPlan(
+  {
+    ...basePlan,
+    visibility: 'public',
+  },
+  [safeReviewedFile],
+  [safeReviewedIssue],
+);
+assertEqual(publicVisibilityReport.status, 'needs-review', 'Public visibility fixture should require review');
+assert(
+  hasFinding(publicVisibilityReport, 'warning', 'visibility-review', 'public-repo-review'),
+  'Public visibility fixture should produce visibility-review warning',
+);
+
+const secretLikePathReport = scanRepoPlan(
+  {
+    ...basePlan,
+    files: [
+      ...basePlan.files,
+      {
+        path: '.env',
+        purpose: 'Unsafe environment file placeholder that should never be committed.',
+        riskLevel: 'medium',
+      },
+    ],
+  },
+  [safeReviewedFile],
+  [safeReviewedIssue],
+);
+assertEqual(secretLikePathReport.status, 'blocked', 'Secret-like path fixture should block');
+assert(
+  hasFinding(secretLikePathReport, 'blocker', 'secret-like-path', 'secret-like-path:.env'),
+  'Secret-like path fixture should produce secret-like-path blocker',
+);
+
+const traversalPathReport = scanRepoPlan(
+  {
+    ...basePlan,
+    files: [
+      ...basePlan.files,
+      {
+        path: '../outside.md',
+        purpose: 'Unsafe traversal path that should stay outside the repo.',
+        riskLevel: 'medium',
+      },
+    ],
+  },
+  [safeReviewedFile],
+  [safeReviewedIssue],
+);
+assertEqual(traversalPathReport.status, 'blocked', 'Traversal path fixture should block');
+assert(
+  hasFinding(traversalPathReport, 'blocker', 'unsafe-path', 'unsafe-path:../outside.md'),
+  'Traversal path fixture should produce unsafe-path blocker',
+);
+
+const keyFilePathReport = scanRepoPlan(
+  {
+    ...basePlan,
+    files: [
+      ...basePlan.files,
+      {
+        path: 'deploy/id_rsa',
+        purpose: 'Unsafe private key filename placeholder.',
+        riskLevel: 'medium',
+      },
+    ],
+  },
+  [safeReviewedFile],
+  [safeReviewedIssue],
+);
+assertEqual(keyFilePathReport.status, 'blocked', 'Key file path fixture should block');
+assert(
+  hasFinding(keyFilePathReport, 'blocker', 'unsafe-path', 'unsafe-path:deploy/id_rsa'),
+  'Key file path fixture should produce unsafe-path blocker',
+);
+
+const highRiskFileReport = scanRepoPlan(
+  {
+    ...basePlan,
+    files: [
+      ...basePlan.files,
+      {
+        path: 'scripts/deploy.sh',
+        purpose: 'Deployment script placeholder requiring human review.',
+        riskLevel: 'high',
+      },
+    ],
+  },
+  [safeReviewedFile],
+  [safeReviewedIssue],
+);
+assertEqual(highRiskFileReport.status, 'needs-review', 'High-risk file fixture should require review');
+assert(
+  hasFinding(highRiskFileReport, 'warning', 'high-risk-file', 'high-risk-file:scripts/deploy.sh'),
+  'High-risk file fixture should produce high-risk-file warning',
+);
 
 const fileBlockerReport = scanRepoPlan(
   basePlan,
