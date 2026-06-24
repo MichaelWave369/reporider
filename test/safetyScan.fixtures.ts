@@ -30,6 +30,13 @@ const hasFindingId = (
   id: string,
 ) => report.findings.some((finding) => finding.severity === severity && finding.id === id);
 
+const assertFindingsHaveRemediation = (report: ReturnType<typeof scanRepoPlan>, label: string) => {
+  assert(
+    report.findings.every((finding) => typeof finding.remediation === 'string' && finding.remediation.trim().length > 0),
+    `${label} should include rider-facing remediation for every finding`,
+  );
+};
+
 const basePlan: RepoPlan = {
   name: 'camping-checklist',
   description: 'Mobile-first camping checklist app.',
@@ -337,5 +344,24 @@ assert(
   hasFinding(issueWarningReport, 'warning', 'production-impact', 'issue-production-impact'),
   'OAuth/production issue fixture should produce production-impact warning',
 );
+
+[
+  ['known-safe', safeReport],
+  ['unsafe repo name', unsafeRepoNameReport],
+  ['public visibility', publicVisibilityReport],
+  ['secret-like path', secretLikePathReport],
+  ['traversal path', traversalPathReport],
+  ['key file path', keyFilePathReport],
+  ['high-risk file', highRiskFileReport],
+  ['empty reviewed file', emptyReviewedFileReport],
+  ['large reviewed file', largeReviewedFileReport],
+  ['file blocker', fileBlockerReport],
+  ['file warning', fileWarningReport],
+  ['empty issue body', emptyIssueBodyReport],
+  ['large issue body', largeIssueBodyReport],
+  ['large issue set', largeIssueSetReport],
+  ['issue blocker', issueBlockerReport],
+  ['issue warning', issueWarningReport],
+].forEach(([label, report]) => assertFindingsHaveRemediation(report as ReturnType<typeof scanRepoPlan>, label as string));
 
 console.log('Safety scan fixtures passed.');
