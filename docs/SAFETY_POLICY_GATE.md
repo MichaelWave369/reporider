@@ -140,7 +140,7 @@ The report includes required gates that future live-mode work must respect:
 
 ## Fixture coverage
 
-The safety fixture suite now covers representative plan, path, visibility, high-risk file, reviewed file content, and reviewed issue body examples.
+The safety fixture suite now covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, and reviewed issue body examples.
 
 Covered path-policy examples include:
 
@@ -150,6 +150,14 @@ Covered path-policy examples include:
 - Traversal paths.
 - Private-key-like generated paths.
 - High-risk generated files.
+
+Covered size/completeness examples include:
+
+- Empty reviewed file content.
+- Large reviewed file content.
+- Empty reviewed issue bodies.
+- Large reviewed issue bodies.
+- Large generated issue sets.
 
 Run the suite with:
 
@@ -178,8 +186,6 @@ If the safety report is not `pass`, the dry-run writer records blockers or warni
 Future policy waves can add:
 
 - Absolute path fixture coverage.
-- Larger issue-set fixture coverage.
-- Empty reviewed content fixture coverage.
 - More language-aware file scanners.
 - Dependency and package manifest checks.
 - License-sensitive content checks.
