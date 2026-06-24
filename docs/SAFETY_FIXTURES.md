@@ -25,6 +25,7 @@ The current fixture suite covers:
   - Safe file path
   - Safe reviewed file content
   - Safe reviewed issue text
+  - Safe `package.json` manifest with `private: true`, explicit license, and exact dependency pins
   - Expected status: `pass`
   - Expected finding remediation: present
 
@@ -52,22 +53,8 @@ The current fixture suite covers:
   - Expected category: `unsafe-path`
   - Expected remediation: move to a safe repo-relative path
 
-- **Unix absolute path blocker**
-  - Generated path that starts from the filesystem root, such as `/tmp/reporider/README.md`
-  - Expected status: `blocked`
-  - Expected category: `unsafe-path`
-  - Expected named check: `file-path-policy` is `blocker`
-  - Expected remediation: safe repo-relative path guidance
-
-- **Windows drive-letter absolute path blocker**
-  - Generated paths such as `C:\Users\rider\RepoRider\README.md` and `C:/Users/rider/RepoRider/README.md`
-  - Expected status: `blocked`
-  - Expected category: `unsafe-path`
-  - Expected named check: `file-path-policy` is `blocker`
-  - Expected remediation: safe repo-relative path guidance
-
-- **Windows UNC absolute path blocker**
-  - Generated network paths such as `\\server\share\RepoRider\README.md`
+- **Absolute path blockers**
+  - Unix root paths, Windows drive-letter paths, and Windows UNC paths
   - Expected status: `blocked`
   - Expected category: `unsafe-path`
   - Expected named check: `file-path-policy` is `blocker`
@@ -83,30 +70,20 @@ The current fixture suite covers:
   - Expected status: `needs-review`
   - Expected category: `high-risk-file`
 
-- **Empty reviewed file warning**
+- **Empty / large reviewed file warnings**
   - Empty reviewed starter-file content
-  - Expected status: `needs-review`
-  - Expected category: `empty-content`
-
-- **Large reviewed file warning**
   - Unusually large reviewed starter-file content
   - Expected status: `needs-review`
-  - Expected category: `large-content`
+  - Expected categories: `empty-content` and `large-content`
 
-- **Reviewed file blocker**
+- **Reviewed file content risk**
   - Private-key-like block in reviewed starter-file content
-  - Expected status: `blocked`
-  - Expected category: `credential-material`
-  - Expected remediation: remove credential-like material and use placeholders
-
-- **Reviewed file warning**
   - Remote script piped into shell in reviewed starter-file content
-  - Expected status: `needs-review`
-  - Expected category: `remote-execution`
-  - Expected remediation: avoid pipe-to-shell instructions
+  - Expected statuses: `blocked` or `needs-review`
+  - Expected categories: `credential-material` and `remote-execution`
 
 - **Package manifest pass**
-  - Safe reviewed `package.json` with simple local scripts and pinned registry dependency
+  - Safe reviewed `package.json` with simple local scripts, `private: true`, explicit license, and pinned registry dependency
   - Expected status: `pass`
   - Expected named check: `package-manifest-policy` is `pass`
 
@@ -117,56 +94,59 @@ The current fixture suite covers:
   - Expected named check: `package-manifest-policy` is `warning`
 
 - **Package script blocker**
-  - package script with remote shell pipe, destructive root command, or broad permissions
+  - Package script with remote shell pipe, destructive root command, or broad permissions
   - Expected status: `blocked`
   - Expected category: `package-script-risk`
   - Expected named check: `package-manifest-policy` is `blocker`
 
 - **Package-manager command warning**
-  - package script using global installs, force installs/audit fix, or `npx` execution
+  - Package script using global installs, force installs/audit fix, or `npx` execution
   - Expected status: `needs-review`
   - Expected category: `package-manager-command-risk`
 
 - **Package dependency name warning**
-  - dependency names with suspicious or credential-like wording
+  - Dependency names with suspicious or credential-like wording
   - Expected status: `needs-review`
   - Expected category: `package-dependency-name-risk`
 
 - **Package dependency source warning**
-  - dependency versions using `git+`, `file:`, or URL sources
+  - Dependency versions using `git+`, `github:`, `file:`, or URL sources
   - Expected status: `needs-review`
   - Expected category: `package-dependency-source-risk`
 
+- **Package license warning**
+  - Missing or blank `license` field
+  - Expected status: `needs-review`
+  - Expected category: `package-license-review`
+
+- **Package private / visibility mismatch warning**
+  - Private repo package not marked `private: true`
+  - Public repo package marked `private: true`
+  - Expected status: `needs-review`
+  - Expected category: `package-private-visibility-risk`
+
+- **Package dependency range warning**
+  - Caret, tilde, wildcard, `latest`, `next`, canary, or inequality dependency ranges
+  - Expected status: `needs-review`
+  - Expected category: `package-dependency-range-risk`
+
 - **Package manifest parse warning**
-  - invalid `package.json` content
+  - Invalid `package.json` content
   - Expected status: `needs-review`
   - Expected category: `package-manifest-parse`
 
-- **Empty reviewed issue body warning**
+- **Empty / large reviewed issue warnings**
   - Empty reviewed starter-issue body
-  - Expected status: `needs-review`
-  - Expected category: `empty-body`
-
-- **Large reviewed issue body warning**
   - Unusually large reviewed starter-issue text
-  - Expected status: `needs-review`
-  - Expected category: `large-body`
-
-- **Large generated issue set warning**
   - More than 10 starter issues in the reviewed issue set
   - Expected status: `needs-review`
-  - Expected category: `large-issue-set`
+  - Expected categories: `empty-body`, `large-body`, and `large-issue-set`
 
-- **Reviewed issue blocker**
+- **Reviewed issue risk**
   - GitHub-token-like value inside reviewed issue text
-  - Expected status: `blocked`
-  - Expected category: `credential-material`
-  - Expected remediation: remove token-like material and use placeholders
-
-- **Reviewed issue warning**
   - OAuth and production-deployment language inside reviewed issue text
-  - Expected status: `needs-review`
-  - Expected categories: `auth-flow-risk` and `production-impact`
+  - Expected statuses: `blocked` or `needs-review`
+  - Expected categories: `credential-material`, `auth-flow-risk`, and `production-impact`
 
 ## Remediation coverage
 
@@ -185,7 +165,7 @@ npm run typecheck
 npm run test:safety
 ```
 
-This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, and remediation guidance coverage.
+This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, and remediation guidance coverage.
 
 ## Boundary
 
@@ -196,6 +176,8 @@ They do not:
 - Request OAuth.
 - Read, store, or validate real tokens.
 - Install dependencies.
+- Resolve dependency versions.
+- Validate external license compatibility.
 - Contact a package registry.
 - Create repositories.
 - Push files.
