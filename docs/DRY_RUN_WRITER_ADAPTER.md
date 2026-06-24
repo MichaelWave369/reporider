@@ -23,6 +23,8 @@ That lets the UI answer:
 
 - Which current starter-file drafts have fresh approvals?
 - Which current starter issues have fresh approvals?
+- Which safety policy version reviewed this package?
+- What safety status did that policy return?
 - Would the repo creation package be blocked by safety findings?
 - How many files would be pushed if live mode existed?
 - How many issues would be opened if live mode existed?
@@ -52,6 +54,8 @@ The adapter returns a `DryRunWriterResult` with:
 - approved file count
 - approved issue count
 - receipt preview count
+- safety policy version
+- safety status
 - safety warning count
 - safety blocker count
 - blocking reasons
@@ -68,6 +72,12 @@ The current dry-run writer blocks promotion if:
 - live-mode state is not armed for real writes
 
 Because live-mode state is currently `mock_only`, live promotion remains blocked even if all reviewed artifacts are approved.
+
+## Receipt coupling
+
+The dry-run writer records the active safety policy version and safety status in its typed summary and in a boundary note.
+
+This makes dry-run output receipt-ready without implying write authority. It lets the UI, future logs, and later handoffs prove which local policy reviewed the package.
 
 ## Boundary
 
