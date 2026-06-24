@@ -151,8 +151,10 @@ export type SafetyReviewedScope = {
   visibility: RepoVisibility;
 };
 
+export type SafetyStatus = 'pass' | 'needs-review' | 'blocked';
+
 export type SafetyReport = {
-  status: 'pass' | 'needs-review' | 'blocked';
+  status: SafetyStatus;
   policyVersion: string;
   summary: string;
   warningCount: number;
@@ -170,6 +172,8 @@ export type Receipt = {
   status: 'planned' | 'approved' | 'completed' | 'blocked';
   detail: string;
   timestamp: string;
+  safetyPolicyVersion?: string;
+  safetyStatus?: SafetyStatus;
 };
 
 export type GithubCreateRepoRequest = {
@@ -186,6 +190,10 @@ export type GithubCreateRepoSummary = {
   editedFileCount: number;
   editedIssueCount: number;
   receiptCount: number;
+  safetyPolicyVersion: string;
+  safetyStatus: SafetyStatus;
+  safetyWarningCount: number;
+  safetyBlockerCount: number;
   totalFileDraftCharacters: number;
   totalIssueDraftCharacters: number;
   writeArtifactCount: number;
