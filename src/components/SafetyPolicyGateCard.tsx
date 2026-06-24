@@ -28,11 +28,19 @@ export const SafetyPolicyGateCard = ({ report }: SafetyPolicyGateCardProps) => (
       </View>
       <View style={styles.metricBox}>
         <Text style={styles.metricValue}>{report.reviewedScope.fileCount}</Text>
-        <Text style={styles.metricLabel}>Files checked</Text>
+        <Text style={styles.metricLabel}>Plan files</Text>
       </View>
       <View style={styles.metricBox}>
         <Text style={styles.metricValue}>{report.reviewedScope.issueCount}</Text>
         <Text style={styles.metricLabel}>Issues checked</Text>
+      </View>
+      <View style={styles.metricBox}>
+        <Text style={styles.metricValue}>{report.reviewedScope.reviewedFileContentCount}</Text>
+        <Text style={styles.metricLabel}>Content files</Text>
+      </View>
+      <View style={styles.metricBox}>
+        <Text style={styles.metricValue}>{report.reviewedScope.reviewedFileContentCharacters}</Text>
+        <Text style={styles.metricLabel}>Content chars</Text>
       </View>
     </View>
 
@@ -44,6 +52,14 @@ export const SafetyPolicyGateCard = ({ report }: SafetyPolicyGateCardProps) => (
           <Text style={styles.checkStatus}>{check.status}</Text>
         </View>
         <Text style={styles.checkSummary}>{check.summary}</Text>
+      </View>
+    ))}
+
+    <Text style={styles.sectionTitle}>Findings</Text>
+    {report.findings.slice(0, 8).map((finding) => (
+      <View key={`${finding.id}:${finding.path ?? 'global'}`} style={styles.findingRow}>
+        <Text style={styles.findingSeverity}>{finding.severity}</Text>
+        <Text style={styles.findingMessage}>{finding.path ? `${finding.path}: ${finding.message}` : finding.message}</Text>
       </View>
     ))}
 
@@ -145,6 +161,25 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   checkSummary: {
+    color: '#cbd5e1',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  findingRow: {
+    backgroundColor: '#0f172a',
+    borderColor: '#1e293b',
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 4,
+    padding: 12,
+  },
+  findingSeverity: {
+    color: '#fde68a',
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  findingMessage: {
     color: '#cbd5e1',
     fontSize: 13,
     lineHeight: 18,
