@@ -174,6 +174,9 @@ export type Receipt = {
   timestamp: string;
   safetyPolicyVersion?: string;
   safetyStatus?: SafetyStatus;
+  artifactFingerprint?: string;
+  previousReceiptHash?: string;
+  receiptHash?: string;
 };
 
 export type GithubCreateRepoRequest = {
@@ -187,9 +190,13 @@ export type GithubCreateRepoRequest = {
 export type GithubCreateRepoSummary = {
   approvedFileCount: number;
   approvedIssueCount: number;
+  approvedFilesFingerprint: string;
+  approvedIssuesFingerprint: string;
   editedFileCount: number;
   editedIssueCount: number;
+  receiptChainHash: string;
   receiptCount: number;
+  rideArtifactFingerprint: string;
   safetyPolicyVersion: string;
   safetyStatus: SafetyStatus;
   safetyWarningCount: number;
