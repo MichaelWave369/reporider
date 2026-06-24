@@ -8,6 +8,12 @@ import type {
   StarterFilePreview,
 } from '../types';
 import { isLiveModeWriteReady } from './liveModeState';
+import {
+  buildApprovedFilesFingerprint,
+  buildApprovedIssuesFingerprint,
+  buildReceiptPreviewFingerprint,
+  buildRideArtifactFingerprint,
+} from './receiptFingerprint';
 
 export type DryRunWriterStatus = 'dry_run_ready' | 'blocked';
 
@@ -26,6 +32,10 @@ export type DryRunWriterSummary = {
   wouldPushFileCount: number;
   wouldOpenIssueCount: number;
   receiptPreviewCount: number;
+  receiptPreviewFingerprint: string;
+  approvedFilesFingerprint: string;
+  approvedIssuesFingerprint: string;
+  rideArtifactFingerprint: string;
   safetyPolicyVersion: string;
   safetyStatus: SafetyStatus;
   warningCount: number;
@@ -87,13 +97,22 @@ export const dryRunWriterAdapter: DryRunWriterAdapter = {
     const canPromoteToLiveWrite = blockingReasons.length === 0;
     const status: DryRunWriterStatus = canPromoteToLiveWrite ? 'dry_run_ready' : 'blocked';
     const wouldCreateRepository = request.approvedByUser && request.safetyReport.status === 'pass';
+    const approvedFilesFingerprint = buildApprovedFilesFingerprint(request.approvedStarterFiles);
+    const approvedIssuesFingerprint = buildApprovedIssuesFingerprint(request.approvedStarterIssues);
+    const receiptPreviewFingerprint = buildReceiptPreviewFingerprint(request.receiptPreview);
+    const rideArtifactFingerprint = buildRideArtifactFingerprint({
+      approvedFiles: request.approvedStarterFiles,
+      approvedIssues: request.approvedStarterIssues,
+      plan: request.plan,
+      safetyReport: request.safetyReport,
+    });
 
     return {
       mode: 'dry_run',
       status,
       label: canPromoteToLiveWrite ? 'Dry-run ready' : 'Dry-run blocked',
       summary: canPromoteToLiveWrite
-        ? `The reviewed artifacts passed ${request.safetyReport.policyVersion} and are dry-run ready, but this adapter still performs no GitHub writes.`
+        ? `The reviewed artifacts passed ${request.safetyReport.policyVersion} and are dry-run ready with artifact fingerprint ${rideArtifactFingerprint}, but this adapter still performs no GitHub writes.`
         : `The dry-run writer can summarize reviewed artifacts, but live write promotion is blocked by ${request.safetyReport.policyVersion} / ${request.safetyReport.status}.`,
       canPromoteToLiveWrite,
       requestSummary: {
@@ -101,6 +120,10 @@ export const dryRunWriterAdapter: DryRunWriterAdapter = {
         wouldPushFileCount: request.approvedStarterFiles.length,
         wouldOpenIssueCount: request.approvedStarterIssues.length,
         receiptPreviewCount: request.receiptPreview.length,
+        receiptPreviewFingerprint,
+        approvedFilesFingerprint,
+        approvedIssuesFingerprint,
+        rideArtifactFingerprint,
         safetyPolicyVersion: request.safetyReport.policyVersion,
         safetyStatus: request.safetyReport.status,
         warningCount: request.safetyReport.warningCount,
@@ -112,6 +135,7 @@ export const dryRunWriterAdapter: DryRunWriterAdapter = {
         'Dry-run output is receipt-ready planning data, not permission to perform a later live write.',
         'Saved drafts, imported Markdown, restored history, and exported receipts never bypass fresh approvals.',
         `Dry-run receipts are coupled to safety policy ${request.safetyReport.policyVersion} with status ${request.safetyReport.status}.`,
+        `Artifact fingerprints: files ${approvedFilesFingerprint}, issues ${approvedIssuesFingerprint}, ride ${rideArtifactFingerprint}.`,
       ],
     };
   },
