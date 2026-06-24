@@ -65,9 +65,11 @@ const assertUnsafeAbsolutePath = (report: SafetyReport, path: string, label: str
     report.findings.some((finding) => (
       finding.severity === 'blocker' &&
       finding.category === 'unsafe-path' &&
-      finding.id === `unsafe-path:${path}`
+      finding.id === `unsafe-path:${path}` &&
+      typeof finding.remediation === 'string' &&
+      finding.remediation.includes('safe repo-relative path')
     )),
-    `${label} fixture should produce unsafe-path blocker`,
+    `${label} fixture should produce unsafe-path blocker with remediation`,
   );
   assert(
     report.checks.some((check) => (
