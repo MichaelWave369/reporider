@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { buildJsonRideReceipt } from '../lib/rideReceiptJson';
 import { buildMarkdownRideReceipt } from '../lib/rideReceiptMarkdown';
 import type { GithubCreateRepoResult } from '../types';
 
@@ -7,51 +8,69 @@ type RideReceiptExportCardProps = {
   result: GithubCreateRepoResult;
 };
 
+type ExportFormat = 'markdown' | 'json';
+
 const countLines = (content: string) => content.split('\n').length;
 
 export const RideReceiptExportCard = ({ result }: RideReceiptExportCardProps) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expandedFormat, setExpandedFormat] = useState<ExportFormat | null>(null);
   const markdownReceipt = useMemo(() => buildMarkdownRideReceipt(result), [result]);
+  const jsonReceipt = useMemo(() => buildJsonRideReceipt(result), [result]);
+  const activeReceipt = expandedFormat === 'json' ? jsonReceipt : markdownReceipt;
+
+  const toggleFormat = (format: ExportFormat) => {
+    setExpandedFormat((current) => (current === format ? null : format));
+  };
 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Export Receipt</Text>
-          <Text style={styles.heading}>Copy-ready Markdown</Text>
+          <Text style={styles.heading}>Copy-ready Markdown + JSON</Text>
           <Text style={styles.helper}>
-            Share this mock ride summary in notes, a PR, an issue, or a handoff. It is generated from the same typed result shown above.
+            Share Markdown with humans or JSON with tools. Both exports are generated from the same typed result shown above.
           </Text>
         </View>
         <View style={styles.statBadge}>
-          <Text style={styles.statValue}>{countLines(markdownReceipt)}</Text>
+          <Text style={styles.statValue}>{countLines(activeReceipt)}</Text>
           <Text style={styles.statLabel}>lines</Text>
         </View>
       </View>
 
       <View style={styles.metaRow}>
-        <Text style={styles.metaPill}>{markdownReceipt.length} chars</Text>
+        <Text style={styles.metaPill}>{markdownReceipt.length} md chars</Text>
+        <Text style={styles.metaPill}>{jsonReceipt.length} json chars</Text>
         <Text style={styles.metaPill}>{result.summary.writeArtifactCount} artifacts</Text>
         <Text style={styles.metaPill}>{result.summary.receiptCount} receipts</Text>
       </View>
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => setExpanded((current) => !current)}
-        style={({ pressed }) => [styles.toggleButton, pressed && styles.toggleButtonPressed]}
-      >
-        <Text style={styles.toggleText}>{expanded ? 'Hide Markdown Receipt' : 'Show Markdown Receipt'}</Text>
-      </Pressable>
+      <View style={styles.buttonRow}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => toggleFormat('markdown')}
+          style={({ pressed }) => [styles.toggleButton, pressed && styles.toggleButtonPressed, expandedFormat === 'markdown' && styles.toggleButtonActive]}
+        >
+          <Text style={styles.toggleText}>{expandedFormat === 'markdown' ? 'Hide Markdown' : 'Show Markdown'}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => toggleFormat('json')}
+          style={({ pressed }) => [styles.toggleButton, pressed && styles.toggleButtonPressed, expandedFormat === 'json' && styles.toggleButtonActive]}
+        >
+          <Text style={styles.toggleText}>{expandedFormat === 'json' ? 'Hide JSON' : 'Show JSON'}</Text>
+        </Pressable>
+      </View>
 
-      {expanded ? (
+      {expandedFormat ? (
         <View style={styles.exportBox}>
           <Text style={styles.exportHelp}>Tap into the box, then use your device/browser select and copy controls.</Text>
           <TextInput
             editable={false}
             multiline
             selectTextOnFocus
-            style={styles.markdownInput}
-            value={markdownReceipt}
+            style={styles.exportInput}
+            value={activeReceipt}
           />
         </View>
       ) : null}
@@ -128,12 +147,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   toggleButton: {
     alignItems: 'center',
     backgroundColor: '#38bdf8',
     borderRadius: 14,
+    flex: 1,
+    minWidth: 130,
     paddingHorizontal: 12,
     paddingVertical: 11,
+  },
+  toggleButtonActive: {
+    backgroundColor: '#67e8f9',
   },
   toggleButtonPressed: {
     opacity: 0.82,
@@ -152,7 +181,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 16,
   },
-  markdownInput: {
+  exportInput: {
     backgroundColor: '#020617',
     borderColor: '#1e293b',
     borderRadius: 14,
