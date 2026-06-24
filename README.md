@@ -17,7 +17,7 @@ The goal is simple:
 - Typed token storage adapter seam with a null adapter that stores no credentials
 - Typed live-mode state machine locked to mock-only writes in this build
 - Receipt-ready dry-run writer adapter contract that performs no GitHub writes
-- Strengthened safety policy gate with policy version, named checks, reviewed-content scope, warning/blocker counts, and live-write boundary notes
+- Strengthened safety policy gate with policy version, named checks, reviewed file/issue content scope, warning/blocker counts, and live-write boundary notes
 - Live idea-to-repo planner
 - Editable repo name, visibility, stack, and starter issue controls
 - Session-only saved draft slots for in-progress idea/plan steering
@@ -44,6 +44,7 @@ The goal is simple:
 - Content-sensitive approval fingerprints that stale out after edits
 - Code-stack `package.json` planning
 - Reviewed starter-file content safety scan for credential-like and destructive-command signals
+- Reviewed starter-issue body risk classification for credential, destructive, disclosure, ops, auth, and remote-execution signals
 - Mock create-repo ride flow that receives reviewed and approved file and issue drafts
 - GitHub write boundary model
 - OAuth/write-mode architecture contract before live GitHub writes
@@ -66,7 +67,7 @@ That means the app can simulate the full ride from approval to repo creation wit
 3. **Check token storage** — user sees the current null token storage adapter, which stores no credentials and keeps live writes blocked.
 4. **Check live mode** — user sees the typed live-mode state machine, currently `mock_only`, with arming, writing, and retry all blocked.
 5. **Check dry-run writer** — user sees the receipt-ready writer contract summarize approved artifacts and blocking reasons without performing GitHub writes.
-6. **Check safety policy** — user sees the strengthened safety policy gate with policy version, plan scope, reviewed content scope, named checks, warnings, blockers, and required gates.
+6. **Check safety policy** — user sees the strengthened safety policy gate with policy version, plan scope, reviewed file/issue content scope, named checks, warnings, blockers, and required gates.
 7. **Capture** — user speaks or types a rough idea.
 8. **Shape** — RepoRider turns it into a structured project brief.
 9. **Steer** — user edits repo name, visibility, starter stack, and issue count.
@@ -88,7 +89,7 @@ That means the app can simulate the full ride from approval to repo creation wit
 25. **Edit issues** — user can tweak starter issue titles, bodies, and labels.
 26. **Approve issues** — every current starter-issue draft must be approved before create unlocks.
 27. **Ledger** — user reviews one unified approval receipt with file status, issue status, edit status, and compact fingerprints.
-28. **Guard** — safety checks catch unsafe repo names, public visibility review needs, secrets, dangerous file names, risky defaults, reviewed-file credential-like content, destructive file content, and starter issue risk signals.
+28. **Guard** — safety checks catch unsafe repo names, public visibility review needs, secrets, dangerous file names, risky defaults, reviewed-file credential/destructive content, and reviewed-issue credential/security/ops/auth risk signals.
 29. **Create** — approved starter files and approved starter issues are pushed/opened on GitHub once live mode exists.
 30. **Complete** — user sees a final Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, and receipts.
 31. **Export ride** — user can open a copy-ready Markdown ride receipt for notes, PRs, issues, or handoffs.
@@ -101,7 +102,7 @@ That means the app can simulate the full ride from approval to repo creation wit
 
 The current planner is local and deterministic. As the idea text changes, RepoRider regenerates the suggested repo plan, safety report, approval state, receipt preview, generated starter file previews, and generated starter issue previews.
 
-The rider can review the permission explainer, inspect the current mock-only auth capability state, inspect the null token storage adapter state, inspect the mock-only live-mode state machine, inspect the dry-run writer summary, inspect the strengthened safety policy gate with reviewed file content checks, override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, save the current idea/steering controls into a session-only draft slot, label saved draft slots, duplicate a saved draft slot into a fresh branch slot, reorder saved draft slots in the session list, pin priority saved draft slots to the top, archive lower-priority saved draft slots away from the active console without deleting them, export a saved draft slot as copy-ready Markdown, paste a saved draft Markdown snapshot, preview the extracted planning inputs, save the preview as a session-only draft slot without changing the current editor, restore the preview as a fresh draft, edit starter-file drafts, compare generated vs rider-edited drafts, approve each file, edit starter issue drafts, approve each issue, review a unified approval ledger before creation, inspect a ride-complete summary after mock creation, export a copy-ready Markdown ride receipt, revisit recent mock ride receipts during the same app session, and restore either a completed ride's planning inputs or a saved in-progress draft as a fresh draft. Editing a file or issue after approval makes that artifact require approval again, because approvals are tied to the current draft content.
+The rider can review the permission explainer, inspect the current mock-only auth capability state, inspect the null token storage adapter state, inspect the mock-only live-mode state machine, inspect the dry-run writer summary, inspect the strengthened safety policy gate with reviewed file content checks and reviewed issue body risk classification, override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, save the current idea/steering controls into a session-only draft slot, label saved draft slots, duplicate a saved draft slot into a fresh branch slot, reorder saved draft slots in the session list, pin priority saved draft slots to the top, archive lower-priority saved draft slots away from the active console without deleting them, export a saved draft slot as copy-ready Markdown, paste a saved draft Markdown snapshot, preview the extracted planning inputs, save the preview as a session-only draft slot without changing the current editor, restore the preview as a fresh draft, edit starter-file drafts, compare generated vs rider-edited drafts, approve each file, edit starter issue drafts, approve each issue, review a unified approval ledger before creation, inspect a ride-complete summary after mock creation, export a copy-ready Markdown ride receipt, revisit recent mock ride receipts during the same app session, and restore either a completed ride's planning inputs or a saved in-progress draft as a fresh draft. Editing a file or issue after approval makes that artifact require approval again, because approvals are tied to the current draft content.
 
 It keeps repositories private by default, infers likely starter stacks from idea text, chooses starter files from the selected stack, includes `package.json` for code stacks, generates a first starter file preview set, and creates a small first issue set. It does not write to GitHub by itself.
 
