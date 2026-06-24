@@ -45,13 +45,14 @@ The goal is simple:
 - Code-stack `package.json` planning
 - Reviewed starter-file content safety scan for credential-like and destructive-command signals
 - Reviewed starter-issue body risk classification for credential, destructive, disclosure, ops, auth, and remote-execution signals
+- Safety fixture coverage for known-safe, warning, and blocker examples in reviewed file and issue content
 - Mock create-repo ride flow that receives reviewed and approved file and issue drafts
 - GitHub write boundary model
 - OAuth/write-mode architecture contract before live GitHub writes
 - Receipt ledger model for every meaningful action
 - Product spec and architecture docs
 - GitHub issue/PR templates
-- Basic CI typecheck workflow
+- Basic CI typecheck workflow plus safety fixture checks
 - MIT license
 
 ## Current mode
@@ -129,6 +130,14 @@ For TypeScript checks:
 npm run typecheck
 ```
 
+For local safety fixture checks:
+
+```bash
+npm run test:safety
+```
+
+CI runs both `npm run typecheck` and `npm run test:safety`.
+
 ## Docs
 
 Start with:
@@ -143,6 +152,7 @@ Start with:
 - `docs/LIVE_MODE_STATE_MACHINE.md`
 - `docs/DRY_RUN_WRITER_ADAPTER.md`
 - `docs/SAFETY_POLICY_GATE.md`
+- `docs/SAFETY_FIXTURES.md`
 - `docs/PLANNER.md`
 - `docs/README_PREVIEW.md`
 - `docs/STARTER_FILE_PREVIEWS.md`
