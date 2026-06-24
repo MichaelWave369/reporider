@@ -24,11 +24,18 @@ export const RideCompleteSummaryCard = ({ result }: RideCompleteSummaryCardProps
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Ride Complete</Text>
           <Text style={styles.heading}>Mock repo creation summary</Text>
-          <Text style={styles.helper}>This final receipt summarizes the approved write package that would be created in live mode.</Text>
+          <Text style={styles.helper}>This final receipt summarizes the approved write package and the safety policy that reviewed it.</Text>
         </View>
         <View style={styles.modeBadge}>
           <Text style={styles.modeText}>{result.mode}</Text>
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Safety policy receipt</Text>
+        <Text style={styles.itemStrong}>{result.summary.safetyPolicyVersion}</Text>
+        <Text style={styles.itemLine}>status · {result.summary.safetyStatus}</Text>
+        <Text style={styles.itemLine}>warnings / blockers · {result.summary.safetyWarningCount} / {result.summary.safetyBlockerCount}</Text>
       </View>
 
       <View style={styles.section}>
