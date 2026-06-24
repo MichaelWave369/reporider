@@ -93,6 +93,10 @@ The scanner currently emits named checks for:
 
 Findings may include a category to make review easier. Current categories include:
 
+- `visibility-review`
+- `secret-like-path`
+- `unsafe-path`
+- `high-risk-file`
 - `credential-material`
 - `credential-reference`
 - `destructive-command`
@@ -102,6 +106,8 @@ Findings may include a category to make review easier. Current categories includ
 - `privileged-operation`
 - `production-impact`
 - `auth-flow-risk`
+- `empty-content`
+- `large-content`
 - `empty-body`
 - `large-body`
 - `large-issue-set`
@@ -134,46 +140,48 @@ The report includes required gates that future live-mode work must respect:
 
 ## Fixture coverage
 
-The safety policy gate now has local fixture coverage through:
+The safety fixture suite now covers representative plan, path, visibility, high-risk file, reviewed file content, and reviewed issue body examples.
+
+Covered path-policy examples include:
+
+- Unsafe repo names.
+- Public visibility warnings.
+- Secret-like generated paths.
+- Traversal paths.
+- Private-key-like generated paths.
+- High-risk generated files.
+
+Run the suite with:
 
 ```bash
 npm run test:safety
 ```
 
-The fixture suite currently covers:
-
-- Known-safe reviewed file and issue content.
-- Private-key-like reviewed file blockers.
-- Remote-shell-pipe reviewed file warnings.
-- GitHub-token-like reviewed issue blockers.
-- OAuth/production reviewed issue warnings.
-
-See `docs/SAFETY_FIXTURES.md` for the current fixture contract and expansion list.
+The fixture suite is not exhaustive and does not prove a future repository is safe. It only confirms that the covered safety policy behaviors continue to trigger expected warnings and blockers.
 
 ## Boundary notes
 
-The safety policy gate does not grant write authority.
-
-A passing report does not mean live writes can happen. It only means the current local policy did not find warnings or blockers in the generated plan, reviewed starter-file contents, or reviewed starter-issue bodies.
-
-Reviewed file and issue content is scanned locally from the current app state. This gate does not send reviewed content to GitHub.
-
-Saved drafts, imported Markdown, restored rides, and exported receipts do not carry safety approval forward. Review state is reset when planning inputs are restored.
+- Safety policy findings are local planning, reviewed file-content, and reviewed issue-body checks, not proof that a repository is safe to publish.
+- A passing safety report does not grant write authority and does not bypass human approvals.
+- Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.
+- Saved drafts, imported Markdown, and restored rides always reset review state and never carry safety approval forward.
+- Future live write mode must treat any warning as an explicit review prompt and any blocker as a hard stop.
 
 ## Relationship to dry-run writer
 
-The dry-run writer consumes the strengthened safety report.
+The dry-run writer consumes the safety report as an input.
 
-If the safety report is not `pass`, the dry-run writer remains blocked.
-
-If blockers exist, the dry-run writer includes the blocker count in its blocking reasons.
+If the safety report is not `pass`, the dry-run writer records blockers or warnings in its receipt-ready summary. This keeps safety findings visible before any future live writer exists.
 
 ## Future work
 
-Before real live writes exist, the safety policy should be expanded again to include:
+Future policy waves can add:
 
-- Protected file path allow/deny lists.
-- Large write-set review gates.
-- Explicit user confirmation for public repos.
-- Receipt hashes tied to the exact policy version and reviewed content package.
-- More fixture coverage for repo names, path policy, visibility, high-risk files, large issue sets, empty content, and warning-category edges.
+- Absolute path fixture coverage.
+- Larger issue-set fixture coverage.
+- Empty reviewed content fixture coverage.
+- More language-aware file scanners.
+- Dependency and package manifest checks.
+- License-sensitive content checks.
+- Receipt hashes tying policy version + approved artifacts together.
+- User-facing remediation suggestions for each finding category.
