@@ -12,8 +12,8 @@ npm run test:safety
 
 This command:
 
-1. Compiles only the safety scanner, shared types, and fixture file with `tsconfig.safety-tests.json`.
-2. Runs the compiled fixture file with Node.
+1. Compiles only the safety scanner, shared types, and fixture files with `tsconfig.safety-tests.json`.
+2. Runs the compiled fixture files with Node.
 3. Deletes the temporary `.safety-test-build/` output directory.
 
 ## Current fixture buckets
@@ -46,6 +46,12 @@ The current fixture suite covers:
   - Generated path that escapes the repo root, such as `../outside.md`
   - Expected status: `blocked`
   - Expected category: `unsafe-path`
+
+- **Unix absolute path blocker**
+  - Generated path that starts from the filesystem root, such as `/tmp/reporider/README.md`
+  - Expected status: `blocked`
+  - Expected category: `unsafe-path`
+  - Expected named check: `file-path-policy` is `blocker`
 
 - **Key-file path blocker**
   - Generated path with private-key-like filename, such as `deploy/id_rsa`
@@ -133,7 +139,8 @@ A passing fixture suite only confirms that the current safety scanner still reco
 
 Future fixture waves should add coverage for:
 
-- Absolute paths.
+- Windows drive-letter absolute paths.
+- Windows UNC absolute paths.
 - Credential-reference warning examples.
 - Security disclosure warning examples.
 - Privileged-operation warning examples.
