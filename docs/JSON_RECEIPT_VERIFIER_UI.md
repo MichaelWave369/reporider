@@ -6,6 +6,8 @@ RepoRider includes a local JSON receipt check surface in the ride receipt export
 
 The card lets a rider paste a RepoRider typed JSON ride receipt and see a compact local verification summary.
 
+It also includes a **Use current JSON** helper that fills the check box with the current ride's JSON export, making it easy to test the export/check loop without manual copy and paste.
+
 It uses the same `verifyJsonRideReceipt` helper that is covered by the safety fixture suite.
 
 ## What it checks
@@ -23,6 +25,13 @@ The preview reports the verifier result for:
 - Boundary note presence.
 
 The preview shows a compact result status, summary, policy/status pills, receipt count, and the first several checks so mobile screens stay readable.
+
+## Helper controls
+
+- **Use current JSON** fills the check box with the current ride's JSON export.
+- **Clear check** empties the check box and hides the current result.
+
+These controls only change the preview text area. They do not change ride history, approvals, reviewed files, reviewed issues, or safety state.
 
 ## Boundary
 
