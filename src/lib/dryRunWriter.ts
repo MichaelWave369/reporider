@@ -4,6 +4,7 @@ import type {
   RepoIssuePlan,
   RepoPlan,
   SafetyReport,
+  SafetyStatus,
   StarterFilePreview,
 } from '../types';
 import { isLiveModeWriteReady } from './liveModeState';
@@ -25,6 +26,8 @@ export type DryRunWriterSummary = {
   wouldPushFileCount: number;
   wouldOpenIssueCount: number;
   receiptPreviewCount: number;
+  safetyPolicyVersion: string;
+  safetyStatus: SafetyStatus;
   warningCount: number;
   blockerCount: number;
   blockingReasons: string[];
@@ -66,7 +69,7 @@ const buildBlockingReasons = (request: DryRunWriterRequest) => {
   }
 
   if (request.safetyReport.status !== 'pass') {
-    reasons.push(`Safety policy gate is ${request.safetyReport.status}, not pass.`);
+    reasons.push(`Safety policy ${request.safetyReport.policyVersion} is ${request.safetyReport.status}, not pass.`);
   }
 
   if (!isLiveModeWriteReady(request.liveModeState)) {
@@ -90,14 +93,16 @@ export const dryRunWriterAdapter: DryRunWriterAdapter = {
       status,
       label: canPromoteToLiveWrite ? 'Dry-run ready' : 'Dry-run blocked',
       summary: canPromoteToLiveWrite
-        ? 'The reviewed artifacts are dry-run ready, but this adapter still performs no GitHub writes.'
-        : 'The dry-run writer can summarize reviewed artifacts, but live write promotion is blocked.',
+        ? `The reviewed artifacts passed ${request.safetyReport.policyVersion} and are dry-run ready, but this adapter still performs no GitHub writes.`
+        : `The dry-run writer can summarize reviewed artifacts, but live write promotion is blocked by ${request.safetyReport.policyVersion} / ${request.safetyReport.status}.`,
       canPromoteToLiveWrite,
       requestSummary: {
         wouldCreateRepository,
         wouldPushFileCount: request.approvedStarterFiles.length,
         wouldOpenIssueCount: request.approvedStarterIssues.length,
         receiptPreviewCount: request.receiptPreview.length,
+        safetyPolicyVersion: request.safetyReport.policyVersion,
+        safetyStatus: request.safetyReport.status,
         warningCount: request.safetyReport.warningCount,
         blockerCount: request.safetyReport.blockerCount,
         blockingReasons,
@@ -106,6 +111,7 @@ export const dryRunWriterAdapter: DryRunWriterAdapter = {
         'This adapter does not create repositories, push files, open issues, request OAuth, or read credentials.',
         'Dry-run output is receipt-ready planning data, not permission to perform a later live write.',
         'Saved drafts, imported Markdown, restored history, and exported receipts never bypass fresh approvals.',
+        `Dry-run receipts are coupled to safety policy ${request.safetyReport.policyVersion} with status ${request.safetyReport.status}.`,
       ],
     };
   },
