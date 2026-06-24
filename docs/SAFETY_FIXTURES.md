@@ -2,7 +2,7 @@
 
 RepoRider includes a lightweight local safety fixture suite for the safety policy gate.
 
-The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, remediation, and receipt policy-coupling examples without adding a heavyweight test framework.
+The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, remediation, receipt policy-coupling, and receipt fingerprint examples without adding a heavyweight test framework.
 
 ## Current command
 
@@ -155,6 +155,14 @@ The current fixture suite covers:
   - Mock-create receipts carry receipt-level safety policy metadata
   - Markdown ride receipt export includes policy version, safety status, warnings, blockers, and receipt-level policy metadata
 
+- **Receipt fingerprint coupling**
+  - Seed receipts carry a seed artifact fingerprint
+  - Dry-run summaries carry approved-file, approved-issue, receipt-preview, and ride artifact fingerprints
+  - Mock-create summaries carry approved-file, approved-issue, ride artifact, and receipt-chain fingerprints
+  - Mock-create receipts carry artifact fingerprints, previous receipt hashes, and receipt hashes
+  - Markdown ride receipt export includes ride artifact, approved file, approved issue, receipt chain, and per-receipt hash metadata
+  - Expected hash prefixes: `seed-`, `files-`, `issues-`, `ride-`, `receipt-preview-`, and `receipt-`
+
 ## Remediation coverage
 
 The fixture suite asserts that every finding produced by the main safety fixture suite includes non-empty rider-facing remediation guidance.
@@ -165,6 +173,8 @@ The package-manifest suite asserts that package warnings and blockers include re
 
 The receipt-policy suite asserts that safety policy version/status metadata flows through seed receipts, dry-run summaries, mock-create summaries, mock-create receipts, and Markdown exports.
 
+The receipt fingerprint suite asserts that approved artifact fingerprints and receipt-chain hashes flow through dry-run summaries, mock-create summaries, mock-create receipts, and Markdown exports.
+
 ## CI relationship
 
 The CI workflow runs:
@@ -174,7 +184,7 @@ npm run typecheck
 npm run test:safety
 ```
 
-This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, remediation guidance coverage, and receipt policy-coupling behavior.
+This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, remediation guidance coverage, receipt policy-coupling behavior, and receipt fingerprint/chain behavior.
 
 ## Boundary
 
@@ -193,9 +203,11 @@ They do not:
 - Open issues.
 - Auto-repair findings.
 - Prove a future repository is safe to publish.
+- Cryptographically sign receipts.
+- Anchor receipt hashes to a remote ledger.
 - Grant write authority.
 
-A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, remediation, and receipt policy-coupling examples.
+A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, remediation, receipt policy-coupling, and receipt fingerprint examples.
 
 ## Future fixture expansion
 
@@ -204,5 +216,5 @@ Future fixture waves should add coverage for:
 - Credential-reference warning examples.
 - Security disclosure warning examples.
 - Privileged-operation warning examples.
-- Receipt hashes tying policy version + approved artifact fingerprints together.
 - Local remediation preview helpers once remediation proposals exist.
+- Optional signed receipt envelopes if live-write authority is ever introduced.
