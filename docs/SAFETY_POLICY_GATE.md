@@ -16,7 +16,7 @@ The scanner does not request OAuth, read credentials, install dependencies, reso
 safety-policy-gate-v0.8
 ```
 
-The version is included in the safety report so future live-mode work can tell which policy produced a decision.
+The version is included in the safety report, dry-run writer summary, seed receipts, mock-create receipts, Ride Complete summary, and Markdown ride receipt export so future live-mode work can tell which policy produced a decision.
 
 ## Reviewed scope
 
@@ -174,12 +174,25 @@ The report includes required gates that future live-mode work must respect:
 - The reviewed package manifest contents must pass local script, dependency, license, private-flag, version-range, and source checks.
 - The reviewed starter-issue bodies must pass local credential/destructive/security/ops risk classification.
 - The dry-run writer must summarize the exact reviewed package before live mode can be considered.
+- Dry-run and mock-create receipts must record the active safety policy version and safety status that reviewed the package.
 - Any blocker finding must be resolved before mock create or future live writes proceed.
 - Future live writes still require OAuth, secure token storage, and an armed live-mode state.
 
+## Receipt coupling
+
+Policy coupling is part of the receipt contract:
+
+- Seed receipts carry `safetyPolicyVersion` and `safetyStatus`.
+- Dry-run summaries carry `safetyPolicyVersion`, `safetyStatus`, warning count, and blocker count.
+- Mock-create results carry the same safety metadata in the summary.
+- Mock-create receipts include a dedicated safety policy receipt.
+- Markdown ride receipts export the policy version, safety status, warnings, blockers, and receipt-level policy metadata.
+
+This is still not write authority. It only proves which local safety policy reviewed the current ride package.
+
 ## Fixture coverage
 
-The safety fixture suite covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, reviewed package manifest, reviewed issue body, and remediation examples.
+The safety fixture suite covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, reviewed package manifest, reviewed issue body, remediation, and receipt policy-coupling examples.
 
 Covered package-manifest examples include:
 
@@ -194,18 +207,27 @@ Covered package-manifest examples include:
 - Unpinned dependency range warnings.
 - Invalid `package.json` parse warnings.
 
+Covered receipt-coupling examples include:
+
+- Seed receipt policy metadata.
+- Dry-run summary policy metadata.
+- Mock-create summary policy metadata.
+- Mock-create receipt policy metadata.
+- Markdown export policy metadata.
+
 Run the suite with:
 
 ```bash
 npm run test:safety
 ```
 
-The fixture suite is not exhaustive and does not prove a future repository is safe. It only confirms that the covered safety policy behaviors continue to trigger expected warnings, blockers, and remediation guidance.
+The fixture suite is not exhaustive and does not prove a future repository is safe. It only confirms that the covered safety policy behaviors continue to trigger expected warnings, blockers, remediation guidance, and policy-coupled receipt metadata.
 
 ## Boundary notes
 
 - Safety policy findings are local planning, reviewed file-content, package-manifest, and reviewed issue-body checks, not proof that a repository is safe to publish.
 - A passing safety report does not grant write authority and does not bypass human approvals.
+- Policy-coupled receipts record local review metadata; they do not prove a remote write happened.
 - Remediation guidance is a local cleanup prompt for the rider and is not automatic repair or approval.
 - Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.
 - Package manifest checks do not install dependencies, resolve dependency ranges, validate license compatibility, or contact a package registry.
@@ -216,7 +238,7 @@ The fixture suite is not exhaustive and does not prove a future repository is sa
 
 The dry-run writer consumes the safety report as an input.
 
-If the safety report is not `pass`, the dry-run writer records blockers or warnings in its receipt-ready summary. This keeps safety findings visible before any future live writer exists.
+If the safety report is not `pass`, the dry-run writer records blockers or warnings in its receipt-ready summary. It also records the safety policy version and safety status that produced the decision. This keeps safety findings visible before any future live writer exists.
 
 ## Future work
 
