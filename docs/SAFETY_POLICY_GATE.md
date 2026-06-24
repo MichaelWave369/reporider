@@ -15,7 +15,7 @@ The scanner does not request OAuth, read credentials, create repositories, push 
 Current version:
 
 ```text
-safety-policy-gate-v0.4
+safety-policy-gate-v0.5
 ```
 
 The version is included in the safety report so future live-mode work can tell which policy produced a decision.
@@ -51,6 +51,8 @@ The scanner currently emits named checks for:
 3. **File path policy**
    - Blocks secret-like file paths.
    - Blocks Unix-style absolute paths.
+   - Blocks Windows drive-letter absolute paths.
+   - Blocks Windows UNC absolute paths.
    - Blocks traversal paths.
    - Blocks private key style paths.
 
@@ -149,6 +151,8 @@ Covered path-policy examples include:
 - Secret-like generated paths.
 - Traversal paths.
 - Unix-style absolute paths.
+- Windows drive-letter absolute paths.
+- Windows UNC absolute paths.
 - Private-key-like generated paths.
 - High-risk generated files.
 
@@ -186,7 +190,6 @@ If the safety report is not `pass`, the dry-run writer records blockers or warni
 
 Future policy waves can add:
 
-- Windows drive-letter and UNC absolute path detection.
 - More language-aware file scanners.
 - Dependency and package manifest checks.
 - License-sensitive content checks.
