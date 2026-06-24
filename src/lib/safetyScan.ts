@@ -8,10 +8,19 @@ import type {
   StarterFilePreview,
 } from '../types';
 
-const policyVersion = 'safety-policy-gate-v0.4';
+const policyVersion = 'safety-policy-gate-v0.5';
 
 const secretLikePatterns = [/\.env$/i, /secret/i, /token/i, /api[_-]?key/i, /credential/i, /password/i, /private[_-]?key/i];
-const unsafePathPatterns = [/^\//, /\.\./, /~\//, /\.pem$/i, /\.key$/i, /id_rsa/i];
+const unsafePathPatterns = [
+  /^\//,
+  /^[A-Za-z]:[\\/]/,
+  /^\\\\[^\\]+\\[^\\]+/,
+  /\.\./,
+  /~[\\/]/,
+  /\.pem$/i,
+  /\.key$/i,
+  /id_rsa/i,
+];
 
 type RiskPattern = {
   category: string;
@@ -440,6 +449,9 @@ export const scanRepoPlan = (
   const issueRiskWarningCount = reviewedIssueFindings.filter((finding) => finding.severity === 'warning').length;
   const issueRiskCheckStatus: SafetyPolicyCheckStatus = issueRiskBlockerCount > 0 ? 'blocker' : issueRiskWarningCount > 0 ? 'warning' : 'pass';
   const issueCountCheckStatus: SafetyPolicyCheckStatus = reviewedStarterIssues.length > 10 ? 'warning' : 'pass';
+  const pathPolicyStatus: SafetyPolicyCheckStatus = findings.some((finding) => (
+    finding.id.startsWith('secret-like-path') || finding.id.startsWith('unsafe-path')
+  )) ? 'blocker' : 'pass';
 
   const checks: SafetyPolicyCheck[] = [
     buildCheck(
@@ -461,8 +473,8 @@ export const scanRepoPlan = (
     buildCheck(
       'file-path-policy',
       'File path policy',
-      findings.some((finding) => finding.id.startsWith('secret-like-path') || finding.id.startsWith('unsafe-path')) ? 'blocker' : 'pass',
-      'Generated file paths were checked for secret-like names, traversal, absolute paths, and key-file patterns.',
+      pathPolicyStatus,
+      'Generated file paths were checked for secret-like names, traversal, Unix absolute paths, Windows absolute paths, UNC absolute paths, and key-file patterns.',
     ),
     buildCheck(
       'file-risk-policy',
