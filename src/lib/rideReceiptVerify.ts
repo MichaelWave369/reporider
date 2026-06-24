@@ -218,7 +218,6 @@ export const verifyJsonRideReceipt = (source: string): RideReceiptVerificationRe
 
   return {
     ...result,
-    artifactFingerprints: undefined,
     checks,
     format,
     policyVersion,
@@ -226,5 +225,5 @@ export const verifyJsonRideReceipt = (source: string): RideReceiptVerificationRe
     receiptCount: receipts?.length,
     rideArtifactFingerprint,
     safetyStatus,
-  } as RideReceiptVerificationResult;
+  };
 };
