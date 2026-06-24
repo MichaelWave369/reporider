@@ -2,7 +2,7 @@
 
 RepoRider includes a lightweight local safety fixture suite for the safety policy gate.
 
-The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, remediation, receipt policy-coupling, receipt fingerprint, and typed JSON receipt export examples without adding a heavyweight test framework.
+The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, remediation, receipt policy-coupling, receipt fingerprint, typed JSON receipt export, and typed JSON receipt verification examples without adding a heavyweight test framework.
 
 ## Current command
 
@@ -171,6 +171,13 @@ The current fixture suite covers:
   - JSON export carries all receipt hashes and boundary notes
   - JSON export parses back to the typed fixture shape
 
+- **Typed JSON receipt verification**
+  - Fresh typed JSON export verifies as `valid`
+  - Changed receipt details invalidate recomputed receipt hashes
+  - Broken `previousReceiptHash` links invalidate the receipt chain
+  - Missing boundary notes produce a `warning` instead of a chain failure
+  - Invalid JSON produces a parse failure
+
 ## Remediation coverage
 
 The fixture suite asserts that every finding produced by the main safety fixture suite includes non-empty rider-facing remediation guidance.
@@ -183,6 +190,8 @@ The receipt-policy suite asserts that safety policy version/status metadata flow
 
 The receipt fingerprint suite asserts that approved artifact fingerprints and receipt-chain hashes flow through dry-run summaries, mock-create summaries, mock-create receipts, Markdown exports, and JSON exports.
 
+The typed JSON verification suite asserts that pasted JSON receipt payloads can be checked locally for format, policy metadata, artifact fingerprints, receipt hashes, final chain hash, and boundary-note presence.
+
 ## CI relationship
 
 The CI workflow runs:
@@ -192,7 +201,7 @@ npm run typecheck
 npm run test:safety
 ```
 
-This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, remediation guidance coverage, receipt policy-coupling behavior, receipt fingerprint/chain behavior, and typed JSON ride receipt export behavior.
+This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, remediation guidance coverage, receipt policy-coupling behavior, receipt fingerprint/chain behavior, typed JSON ride receipt export behavior, and typed JSON ride receipt verification behavior.
 
 ## Boundary
 
@@ -213,9 +222,10 @@ They do not:
 - Prove a future repository is safe to publish.
 - Cryptographically sign receipts.
 - Anchor receipt hashes to a remote ledger.
+- Import JSON receipts into app approval state.
 - Grant write authority.
 
-A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, remediation, receipt policy-coupling, receipt fingerprint, and JSON export examples.
+A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, remediation, receipt policy-coupling, receipt fingerprint, JSON export, and JSON verification examples.
 
 ## Future fixture expansion
 
