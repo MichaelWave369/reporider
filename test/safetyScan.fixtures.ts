@@ -186,6 +186,38 @@ assert(
   'High-risk file fixture should produce high-risk-file warning',
 );
 
+const emptyReviewedFileReport = scanRepoPlan(
+  basePlan,
+  [
+    {
+      ...safeReviewedFile,
+      content: '',
+    },
+  ],
+  [safeReviewedIssue],
+);
+assertEqual(emptyReviewedFileReport.status, 'needs-review', 'Empty reviewed file fixture should require review');
+assert(
+  hasFinding(emptyReviewedFileReport, 'warning', 'empty-content', 'empty-reviewed-file'),
+  'Empty reviewed file fixture should produce empty-content warning',
+);
+
+const largeReviewedFileReport = scanRepoPlan(
+  basePlan,
+  [
+    {
+      ...safeReviewedFile,
+      content: 'Safe local setup guidance line.\n'.repeat(1000),
+    },
+  ],
+  [safeReviewedIssue],
+);
+assertEqual(largeReviewedFileReport.status, 'needs-review', 'Large reviewed file fixture should require review');
+assert(
+  hasFinding(largeReviewedFileReport, 'warning', 'large-content', 'large-reviewed-file'),
+  'Large reviewed file fixture should produce large-content warning',
+);
+
 const fileBlockerReport = scanRepoPlan(
   basePlan,
   [
@@ -216,6 +248,57 @@ assertEqual(fileWarningReport.status, 'needs-review', 'Remote shell pipe fixture
 assert(
   hasFinding(fileWarningReport, 'warning', 'remote-execution', 'remote-shell-pipe'),
   'Remote shell pipe fixture should produce remote-execution warning',
+);
+
+const emptyIssueBodyReport = scanRepoPlan(
+  basePlan,
+  [safeReviewedFile],
+  [
+    {
+      ...safeReviewedIssue,
+      body: '',
+    },
+  ],
+);
+assertEqual(emptyIssueBodyReport.status, 'needs-review', 'Empty issue body fixture should require review');
+assert(
+  hasFinding(emptyIssueBodyReport, 'warning', 'empty-body', 'empty-body'),
+  'Empty issue body fixture should produce empty-body warning',
+);
+
+const largeIssueBodyReport = scanRepoPlan(
+  basePlan,
+  [safeReviewedFile],
+  [
+    {
+      ...safeReviewedIssue,
+      body: 'Add local checklist acceptance criteria for a simple screen. '.repeat(120),
+    },
+  ],
+);
+assertEqual(largeIssueBodyReport.status, 'needs-review', 'Large issue body fixture should require review');
+assert(
+  hasFinding(largeIssueBodyReport, 'warning', 'large-body', 'large-body'),
+  'Large issue body fixture should produce large-body warning',
+);
+
+const largeIssueSet = Array.from({ length: 11 }, (_, index): RepoIssuePlan => ({
+  title: `Build checklist helper ${index + 1}`,
+  body: 'Add a small local-only helper with clear acceptance criteria.',
+  labels: ['enhancement'],
+}));
+const largeIssueSetReport = scanRepoPlan(
+  {
+    ...basePlan,
+    issues: largeIssueSet,
+  },
+  [safeReviewedFile],
+  largeIssueSet,
+);
+assertEqual(largeIssueSetReport.status, 'needs-review', 'Large issue set fixture should require review');
+assert(
+  hasFinding(largeIssueSetReport, 'warning', 'large-issue-set', 'large-generated-issue-set'),
+  'Large issue set fixture should produce large-issue-set warning',
 );
 
 const issueBlockerReport = scanRepoPlan(
