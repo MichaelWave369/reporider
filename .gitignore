@@ -4,6 +4,7 @@ dist/
 build/
 web-build/
 coverage/
+.safety-test-build/
 .env
 .env.*
 !.env.example
