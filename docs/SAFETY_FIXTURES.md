@@ -53,6 +53,18 @@ The current fixture suite covers:
   - Expected category: `unsafe-path`
   - Expected named check: `file-path-policy` is `blocker`
 
+- **Windows drive-letter absolute path blocker**
+  - Generated paths such as `C:\\Users\\rider\\RepoRider\\README.md` and `C:/Users/rider/RepoRider/README.md`
+  - Expected status: `blocked`
+  - Expected category: `unsafe-path`
+  - Expected named check: `file-path-policy` is `blocker`
+
+- **Windows UNC absolute path blocker**
+  - Generated network paths such as `\\\\server\\share\\RepoRider\\README.md`
+  - Expected status: `blocked`
+  - Expected category: `unsafe-path`
+  - Expected named check: `file-path-policy` is `blocker`
+
 - **Key-file path blocker**
   - Generated path with private-key-like filename, such as `deploy/id_rsa`
   - Expected status: `blocked`
@@ -139,8 +151,6 @@ A passing fixture suite only confirms that the current safety scanner still reco
 
 Future fixture waves should add coverage for:
 
-- Windows drive-letter absolute paths.
-- Windows UNC absolute paths.
 - Credential-reference warning examples.
 - Security disclosure warning examples.
 - Privileged-operation warning examples.
