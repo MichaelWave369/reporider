@@ -130,7 +130,10 @@ export default function App() {
 
   const allStarterFilesApproved = reviewedStarterFiles.length > 0 && approvedStarterFileCount === reviewedStarterFiles.length;
   const allStarterIssuesApproved = reviewedStarterIssues.length === approvedStarterIssueCount;
-  const safetyReport = useMemo(() => scanRepoPlan(repoPlan, reviewedStarterFiles), [repoPlan, reviewedStarterFiles]);
+  const safetyReport = useMemo(
+    () => scanRepoPlan(repoPlan, reviewedStarterFiles, reviewedStarterIssues),
+    [repoPlan, reviewedStarterFiles, reviewedStarterIssues],
+  );
   const receipts = useMemo(() => createSeedReceipts(repoPlan, safetyReport), [repoPlan, safetyReport]);
   const dryRunWriterResult = useMemo(() => dryRunWriterAdapter.dryRun({
     approvedByUser: allStarterFilesApproved && allStarterIssuesApproved,
