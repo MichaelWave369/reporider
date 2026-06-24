@@ -127,6 +127,7 @@ export type SafetyFinding = {
   severity: SafetyFindingSeverity;
   message: string;
   path?: string;
+  category?: string;
 };
 
 export type SafetyPolicyCheckStatus = 'pass' | 'warning' | 'blocker';
@@ -143,6 +144,8 @@ export type SafetyReviewedScope = {
   issueCount: number;
   reviewedFileContentCount: number;
   reviewedFileContentCharacters: number;
+  reviewedIssueContentCount: number;
+  reviewedIssueContentCharacters: number;
   stack: StarterStack;
   visibility: RepoVisibility;
 };
