@@ -45,7 +45,7 @@ The goal is simple:
 - Code-stack `package.json` planning
 - Reviewed starter-file content safety scan for credential-like and destructive-command signals
 - Reviewed starter-issue body risk classification for credential, destructive, disclosure, ops, auth, and remote-execution signals
-- Safety fixture coverage for known-safe, path-policy, visibility, high-risk file, reviewed file, and reviewed issue examples
+- Safety fixture coverage for known-safe, path-policy, visibility, high-risk file, empty/large content, reviewed file, and reviewed issue examples
 - Mock create-repo ride flow that receives reviewed and approved file and issue drafts
 - GitHub write boundary model
 - OAuth/write-mode architecture contract before live GitHub writes
@@ -90,7 +90,7 @@ That means the app can simulate the full ride from approval to repo creation wit
 25. **Edit issues** — user can tweak starter issue titles, bodies, and labels.
 26. **Approve issues** — every current starter-issue draft must be approved before create unlocks.
 27. **Ledger** — user reviews one unified approval receipt with file status, issue status, edit status, and compact fingerprints.
-28. **Guard** — safety checks catch unsafe repo names, public visibility review needs, secrets, dangerous file names, risky defaults, reviewed-file credential/destructive content, and reviewed-issue credential/security/ops/auth risk signals.
+28. **Guard** — safety checks catch unsafe repo names, public visibility review needs, secrets, dangerous file names, risky defaults, reviewed-file credential/destructive/empty/large content, and reviewed-issue credential/security/ops/auth/empty/large risk signals.
 29. **Create** — approved starter files and approved starter issues are pushed/opened on GitHub once live mode exists.
 30. **Complete** — user sees a final Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, and receipts.
 31. **Export ride** — user can open a copy-ready Markdown ride receipt for notes, PRs, issues, or handoffs.
