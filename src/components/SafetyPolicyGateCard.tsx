@@ -69,6 +69,9 @@ export const SafetyPolicyGateCard = ({ report }: SafetyPolicyGateCardProps) => (
         <Text style={styles.findingSeverity}>{finding.severity}</Text>
         {finding.category ? <Text style={styles.findingCategory}>{finding.category}</Text> : null}
         <Text style={styles.findingMessage}>{finding.path ? `${finding.path}: ${finding.message}` : finding.message}</Text>
+        {finding.remediation ? (
+          <Text style={styles.findingRemediation}>Fix: {finding.remediation}</Text>
+        ) : null}
       </View>
     ))}
 
@@ -197,6 +200,12 @@ const styles = StyleSheet.create({
   findingMessage: {
     color: '#cbd5e1',
     fontSize: 13,
+    lineHeight: 18,
+  },
+  findingRemediation: {
+    color: '#bbf7d0',
+    fontSize: 13,
+    fontWeight: '800',
     lineHeight: 18,
   },
   note: {
