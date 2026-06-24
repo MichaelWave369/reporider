@@ -2,7 +2,7 @@
 
 RepoRider includes a lightweight local safety fixture suite for the safety policy gate.
 
-The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, and remediation examples without adding a heavyweight test framework.
+The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, remediation, and receipt policy-coupling examples without adding a heavyweight test framework.
 
 ## Current command
 
@@ -12,7 +12,7 @@ npm run test:safety
 
 This command:
 
-1. Compiles only the safety scanner, shared types, and fixture files with `tsconfig.safety-tests.json`.
+1. Compiles only the safety scanner, shared types, supporting local writer/receipt modules, and fixture files with `tsconfig.safety-tests.json`.
 2. Runs the compiled fixture files with Node.
 3. Deletes the temporary `.safety-test-build/` output directory.
 
@@ -148,6 +148,13 @@ The current fixture suite covers:
   - Expected statuses: `blocked` or `needs-review`
   - Expected categories: `credential-material`, `auth-flow-risk`, and `production-impact`
 
+- **Receipt policy coupling**
+  - Seed receipts carry the active safety policy version and safety status
+  - Dry-run summaries carry the active safety policy version and safety status
+  - Mock-create summaries carry safety status, warning count, and blocker count
+  - Mock-create receipts carry receipt-level safety policy metadata
+  - Markdown ride receipt export includes policy version, safety status, warnings, blockers, and receipt-level policy metadata
+
 ## Remediation coverage
 
 The fixture suite asserts that every finding produced by the main safety fixture suite includes non-empty rider-facing remediation guidance.
@@ -155,6 +162,8 @@ The fixture suite asserts that every finding produced by the main safety fixture
 The absolute-path suite additionally asserts that Unix, Windows drive-letter, and Windows UNC path blockers include explicit safe repo-relative path guidance.
 
 The package-manifest suite asserts that package warnings and blockers include remediation and flow into the named `package-manifest-policy` check.
+
+The receipt-policy suite asserts that safety policy version/status metadata flows through seed receipts, dry-run summaries, mock-create summaries, mock-create receipts, and Markdown exports.
 
 ## CI relationship
 
@@ -165,7 +174,7 @@ npm run typecheck
 npm run test:safety
 ```
 
-This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, and remediation guidance coverage.
+This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, remediation guidance coverage, and receipt policy-coupling behavior.
 
 ## Boundary
 
@@ -186,7 +195,7 @@ They do not:
 - Prove a future repository is safe to publish.
 - Grant write authority.
 
-A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, and remediation examples.
+A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, remediation, and receipt policy-coupling examples.
 
 ## Future fixture expansion
 
@@ -195,5 +204,5 @@ Future fixture waves should add coverage for:
 - Credential-reference warning examples.
 - Security disclosure warning examples.
 - Privileged-operation warning examples.
-- Receipt/policy-version coupling once receipt hashes exist.
+- Receipt hashes tying policy version + approved artifact fingerprints together.
 - Local remediation preview helpers once remediation proposals exist.
