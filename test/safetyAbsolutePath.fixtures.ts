@@ -1,5 +1,5 @@
 import { scanRepoPlan } from '../src/lib/safetyScan';
-import type { RepoIssuePlan, RepoPlan, StarterFilePreview } from '../src/types';
+import type { RepoIssuePlan, RepoPlan, SafetyReport, StarterFilePreview } from '../src/types';
 
 const assert = (condition: boolean, message: string) => {
   if (!condition) {
@@ -43,13 +43,13 @@ const basePlan: RepoPlan = {
   approvalRequired: true,
 };
 
-const unixAbsolutePathReport = scanRepoPlan(
+const scanPlanWithPath = (path: string) => scanRepoPlan(
   {
     ...basePlan,
     files: [
       ...basePlan.files,
       {
-        path: '/tmp/reporider/README.md',
+        path,
         purpose: 'Unsafe absolute path that must never be written outside the repo root.',
         riskLevel: 'medium',
       },
@@ -59,21 +59,34 @@ const unixAbsolutePathReport = scanRepoPlan(
   [baseIssue],
 );
 
-assertEqual(unixAbsolutePathReport.status, 'blocked', 'Unix absolute path fixture should block');
-assert(
-  unixAbsolutePathReport.findings.some((finding) => (
-    finding.severity === 'blocker' &&
-    finding.category === 'unsafe-path' &&
-    finding.id === 'unsafe-path:/tmp/reporider/README.md'
-  )),
-  'Unix absolute path fixture should produce unsafe-path blocker',
-);
+const assertUnsafeAbsolutePath = (report: SafetyReport, path: string, label: string) => {
+  assertEqual(report.status, 'blocked', `${label} fixture should block`);
+  assert(
+    report.findings.some((finding) => (
+      finding.severity === 'blocker' &&
+      finding.category === 'unsafe-path' &&
+      finding.id === `unsafe-path:${path}`
+    )),
+    `${label} fixture should produce unsafe-path blocker`,
+  );
+  assert(
+    report.checks.some((check) => (
+      check.id === 'file-path-policy' && check.status === 'blocker'
+    )),
+    `${label} fixture should mark file-path-policy as blocker`,
+  );
+};
 
-assert(
-  unixAbsolutePathReport.checks.some((check) => (
-    check.id === 'file-path-policy' && check.status === 'blocker'
-  )),
-  'Unix absolute path fixture should mark file-path-policy as blocker',
-);
+const unixAbsolutePath = '/tmp/reporider/README.md';
+assertUnsafeAbsolutePath(scanPlanWithPath(unixAbsolutePath), unixAbsolutePath, 'Unix absolute path');
+
+const windowsDriveBackslashPath = 'C:\\Users\\rider\\RepoRider\\README.md';
+assertUnsafeAbsolutePath(scanPlanWithPath(windowsDriveBackslashPath), windowsDriveBackslashPath, 'Windows drive-letter backslash path');
+
+const windowsDriveForwardSlashPath = 'C:/Users/rider/RepoRider/README.md';
+assertUnsafeAbsolutePath(scanPlanWithPath(windowsDriveForwardSlashPath), windowsDriveForwardSlashPath, 'Windows drive-letter forward-slash path');
+
+const windowsUncPath = '\\\\server\\share\\RepoRider\\README.md';
+assertUnsafeAbsolutePath(scanPlanWithPath(windowsUncPath), windowsUncPath, 'Windows UNC path');
 
 console.log('Safety absolute path fixtures passed.');
