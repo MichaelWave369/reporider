@@ -15,7 +15,7 @@ The scanner does not request OAuth, read credentials, create repositories, push 
 Current version:
 
 ```text
-safety-policy-gate-v0.5
+safety-policy-gate-v0.6
 ```
 
 The version is included in the safety report so future live-mode work can tell which policy produced a decision.
@@ -116,6 +116,21 @@ Findings may include a category to make review easier. Current categories includ
 
 Categories are review labels only. They are not proof of danger and they do not grant write authority.
 
+## Remediation guidance
+
+Every finding now includes rider-facing remediation guidance.
+
+Examples:
+
+- Unsafe paths tell the rider to move generated files to safe repo-relative paths.
+- Secret-like paths tell the rider to rename or remove generated secret-looking files.
+- Credential-material findings tell the rider to remove token/key-like material and use obvious placeholders.
+- Destructive-command findings tell the rider to remove dangerous commands or rewrite them as non-executing documentation warnings.
+- Empty and large content findings tell the rider to add content, remove the artifact, split content, or explicitly review the size.
+- Public visibility findings tell the rider to stay private unless public release is intentional.
+
+Remediation guidance is not automatic repair and is not approval. It is local cleanup guidance before re-review.
+
 ## Report status
 
 The report status is derived from findings:
@@ -134,6 +149,7 @@ The report includes required gates that future live-mode work must respect:
 
 - Every generated starter file must have a fresh content-bound approval.
 - Every generated starter issue must have a fresh content-bound approval.
+- Every safety warning or blocker must include rider-facing remediation guidance.
 - The reviewed starter-file contents must pass local credential/destructive-command checks.
 - The reviewed starter-issue bodies must pass local credential/destructive/security/ops risk classification.
 - The dry-run writer must summarize the exact reviewed package before live mode can be considered.
@@ -142,7 +158,7 @@ The report includes required gates that future live-mode work must respect:
 
 ## Fixture coverage
 
-The safety fixture suite now covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, and reviewed issue body examples.
+The safety fixture suite now covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, reviewed issue body, and remediation examples.
 
 Covered path-policy examples include:
 
@@ -164,18 +180,24 @@ Covered size/completeness examples include:
 - Large reviewed issue bodies.
 - Large generated issue sets.
 
+Covered remediation examples include:
+
+- Every finding in the main safety fixture suite must include non-empty remediation guidance.
+- Absolute-path blockers must include safe repo-relative path guidance.
+
 Run the suite with:
 
 ```bash
 npm run test:safety
 ```
 
-The fixture suite is not exhaustive and does not prove a future repository is safe. It only confirms that the covered safety policy behaviors continue to trigger expected warnings and blockers.
+The fixture suite is not exhaustive and does not prove a future repository is safe. It only confirms that the covered safety policy behaviors continue to trigger expected warnings, blockers, and remediation guidance.
 
 ## Boundary notes
 
 - Safety policy findings are local planning, reviewed file-content, and reviewed issue-body checks, not proof that a repository is safe to publish.
 - A passing safety report does not grant write authority and does not bypass human approvals.
+- Remediation guidance is a local cleanup prompt for the rider and is not automatic repair or approval.
 - Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.
 - Saved drafts, imported Markdown, and restored rides always reset review state and never carry safety approval forward.
 - Future live write mode must treat any warning as an explicit review prompt and any blocker as a hard stop.
@@ -194,4 +216,4 @@ Future policy waves can add:
 - Dependency and package manifest checks.
 - License-sensitive content checks.
 - Receipt hashes tying policy version + approved artifacts together.
-- User-facing remediation suggestions for each finding category.
+- One-click local remediation helpers that propose edits without applying them automatically.
