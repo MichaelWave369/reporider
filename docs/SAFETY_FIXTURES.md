@@ -58,10 +58,6 @@ npm run test:safety
 
 This means the green check now verifies both TypeScript validity and safety fixture behavior.
 
-## Tracker status
-
-The #31 milestone should record this as the safety fixture coverage wave once the issue-comment connector accepts a new comment.
-
 ## Boundary
 
 Safety fixtures are local deterministic checks.
