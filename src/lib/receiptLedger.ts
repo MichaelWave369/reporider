@@ -1,3 +1,4 @@
+import { attachReceiptChain, buildSeedArtifactFingerprint } from './receiptFingerprint';
 import type { Receipt, RepoPlan, SafetyReport } from '../types';
 
 const isoNow = () => new Date().toISOString();
@@ -9,9 +10,11 @@ const receiptWithSafety = (
   status: Receipt['status'],
   safetyReport: SafetyReport,
   timestamp: string,
+  artifactFingerprint: string,
 ): Receipt => ({
   id,
   action,
+  artifactFingerprint,
   detail,
   safetyPolicyVersion: safetyReport.policyVersion,
   safetyStatus: safetyReport.status,
@@ -21,8 +24,8 @@ const receiptWithSafety = (
 
 export const createSeedReceipts = (plan: RepoPlan, safetyReport: SafetyReport): Receipt[] => {
   const timestamp = isoNow();
-
-  return [
+  const seedArtifactFingerprint = buildSeedArtifactFingerprint(plan, safetyReport);
+  const receipts = [
     receiptWithSafety(
       'capture-idea',
       'Idea captured',
@@ -30,6 +33,7 @@ export const createSeedReceipts = (plan: RepoPlan, safetyReport: SafetyReport): 
       'completed',
       safetyReport,
       timestamp,
+      seedArtifactFingerprint,
     ),
     receiptWithSafety(
       'plan-repo',
@@ -38,14 +42,16 @@ export const createSeedReceipts = (plan: RepoPlan, safetyReport: SafetyReport): 
       'planned',
       safetyReport,
       timestamp,
+      seedArtifactFingerprint,
     ),
     receiptWithSafety(
       'safety-scan',
       'Safety scan completed',
-      `Safety policy ${safetyReport.policyVersion} returned ${safetyReport.status} with ${safetyReport.warningCount} warning(s) and ${safetyReport.blockerCount} blocker(s).`,
+      `Safety policy ${safetyReport.policyVersion} returned ${safetyReport.status} with ${safetyReport.warningCount} warning(s), ${safetyReport.blockerCount} blocker(s), and seed fingerprint ${seedArtifactFingerprint}.`,
       safetyReport.status === 'blocked' ? 'blocked' : 'completed',
       safetyReport,
       timestamp,
+      seedArtifactFingerprint,
     ),
     receiptWithSafety(
       'human-approval',
@@ -54,6 +60,9 @@ export const createSeedReceipts = (plan: RepoPlan, safetyReport: SafetyReport): 
       'planned',
       safetyReport,
       timestamp,
+      seedArtifactFingerprint,
     ),
   ];
+
+  return attachReceiptChain(receipts, seedArtifactFingerprint);
 };
