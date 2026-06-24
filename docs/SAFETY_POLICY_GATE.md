@@ -132,6 +132,24 @@ The report includes required gates that future live-mode work must respect:
 - Any blocker finding must be resolved before mock create or future live writes proceed.
 - Future live writes still require OAuth, secure token storage, and an armed live-mode state.
 
+## Fixture coverage
+
+The safety policy gate now has local fixture coverage through:
+
+```bash
+npm run test:safety
+```
+
+The fixture suite currently covers:
+
+- Known-safe reviewed file and issue content.
+- Private-key-like reviewed file blockers.
+- Remote-shell-pipe reviewed file warnings.
+- GitHub-token-like reviewed issue blockers.
+- OAuth/production reviewed issue warnings.
+
+See `docs/SAFETY_FIXTURES.md` for the current fixture contract and expansion list.
+
 ## Boundary notes
 
 The safety policy gate does not grant write authority.
@@ -158,4 +176,4 @@ Before real live writes exist, the safety policy should be expanded again to inc
 - Large write-set review gates.
 - Explicit user confirmation for public repos.
 - Receipt hashes tied to the exact policy version and reviewed content package.
-- Test fixtures for known-safe and known-blocked reviewed file and issue contents.
+- More fixture coverage for repo names, path policy, visibility, high-risk files, large issue sets, empty content, and warning-category edges.
