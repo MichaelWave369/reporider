@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { buildJsonRideReceipt } from '../lib/rideReceiptJson';
 import { buildMarkdownRideReceipt } from '../lib/rideReceiptMarkdown';
+import { verifyJsonRideReceipt } from '../lib/rideReceiptVerify';
 import type { GithubCreateRepoResult } from '../types';
 
 type RideReceiptExportCardProps = {
@@ -14,9 +15,14 @@ const countLines = (content: string) => content.split('\n').length;
 
 export const RideReceiptExportCard = ({ result }: RideReceiptExportCardProps) => {
   const [expandedFormat, setExpandedFormat] = useState<ExportFormat | null>(null);
+  const [receiptCheckSource, setReceiptCheckSource] = useState('');
   const markdownReceipt = useMemo(() => buildMarkdownRideReceipt(result), [result]);
   const jsonReceipt = useMemo(() => buildJsonRideReceipt(result), [result]);
   const activeReceipt = expandedFormat === 'json' ? jsonReceipt : markdownReceipt;
+  const receiptCheck = useMemo(
+    () => (receiptCheckSource.trim() ? verifyJsonRideReceipt(receiptCheckSource) : null),
+    [receiptCheckSource],
+  );
 
   const toggleFormat = (format: ExportFormat) => {
     setExpandedFormat((current) => (current === format ? null : format));
@@ -74,6 +80,39 @@ export const RideReceiptExportCard = ({ result }: RideReceiptExportCardProps) =>
           />
         </View>
       ) : null}
+
+      <View style={styles.verifyBox}>
+        <Text style={styles.verifyHeading}>JSON receipt check</Text>
+        <Text style={styles.verifyHelp}>
+          Paste a RepoRider JSON receipt to check its format, policy fields, fingerprints, and receipt-chain links locally. This does not restore approvals or contact GitHub.
+        </Text>
+        <TextInput
+          multiline
+          onChangeText={setReceiptCheckSource}
+          placeholder="Paste JSON receipt here"
+          placeholderTextColor="#64748b"
+          style={styles.verifyInput}
+          value={receiptCheckSource}
+        />
+        {receiptCheck ? (
+          <View style={styles.verifyResult}>
+            <Text style={[styles.verifyStatus, receiptCheck.status === 'valid' && styles.verifyStatusGood, receiptCheck.status === 'warning' && styles.verifyStatusWarn, receiptCheck.status === 'invalid' && styles.verifyStatusBad]}>
+              {receiptCheck.status.toUpperCase()}: {receiptCheck.summary}
+            </Text>
+            <View style={styles.metaRow}>
+              {receiptCheck.policyVersion ? <Text style={styles.metaPill}>{receiptCheck.policyVersion}</Text> : null}
+              {receiptCheck.safetyStatus ? <Text style={styles.metaPill}>safety: {receiptCheck.safetyStatus}</Text> : null}
+              {receiptCheck.receiptCount !== undefined ? <Text style={styles.metaPill}>{receiptCheck.receiptCount} receipts</Text> : null}
+            </View>
+            {receiptCheck.checks.slice(0, 8).map((check) => (
+              <Text key={check.id} style={styles.verifyCheck}>
+                {check.status.toUpperCase()} · {check.label}: {check.detail}
+              </Text>
+            ))}
+            {receiptCheck.checks.length > 8 ? <Text style={styles.verifyCheck}>+ {receiptCheck.checks.length - 8} more check(s)</Text> : null}
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 };
@@ -193,5 +232,58 @@ const styles = StyleSheet.create({
     minHeight: 240,
     padding: 12,
     textAlignVertical: 'top',
+  },
+  verifyBox: {
+    backgroundColor: '#020617',
+    borderColor: '#1e293b',
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 8,
+    padding: 12,
+  },
+  verifyHeading: {
+    color: '#f8fafc',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  verifyHelp: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  verifyInput: {
+    backgroundColor: '#0f172a',
+    borderColor: '#334155',
+    borderRadius: 12,
+    borderWidth: 1,
+    color: '#e2e8f0',
+    fontFamily: 'monospace',
+    fontSize: 11,
+    lineHeight: 15,
+    minHeight: 110,
+    padding: 10,
+    textAlignVertical: 'top',
+  },
+  verifyResult: {
+    gap: 8,
+  },
+  verifyStatus: {
+    fontSize: 12,
+    fontWeight: '900',
+    lineHeight: 17,
+  },
+  verifyStatusGood: {
+    color: '#86efac',
+  },
+  verifyStatusWarn: {
+    color: '#fde68a',
+  },
+  verifyStatusBad: {
+    color: '#fecaca',
+  },
+  verifyCheck: {
+    color: '#cbd5e1',
+    fontSize: 11,
+    lineHeight: 15,
   },
 });
