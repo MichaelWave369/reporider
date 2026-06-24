@@ -27,6 +27,36 @@ The current fixture suite covers:
   - Safe reviewed issue text
   - Expected status: `pass`
 
+- **Unsafe repo name blocker**
+  - Repo name containing traversal-like text
+  - Expected status: `blocked`
+  - Expected finding: `unsafe-repo-name`
+
+- **Public visibility warning**
+  - Public repo visibility selected
+  - Expected status: `needs-review`
+  - Expected category: `visibility-review`
+
+- **Secret-like path blocker**
+  - Secret-like generated path such as `.env`
+  - Expected status: `blocked`
+  - Expected category: `secret-like-path`
+
+- **Traversal path blocker**
+  - Generated path that escapes the repo root, such as `../outside.md`
+  - Expected status: `blocked`
+  - Expected category: `unsafe-path`
+
+- **Key-file path blocker**
+  - Generated path with private-key-like filename, such as `deploy/id_rsa`
+  - Expected status: `blocked`
+  - Expected category: `unsafe-path`
+
+- **High-risk file warning**
+  - Generated high-risk starter file, such as a deployment script
+  - Expected status: `needs-review`
+  - Expected category: `high-risk-file`
+
 - **Reviewed file blocker**
   - Private-key-like block in reviewed starter-file content
   - Expected status: `blocked`
@@ -78,11 +108,7 @@ A passing fixture suite only confirms that the current safety scanner still reco
 
 Future fixture waves should add coverage for:
 
-- Unsafe repo names.
-- Public visibility warning behavior.
-- Secret-like paths.
-- Unsafe traversal paths.
-- High-risk files.
+- Absolute paths.
 - Large issue sets.
 - Empty reviewed files and issue bodies.
 - Credential-reference warning examples.
