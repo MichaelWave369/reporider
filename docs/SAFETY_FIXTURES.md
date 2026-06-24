@@ -2,7 +2,7 @@
 
 RepoRider includes a lightweight local safety fixture suite for the safety policy gate.
 
-The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, remediation, receipt policy-coupling, and receipt fingerprint examples without adding a heavyweight test framework.
+The suite exercises known-safe, warning, blocker, absolute-path, package-manifest, remediation, receipt policy-coupling, receipt fingerprint, and typed JSON receipt export examples without adding a heavyweight test framework.
 
 ## Current command
 
@@ -163,6 +163,14 @@ The current fixture suite covers:
   - Markdown ride receipt export includes ride artifact, approved file, approved issue, receipt chain, and per-receipt hash metadata
   - Expected hash prefixes: `seed-`, `files-`, `issues-`, `ride-`, `receipt-preview-`, and `receipt-`
 
+- **Typed JSON receipt export**
+  - JSON export carries format id `reporider.ride-receipt.v1`
+  - JSON export carries safety policy version, safety status, warnings, and blockers
+  - JSON export carries ride artifact, approved file, approved issue, and receipt-chain fingerprints
+  - JSON export carries queued file paths and queued issue titles
+  - JSON export carries all receipt hashes and boundary notes
+  - JSON export parses back to the typed fixture shape
+
 ## Remediation coverage
 
 The fixture suite asserts that every finding produced by the main safety fixture suite includes non-empty rider-facing remediation guidance.
@@ -171,9 +179,9 @@ The absolute-path suite additionally asserts that Unix, Windows drive-letter, an
 
 The package-manifest suite asserts that package warnings and blockers include remediation and flow into the named `package-manifest-policy` check.
 
-The receipt-policy suite asserts that safety policy version/status metadata flows through seed receipts, dry-run summaries, mock-create summaries, mock-create receipts, and Markdown exports.
+The receipt-policy suite asserts that safety policy version/status metadata flows through seed receipts, dry-run summaries, mock-create summaries, mock-create receipts, Markdown exports, and JSON exports.
 
-The receipt fingerprint suite asserts that approved artifact fingerprints and receipt-chain hashes flow through dry-run summaries, mock-create summaries, mock-create receipts, and Markdown exports.
+The receipt fingerprint suite asserts that approved artifact fingerprints and receipt-chain hashes flow through dry-run summaries, mock-create summaries, mock-create receipts, Markdown exports, and JSON exports.
 
 ## CI relationship
 
@@ -184,7 +192,7 @@ npm run typecheck
 npm run test:safety
 ```
 
-This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, remediation guidance coverage, receipt policy-coupling behavior, and receipt fingerprint/chain behavior.
+This means the green check now verifies TypeScript validity, safety fixture behavior, package manifest fixture behavior, package license/source/range review behavior, remediation guidance coverage, receipt policy-coupling behavior, receipt fingerprint/chain behavior, and typed JSON ride receipt export behavior.
 
 ## Boundary
 
@@ -207,7 +215,7 @@ They do not:
 - Anchor receipt hashes to a remote ledger.
 - Grant write authority.
 
-A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, remediation, receipt policy-coupling, and receipt fingerprint examples.
+A passing fixture suite only confirms that the current safety scanner still recognizes the covered known-safe, warning, blocker, package-manifest, remediation, receipt policy-coupling, receipt fingerprint, and JSON export examples.
 
 ## Future fixture expansion
 
