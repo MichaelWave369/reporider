@@ -1,5 +1,6 @@
 import { dryRunWriterAdapter } from '../src/lib/dryRunWriter';
 import { createMockGitHubRepository } from '../src/lib/github/mockGitHubClient';
+import { buildJsonRideReceipt, buildTypedRideReceiptJson } from '../src/lib/rideReceiptJson';
 import { buildMarkdownRideReceipt } from '../src/lib/rideReceiptMarkdown';
 import { createSeedReceipts } from '../src/lib/receiptLedger';
 import {
@@ -167,6 +168,29 @@ const runMockCreateFixture = async () => {
   assert(markdownReceipt.includes(`**Receipt chain:** ${mockCreateResult.summary.receiptChainHash}`), 'Markdown receipt should include receipt chain hash');
   assert(markdownReceipt.includes(`policy ${safetyReport.policyVersion}, status ${safetyReport.status}`), 'Markdown receipt lines should include receipt-level policy metadata');
   assert(markdownReceipt.includes('hash receipt-'), 'Markdown receipt lines should include receipt hashes');
+
+  const typedJsonReceipt = buildTypedRideReceiptJson(mockCreateResult);
+  const jsonReceipt = buildJsonRideReceipt(mockCreateResult);
+  const parsedJsonReceipt = JSON.parse(jsonReceipt) as typeof typedJsonReceipt;
+  assertEqual(typedJsonReceipt.format, 'reporider.ride-receipt.v1', 'Typed JSON receipt should carry the versioned format id');
+  assertEqual(parsedJsonReceipt.format, typedJsonReceipt.format, 'JSON export should parse back to the typed receipt format id');
+  assertEqual(parsedJsonReceipt.safetyPolicy.policyVersion, safetyReport.policyVersion, 'JSON export should include safety policy version');
+  assertEqual(parsedJsonReceipt.safetyPolicy.status, safetyReport.status, 'JSON export should include safety status');
+  assertEqual(parsedJsonReceipt.artifactFingerprints.rideArtifact, rideArtifactFingerprint, 'JSON export should include ride artifact fingerprint');
+  assertEqual(parsedJsonReceipt.artifactFingerprints.approvedFiles, approvedFilesFingerprint, 'JSON export should include approved files fingerprint');
+  assertEqual(parsedJsonReceipt.artifactFingerprints.approvedIssues, approvedIssuesFingerprint, 'JSON export should include approved issues fingerprint');
+  assertEqual(parsedJsonReceipt.artifactFingerprints.receiptChain, mockCreateResult.summary.receiptChainHash, 'JSON export should include receipt chain hash');
+  assertEqual(parsedJsonReceipt.queuedFiles[0].path, reviewedFiles[0].path, 'JSON export should include queued file paths');
+  assertEqual(parsedJsonReceipt.queuedIssues[0].title, reviewedIssues[0].title, 'JSON export should include queued issue titles');
+  assertEqual(parsedJsonReceipt.receipts.length, mockCreateResult.receipts.length, 'JSON export should include all receipts');
+  assert(
+    parsedJsonReceipt.receipts.every((receipt) => receipt.receiptHash?.startsWith('receipt-')),
+    'JSON export receipts should include receipt hashes',
+  );
+  assert(
+    parsedJsonReceipt.boundary.notes.some((note) => note.includes('No OAuth token')),
+    'JSON export should include boundary notes',
+  );
 };
 
 runMockCreateFixture()
