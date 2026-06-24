@@ -66,7 +66,7 @@ const buildStages = (
   {
     id: 'safety-gate',
     label: 'Safety gate',
-    detail: `Current safety status: ${safetyReport.status}.`,
+    detail: `Policy ${safetyReport.policyVersion} returned ${safetyReport.status} with ${safetyReport.warningCount} warning(s) and ${safetyReport.blockerCount} blocker(s).`,
     status: safetyReport.status === 'blocked' ? 'blocked' : statusForPhase(phase, Boolean(result)),
   },
   {
@@ -78,7 +78,7 @@ const buildStages = (
   {
     id: 'repo-created',
     label: 'Repo creation',
-    detail: result ? `Prepared ${result.repositoryUrl}` : 'Ready to simulate after file and issue approvals.',
+    detail: result ? `Prepared ${result.repositoryUrl} with ${result.summary.safetyPolicyVersion} / ${result.summary.safetyStatus}.` : 'Ready to simulate after file and issue approvals.',
     status: result ? 'completed' : phase === 'blocked' ? 'blocked' : 'planned',
   },
 ];
@@ -118,6 +118,7 @@ export const CreateRepoPanel = ({
     plan.files.length,
     plan.issues.length,
     safetyReport.status,
+    safetyReport.policyVersion,
     starterFilesKey,
     starterIssuesKey,
     approvedStarterFileCount,
@@ -144,7 +145,7 @@ export const CreateRepoPanel = ({
   const remainingFileApprovals = starterFiles.length - approvedStarterFileCount;
   const remainingIssueApprovals = starterIssues.length - approvedStarterIssueCount;
   const approvalHelper = canRide
-    ? 'All reviewed starter files and starter issues are approved for this ride.'
+    ? `All reviewed starter files and starter issues are approved for ${safetyReport.policyVersion} / ${safetyReport.status}.`
     : `Approve ${remainingFileApprovals} more files and ${remainingIssueApprovals} more issues to unlock repo creation.`;
 
   const rideMockCreateRepo = async () => {
@@ -176,7 +177,7 @@ export const CreateRepoPanel = ({
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>Ride Preview</Text>
           <Text style={styles.heading}>Approve & Create Repo</Text>
-          <Text style={styles.helper}>Mock mode proves approvals, editable drafts, safety, boundary checks, and receipts before live writes land.</Text>
+          <Text style={styles.helper}>Mock mode proves approvals, editable drafts, safety, boundary checks, and policy-coupled receipts before live writes land.</Text>
           <Text style={[styles.approvalHelper, canRide && styles.approvalHelperReady]}>{approvalHelper}</Text>
         </View>
         <View style={styles.modeBadge}><Text style={styles.modeText}>{mockGitHubWriteBoundary.mode}</Text></View>
