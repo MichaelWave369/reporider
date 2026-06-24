@@ -1,21 +1,19 @@
 # Safety Policy Gate
 
-RepoRider now has a strengthened local safety policy gate for generated repository plans, reviewed starter-file draft contents, reviewed `package.json` starter manifests, and reviewed starter-issue draft bodies.
+RepoRider has a local safety policy gate for generated repository plans, reviewed starter-file draft contents, reviewed `package.json` starter manifests, and reviewed starter-issue draft bodies.
 
 This is still a **planning and review gate**, not proof that a repository is safe and not permission to write to GitHub.
 
 ## Current mode
 
-The current implementation runs locally in mock mode. It reviews the generated `RepoPlan`, the current reviewed starter-file drafts, the current reviewed package manifests, the current reviewed starter-issue drafts, and returns a policy-versioned `SafetyReport`.
+The current implementation runs locally in mock mode. It reviews the generated `RepoPlan`, reviewed starter-file drafts, reviewed package manifests, reviewed starter-issue drafts, and returns a policy-versioned `SafetyReport`.
 
-The scanner does not request OAuth, read credentials, install dependencies, contact package registries, create repositories, push files, open issues, or contact GitHub.
+The scanner does not request OAuth, read credentials, install dependencies, resolve package versions, validate licenses externally, contact package registries, create repositories, push files, open issues, or contact GitHub.
 
 ## Policy version
 
-Current version:
-
 ```text
-safety-policy-gate-v0.7
+safety-policy-gate-v0.8
 ```
 
 The version is included in the safety report so future live-mode work can tell which policy produced a decision.
@@ -35,9 +33,9 @@ Each report records the generated plan and reviewed content scope:
 
 This keeps safety receipts tied to the package that was actually reviewed.
 
-## Checks
+## Named checks
 
-The scanner currently emits named checks for:
+The scanner emits named checks for:
 
 1. **Repository name hygiene**
    - Blocks empty names.
@@ -77,13 +75,16 @@ The scanner currently emits named checks for:
 
 6. **Package manifest policy**
    - Parses reviewed `package.json` starter drafts locally.
+   - Warns when the manifest is missing an explicit `license` field.
+   - Warns when package `private` intent does not match repo visibility intent.
    - Warns on lifecycle scripts such as `preinstall`, `install`, `postinstall`, `prepare`, `prepublish`, and `prepublishOnly`.
    - Blocks package scripts that pipe remote output into shells.
    - Blocks package scripts that contain destructive root filesystem commands.
    - Blocks package scripts that set broad `777` permissions.
    - Warns on package-manager commands such as global installs, force installs/audit fixes, and `npx` execution.
    - Warns on suspicious or credential-like dependency names.
-   - Warns on dependency sources using `git+`, `file:`, or URL references.
+   - Warns on unpinned dependency ranges such as caret, tilde, wildcard, `latest`, `next`, or inequality ranges.
+   - Warns on dependency sources using `git+`, `github:`, `file:`, or URL references.
    - Warns when `package.json` cannot be parsed.
 
 7. **Starter issue count policy**
@@ -130,20 +131,21 @@ Findings may include a category to make review easier. Current categories includ
 - `package-manager-command-risk`
 - `package-dependency-name-risk`
 - `package-dependency-source-risk`
+- `package-license-review`
+- `package-private-visibility-risk`
+- `package-dependency-range-risk`
 
 Categories are review labels only. They are not proof of danger and they do not grant write authority.
 
 ## Remediation guidance
 
-Every finding now includes rider-facing remediation guidance.
+Every finding includes rider-facing remediation guidance.
 
 Examples:
 
 - Unsafe paths tell the rider to move generated files to safe repo-relative paths.
-- Secret-like paths tell the rider to rename or remove generated secret-looking files.
 - Credential-material findings tell the rider to remove token/key-like material and use obvious placeholders.
-- Destructive-command findings tell the rider to remove dangerous commands or rewrite them as non-executing documentation warnings.
-- Package manifest findings tell the rider to fix JSON syntax, remove risky lifecycle/script behavior, avoid risky package-manager commands, or review suspicious dependency names/sources.
+- Package manifest findings tell the rider to fix JSON syntax, add a license, align package privacy with repo intent, remove risky lifecycle/script behavior, avoid risky package-manager commands, pin dependency versions, or review suspicious dependency names/sources.
 - Empty and large content findings tell the rider to add content, remove the artifact, split content, or explicitly review the size.
 - Public visibility findings tell the rider to stay private unless public release is intentional.
 
@@ -169,7 +171,7 @@ The report includes required gates that future live-mode work must respect:
 - Every generated starter issue must have a fresh content-bound approval.
 - Every safety warning or blocker must include rider-facing remediation guidance.
 - The reviewed starter-file contents must pass local credential/destructive-command checks.
-- The reviewed package manifest contents must pass local script/dependency risk checks.
+- The reviewed package manifest contents must pass local script, dependency, license, private-flag, version-range, and source checks.
 - The reviewed starter-issue bodies must pass local credential/destructive/security/ops risk classification.
 - The dry-run writer must summarize the exact reviewed package before live mode can be considered.
 - Any blocker finding must be resolved before mock create or future live writes proceed.
@@ -177,43 +179,20 @@ The report includes required gates that future live-mode work must respect:
 
 ## Fixture coverage
 
-The safety fixture suite now covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, reviewed package manifest, reviewed issue body, and remediation examples.
-
-Covered path-policy examples include:
-
-- Unsafe repo names.
-- Public visibility warnings.
-- Secret-like generated paths.
-- Traversal paths.
-- Unix-style absolute paths.
-- Windows drive-letter absolute paths.
-- Windows UNC absolute paths.
-- Private-key-like generated paths.
-- High-risk generated files.
-
-Covered size/completeness examples include:
-
-- Empty reviewed file content.
-- Large reviewed file content.
-- Empty reviewed issue bodies.
-- Large reviewed issue bodies.
-- Large generated issue sets.
+The safety fixture suite covers representative plan, path, visibility, high-risk file, empty/large content, reviewed file content, reviewed package manifest, reviewed issue body, and remediation examples.
 
 Covered package-manifest examples include:
 
-- Safe `package.json` manifests.
+- Safe `package.json` manifests with explicit license, private flag, and exact dependency pins.
 - Lifecycle hook warnings.
 - Remote shell / destructive package script blockers.
 - Global install, force install, and `npx` package-manager warnings.
 - Suspicious dependency name warnings.
-- `git+`, `file:`, and URL dependency source warnings.
+- `git+`, `github:`, `file:`, and URL dependency source warnings.
+- Missing license warnings.
+- Private flag / repo visibility mismatch warnings.
+- Unpinned dependency range warnings.
 - Invalid `package.json` parse warnings.
-
-Covered remediation examples include:
-
-- Every finding in the main safety fixture suite must include non-empty remediation guidance.
-- Absolute-path blockers must include safe repo-relative path guidance.
-- Package manifest warnings and blockers must include cleanup guidance and flow into `package-manifest-policy`.
 
 Run the suite with:
 
@@ -229,7 +208,7 @@ The fixture suite is not exhaustive and does not prove a future repository is sa
 - A passing safety report does not grant write authority and does not bypass human approvals.
 - Remediation guidance is a local cleanup prompt for the rider and is not automatic repair or approval.
 - Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.
-- Package manifest checks do not install dependencies or contact a package registry.
+- Package manifest checks do not install dependencies, resolve dependency ranges, validate license compatibility, or contact a package registry.
 - Saved drafts, imported Markdown, and restored rides always reset review state and never carry safety approval forward.
 - Future live write mode must treat any warning as an explicit review prompt and any blocker as a hard stop.
 
