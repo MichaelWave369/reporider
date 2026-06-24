@@ -126,7 +126,6 @@ runMockCreateFixture()
   .then(() => {
     console.log('Receipt policy coupling fixtures passed.');
   })
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
+  .catch((error: unknown) => {
+    throw error;
   });
