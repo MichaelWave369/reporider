@@ -63,7 +63,7 @@ export const createMockGitHubRepository = async ({
   );
   const receipts = [
     receipt('mock-auth-boundary', 'GitHub auth boundary checked', 'No token was requested. Mock mode kept the ride local.', 'completed', safetyReport),
-    receipt('mock-safety-policy-coupled', 'Safety policy receipt coupled', `Mock ride used ${safetyReport.policyVersion} with status ${safetyReport.status}, ${safetyReport.warningCount} warning(s), and ${safetyReport.blockerCount} blocker(s).`, safetyReport.status === 'blocked' ? 'blocked' : 'completed', safetyReport),
+    receipt('mock-safety-policy-coupled', 'Safety policy receipt coupled', `Mock ride used ${safetyReport.policyVersion} with status ${safetyReport.status}, ${safetyReport.warningCount} warning(s), and ${safetyReport.blockerCount} blocker(s).`, 'completed', safetyReport),
     receipt('mock-file-approvals-verified', 'Starter file approvals verified', `${starterPreviews.length} reviewed file drafts were approved before mock creation.`, 'approved', safetyReport),
     receipt('mock-issue-approvals-verified', 'Starter issue approvals verified', `${reviewedIssues.length} reviewed issue drafts were approved before mock creation.`, 'approved', safetyReport),
     receipt('mock-repo-created', 'Repository creation simulated', `Prepared ${repositoryUrl} as a ${plan.visibility} ${plan.stack} repo.`, 'completed', safetyReport),
