@@ -4,8 +4,14 @@ const listItems = (items: string[]) => (items.length > 0
   ? items.map((item) => `- ${item}`).join('\n')
   : '- None');
 
+const formatReceiptSafety = (receipt: Receipt) => (
+  receipt.safetyPolicyVersion && receipt.safetyStatus
+    ? ` _(policy ${receipt.safetyPolicyVersion}, status ${receipt.safetyStatus})_`
+    : ''
+);
+
 const formatReceipt = (receipt: Receipt) => (
-  `- **${receipt.status.toUpperCase()}** · ${receipt.action} — ${receipt.detail}`
+  `- **${receipt.status.toUpperCase()}** · ${receipt.action} — ${receipt.detail}${formatReceiptSafety(receipt)}`
 );
 
 const formatReceipts = (receipts: Receipt[]) => (receipts.length > 0
@@ -33,6 +39,13 @@ export const buildMarkdownRideReceipt = (result: GithubCreateRepoResult) => `# R
 - **Default branch:** ${result.defaultBranch}
 - **Completed at:** ${latestReceiptTimestamp(result)}
 
+## Safety Policy
+
+- **Policy version:** ${result.summary.safetyPolicyVersion}
+- **Safety status:** ${result.summary.safetyStatus}
+- **Warnings:** ${result.summary.safetyWarningCount}
+- **Blockers:** ${result.summary.safetyBlockerCount}
+
 ## Approval Summary
 
 - **Write artifacts:** ${result.summary.writeArtifactCount}
@@ -58,5 +71,5 @@ ${formatReceipts(result.receipts)}
 
 ## Boundary
 
-RepoRider generated this Markdown from the same typed create result shown on the Ride Complete screen. In mock mode, no token is requested, no remote repository is created, no files are pushed, and no issues are opened.
+RepoRider generated this Markdown from the same typed create result shown on the Ride Complete screen. In mock mode, no token is requested, no remote repository is created, no files are pushed, and no issues are opened. The safety policy section records which local policy version reviewed the ride package.
 `;
