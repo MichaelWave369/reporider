@@ -16,7 +16,7 @@ The goal is simple:
 - Typed auth capability model and mock-only auth status card
 - Typed token storage adapter seam with a null adapter that stores no credentials
 - Typed live-mode state machine locked to mock-only writes in this build
-- Receipt-ready dry-run writer adapter contract that performs no GitHub writes
+- Receipt-ready dry-run writer adapter contract that performs no GitHub writes and carries safety policy version/status metadata
 - Strengthened safety policy gate with policy version, named checks, reviewed file/issue content scope, package manifest checks, warning/blocker counts, rider-facing remediation guidance, and live-write boundary notes
 - Live idea-to-repo planner
 - Editable repo name, visibility, stack, and starter issue controls
@@ -37,8 +37,8 @@ The goal is simple:
 - Editable starter issue drafts with title/body/label controls
 - Issue-by-issue starter approval gate
 - Unified approval receipt preview for starter files and starter issues before create
-- Post-create Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, and receipts
-- Copy-ready Markdown ride receipt export after mock create
+- Post-create Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, receipts, and policy-coupled safety status
+- Copy-ready Markdown ride receipt export after mock create with safety policy version/status metadata
 - Session-only local ride history for recent mock ride receipts
 - Draft ride restore from session history with approvals intentionally reset
 - Content-sensitive approval fingerprints that stale out after edits
@@ -46,7 +46,7 @@ The goal is simple:
 - Reviewed starter-file content safety scan for credential-like and destructive-command signals
 - Reviewed package manifest safety checks for lifecycle hooks, risky scripts, package-manager commands, dependency names, dependency ranges, dependency sources, missing licenses, package private/visibility mismatches, and invalid JSON
 - Reviewed starter-issue body risk classification for credential, destructive, disclosure, ops, auth, and remote-execution signals
-- Safety fixture coverage for known-safe, path-policy, Unix/Windows absolute path, visibility, high-risk file, empty/large content, package manifest license/source/range review, reviewed file, reviewed issue, and remediation guidance examples
+- Safety fixture coverage for known-safe, path-policy, Unix/Windows absolute path, visibility, high-risk file, empty/large content, package manifest license/source/range review, reviewed file, reviewed issue, remediation guidance, and receipt policy-coupling examples
 - Mock create-repo ride flow that receives reviewed and approved file and issue drafts
 - GitHub write boundary model
 - OAuth/write-mode architecture contract before live GitHub writes
@@ -68,7 +68,7 @@ That means the app can simulate the full ride from approval to repo creation wit
 2. **Check auth capability** — user sees the typed auth state, currently `mock_only`, with OAuth request, token storage, and live writes all blocked.
 3. **Check token storage** — user sees the current null token storage adapter, which stores no credentials and keeps live writes blocked.
 4. **Check live mode** — user sees the typed live-mode state machine, currently `mock_only`, with arming, writing, and retry all blocked.
-5. **Check dry-run writer** — user sees the receipt-ready writer contract summarize approved artifacts and blocking reasons without performing GitHub writes.
+5. **Check dry-run writer** — user sees the receipt-ready writer contract summarize approved artifacts, safety policy version/status, and blocking reasons without performing GitHub writes.
 6. **Check safety policy** — user sees the strengthened safety policy gate with policy version, plan scope, reviewed file/issue content scope, package manifest checks, named checks, warnings, blockers, remediation guidance, and required gates.
 7. **Capture** — user speaks or types a rough idea.
 8. **Shape** — RepoRider turns it into a structured project brief.
@@ -93,18 +93,18 @@ That means the app can simulate the full ride from approval to repo creation wit
 27. **Ledger** — user reviews one unified approval receipt with file status, issue status, edit status, and compact fingerprints.
 28. **Guard** — safety checks catch unsafe repo names, public visibility review needs, secrets, Unix/Windows absolute paths, traversal paths, dangerous file names, risky defaults, package manifest lifecycle/script/dependency/license/private/range/source risks, reviewed-file credential/destructive/empty/large content, and reviewed-issue credential/security/ops/auth/empty/large risk signals; findings include cleanup guidance.
 29. **Create** — approved starter files and approved starter issues are pushed/opened on GitHub once live mode exists.
-30. **Complete** — user sees a final Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, and receipts.
-31. **Export ride** — user can open a copy-ready Markdown ride receipt for notes, PRs, issues, or handoffs.
+30. **Complete** — user sees a final Ride Complete summary with repo URL, queued files, queued issues, approval totals, edit totals, receipts, safety policy version, and safety status.
+31. **Export ride** — user can open a copy-ready Markdown ride receipt for notes, PRs, issues, or handoffs; the export includes policy version/status metadata.
 32. **History** — recent mock ride receipts remain available during the current app session for revisit/export.
 33. **Restore ride** — a previous session ride can reload its captured idea and steering controls as a new draft, with file drafts, issue drafts, and approvals reset.
 34. **Restore saved draft** — a saved draft slot can reload in-progress idea and steering controls, also with review state reset.
-35. **Receipt** — every action gets a human-readable audit trail.
+35. **Receipt** — every meaningful action gets a human-readable audit trail tied to the safety policy that reviewed the ride package.
 
 ## Planner behavior
 
 The current planner is local and deterministic. As the idea text changes, RepoRider regenerates the suggested repo plan, safety report, approval state, receipt preview, generated starter file previews, and generated starter issue previews.
 
-The rider can review the permission explainer, inspect the current mock-only auth capability state, inspect the null token storage adapter state, inspect the mock-only live-mode state machine, inspect the dry-run writer summary, inspect the strengthened safety policy gate with reviewed file content checks, package manifest safety checks, reviewed issue body risk classification, and remediation guidance, override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, save the current idea/steering controls into a session-only draft slot, label saved draft slots, duplicate a saved draft slot into a fresh branch slot, reorder saved draft slots in the session list, pin priority saved draft slots to the top, archive lower-priority saved draft slots away from the active console without deleting them, export a saved draft slot as copy-ready Markdown, paste a saved draft Markdown snapshot, preview the extracted planning inputs, save the preview as a session-only draft slot without changing the current editor, restore the preview as a fresh draft, edit starter-file drafts, compare generated vs rider-edited drafts, approve each file, edit starter issue drafts, approve each issue, review a unified approval ledger before creation, inspect a ride-complete summary after mock creation, export a copy-ready Markdown ride receipt, revisit recent mock ride receipts during the same app session, and restore either a completed ride's planning inputs or a saved in-progress draft as a fresh draft. Editing a file or issue after approval makes that artifact require approval again, because approvals are tied to the current draft content.
+The rider can review the permission explainer, inspect the current mock-only auth capability state, inspect the null token storage adapter state, inspect the mock-only live-mode state machine, inspect the dry-run writer summary, inspect the strengthened safety policy gate with reviewed file content checks, package manifest safety checks, reviewed issue body risk classification, and remediation guidance, override the generated repo name, choose public or private visibility, switch starter stacks, cap starter issue generation, save the current idea/steering controls into a session-only draft slot, label saved draft slots, duplicate a saved draft slot into a fresh branch slot, reorder saved draft slots in the session list, pin priority saved draft slots to the top, archive lower-priority saved draft slots away from the active console without deleting them, export a saved draft slot as copy-ready Markdown, paste a saved draft Markdown snapshot, preview the extracted planning inputs, save the preview as a session-only draft slot without changing the current editor, restore the preview as a fresh draft, edit starter-file drafts, compare generated vs rider-edited drafts, approve each file, edit starter issue drafts, approve each issue, review a unified approval ledger before creation, inspect a policy-coupled ride-complete summary after mock creation, export a copy-ready Markdown ride receipt, revisit recent mock ride receipts during the same app session, and restore either a completed ride's planning inputs or a saved in-progress draft as a fresh draft. Editing a file or issue after approval makes that artifact require approval again, because approvals are tied to the current draft content.
 
 It keeps repositories private by default, infers likely starter stacks from idea text, chooses starter files from the selected stack, includes `package.json` for code stacks, generates a first starter file preview set, and creates a small first issue set. It does not write to GitHub by itself.
 
@@ -173,4 +173,4 @@ CI runs both `npm run typecheck` and `npm run test:safety`.
 
 RepoRider must never surprise-write code to GitHub.
 
-Before live writes exist, the app should keep all write behavior mocked and visible. When live writes are introduced later, every created repo, file, issue, and receipt must be previewed and approved first.
+Before live writes exist, the app should keep all write behavior mocked and visible. When live writes are introduced later, every created repo, file, issue, receipt, and policy/version marker must be previewed and approved first.
