@@ -45,7 +45,7 @@ The goal is simple:
 - Code-stack `package.json` planning
 - Reviewed starter-file content safety scan for credential-like and destructive-command signals
 - Reviewed starter-issue body risk classification for credential, destructive, disclosure, ops, auth, and remote-execution signals
-- Safety fixture coverage for known-safe, warning, and blocker examples in reviewed file and issue content
+- Safety fixture coverage for known-safe, path-policy, visibility, high-risk file, reviewed file, and reviewed issue examples
 - Mock create-repo ride flow that receives reviewed and approved file and issue drafts
 - GitHub write boundary model
 - OAuth/write-mode architecture contract before live GitHub writes
@@ -138,44 +138,38 @@ npm run test:safety
 
 CI runs both `npm run typecheck` and `npm run test:safety`.
 
-## Docs
+## Documentation
 
-Start with:
+- [Product spec](docs/PRODUCT_SPEC.md)
+- [GitHub write boundary](docs/GITHUB_WRITE_BOUNDARY.md)
+- [OAuth/write-mode architecture](docs/OAUTH_WRITE_MODE_ARCHITECTURE.md)
+- [Permission explainer](docs/PERMISSION_EXPLAINER.md)
+- [Auth capability model](docs/AUTH_CAPABILITY_MODEL.md)
+- [Token storage adapter](docs/TOKEN_STORAGE_ADAPTER.md)
+- [Live-mode state machine](docs/LIVE_MODE_STATE_MACHINE.md)
+- [Dry-run writer adapter](docs/DRY_RUN_WRITER_ADAPTER.md)
+- [Safety policy gate](docs/SAFETY_POLICY_GATE.md)
+- [Safety fixtures](docs/SAFETY_FIXTURES.md)
+- [Saved draft slots](docs/SAVED_DRAFT_SLOTS.md)
+- [Saved draft labels](docs/SAVED_DRAFT_LABELS.md)
+- [Saved draft duplicate slot](docs/SAVED_DRAFT_DUPLICATE_SLOT.md)
+- [Saved draft reorder slot](docs/SAVED_DRAFT_REORDER_SLOT.md)
+- [Saved draft pin slot](docs/SAVED_DRAFT_PIN_SLOT.md)
+- [Saved draft archive slot](docs/SAVED_DRAFT_ARCHIVE_SLOT.md)
+- [Saved draft export](docs/SAVED_DRAFT_EXPORT.md)
+- [Saved draft import](docs/SAVED_DRAFT_IMPORT.md)
+- [Saved draft import preview](docs/SAVED_DRAFT_IMPORT_PREVIEW.md)
+- [Saved draft import save-to-slot](docs/SAVED_DRAFT_IMPORT_SAVE_SLOT.md)
+- [File approvals](docs/FILE_APPROVALS.md)
+- [Issue approvals](docs/ISSUE_APPROVALS.md)
+- [Unified approval ledger](docs/UNIFIED_APPROVAL_LEDGER.md)
+- [Ride complete](docs/RIDE_COMPLETE.md)
+- [Ride receipt export](docs/RIDE_RECEIPT_EXPORT.md)
+- [Ride history](docs/RIDE_HISTORY.md)
+- [Ride restore](docs/RIDE_RESTORE.md)
 
-- `docs/PRODUCT_SPEC.md`
-- `docs/ARCHITECTURE.md`
-- `docs/GITHUB_WRITE_BOUNDARY.md`
-- `docs/OAUTH_WRITE_MODE_ARCHITECTURE.md`
-- `docs/PERMISSION_EXPLAINER.md`
-- `docs/AUTH_CAPABILITY_MODEL.md`
-- `docs/TOKEN_STORAGE_ADAPTER.md`
-- `docs/LIVE_MODE_STATE_MACHINE.md`
-- `docs/DRY_RUN_WRITER_ADAPTER.md`
-- `docs/SAFETY_POLICY_GATE.md`
-- `docs/SAFETY_FIXTURES.md`
-- `docs/PLANNER.md`
-- `docs/README_PREVIEW.md`
-- `docs/STARTER_FILE_PREVIEWS.md`
-- `docs/EDITABLE_DRAFTS.md`
-- `docs/INLINE_DIFF_VIEW.md`
-- `docs/FILE_APPROVALS.md`
-- `docs/STARTER_ISSUE_APPROVALS.md`
-- `docs/APPROVAL_RECEIPT_PREVIEW.md`
-- `docs/RIDE_COMPLETE_SUMMARY.md`
-- `docs/MARKDOWN_RIDE_RECEIPT.md`
-- `docs/LOCAL_RIDE_HISTORY.md`
-- `docs/RESTORE_RIDE_DRAFT.md`
-- `docs/SAVED_DRAFT_SLOTS.md`
-- `docs/SAVED_DRAFT_SLOT_LABELS.md`
-- `docs/SAVED_DRAFT_DUPLICATE_SLOT.md`
-- `docs/SAVED_DRAFT_REORDER_SLOT.md`
-- `docs/SAVED_DRAFT_PIN_SLOT.md`
-- `docs/SAVED_DRAFT_ARCHIVE_SLOT.md`
-- `docs/SAVED_DRAFT_EXPORT.md`
-- `docs/SAVED_DRAFT_IMPORT.md`
-- `docs/SAVED_DRAFT_IMPORT_PREVIEW.md`
-- `docs/SAVED_DRAFT_IMPORT_SAVE_SLOT.md`
+## Safety stance
 
-## License
+RepoRider must never surprise-write code to GitHub.
 
-MIT — see `LICENSE`.
+Before live writes exist, the app should keep all write behavior mocked and visible. When live writes are introduced later, every created repo, file, issue, and receipt must be previewed and approved first.
