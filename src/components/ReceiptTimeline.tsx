@@ -5,6 +5,12 @@ type ReceiptTimelineProps = {
   receipts: Receipt[];
 };
 
+const formatReceiptMeta = (receipt: Receipt) => [
+  receipt.status,
+  receipt.timestamp,
+  receipt.receiptHash ? `hash ${receipt.receiptHash}` : undefined,
+].filter(Boolean).join(' · ');
+
 export const ReceiptTimeline = ({ receipts }: ReceiptTimelineProps) => {
   return (
     <View style={styles.card}>
@@ -13,7 +19,9 @@ export const ReceiptTimeline = ({ receipts }: ReceiptTimelineProps) => {
         <View key={receipt.id} style={styles.receipt}>
           <Text style={styles.action}>{receipt.action}</Text>
           <Text style={styles.detail}>{receipt.detail}</Text>
-          <Text style={styles.meta}>{receipt.status} · {receipt.timestamp}</Text>
+          {receipt.artifactFingerprint ? <Text style={styles.hashLine}>artifact · {receipt.artifactFingerprint}</Text> : null}
+          {receipt.previousReceiptHash ? <Text style={styles.hashLine}>previous · {receipt.previousReceiptHash}</Text> : null}
+          <Text style={styles.meta}>{formatReceiptMeta(receipt)}</Text>
         </View>
       ))}
     </View>
@@ -49,6 +57,12 @@ const styles = StyleSheet.create({
     color: '#cbd5e1',
     fontSize: 13,
     lineHeight: 18,
+  },
+  hashLine: {
+    color: '#bae6fd',
+    fontSize: 11,
+    fontWeight: '800',
+    lineHeight: 15,
   },
   meta: {
     color: '#94a3b8',
