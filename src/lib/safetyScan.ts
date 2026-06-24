@@ -8,7 +8,7 @@ import type {
   StarterFilePreview,
 } from '../types';
 
-const policyVersion = 'safety-policy-gate-v0.5';
+const policyVersion = 'safety-policy-gate-v0.6';
 
 const secretLikePatterns = [/\.env$/i, /secret/i, /token/i, /api[_-]?key/i, /credential/i, /password/i, /private[_-]?key/i];
 const unsafePathPatterns = [
@@ -188,6 +188,7 @@ const issueBodyWarningPatterns: RiskPattern[] = [
 const requiredGates = [
   'Every generated starter file must have a fresh content-bound approval.',
   'Every generated starter issue must have a fresh content-bound approval.',
+  'Every safety warning or blocker must include rider-facing remediation guidance.',
   'The reviewed starter-file contents must pass local credential/destructive-command checks.',
   'The reviewed starter-issue bodies must pass local credential/destructive/security/ops risk classification.',
   'The dry-run writer must summarize the exact reviewed package before live mode can be considered.',
@@ -198,6 +199,7 @@ const requiredGates = [
 const boundaryNotes = [
   'Safety policy findings are local planning, reviewed file-content, and reviewed issue-body checks, not proof that a repository is safe to publish.',
   'A passing safety report does not grant write authority and does not bypass human approvals.',
+  'Remediation guidance is a local cleanup prompt for the rider and is not automatic repair or approval.',
   'Reviewed file and issue content is scanned locally in the current app state and is not sent to GitHub by this gate.',
   'Saved drafts, imported Markdown, and restored rides always reset review state and never carry safety approval forward.',
   'Future live write mode must treat any warning as an explicit review prompt and any blocker as a hard stop.',
@@ -241,6 +243,66 @@ const summarizePolicy = (
 const contentFindingId = (kind: string, path: string, id: string) => `${kind}:${id}:${path}`;
 const issueFindingId = (kind: string, issueIndex: number, id: string) => `${kind}:${id}:issue-${issueIndex + 1}`;
 const issuePath = (issueIndex: number, issue: RepoIssuePlan) => `issue:${issueIndex + 1}:${issue.title}`;
+
+const remediationForFinding = (finding: SafetyFinding) => {
+  if (finding.id === 'baseline-pass') {
+    return 'No cleanup needed for this pass finding. Keep approvals fresh before any future write path.';
+  }
+
+  if (finding.id === 'unsafe-repo-name') {
+    return 'Rename the repo to a simple slug with no slashes or traversal, then regenerate/review the package.';
+  }
+
+  switch (finding.category) {
+    case 'visibility-review':
+      return 'Keep the repo private until the rider intentionally confirms public release language and reviewed content.';
+    case 'secret-like-path':
+      return 'Rename or remove this generated path. Use sample or template files for environment values instead of committing secret-like files.';
+    case 'unsafe-path':
+      return 'Move this generated file to a safe repo-relative path. Remove absolute paths, home-directory paths, traversal, key-file names, and Windows/UNC roots.';
+    case 'high-risk-file':
+      return 'Open the generated file, reduce risky operations where possible, and require explicit file approval after the final edit.';
+    case 'large-issue-set':
+      return 'Reduce the starter issue count or split the package into smaller reviewed batches before any future issue creation.';
+    case 'empty-content':
+      return 'Add intentional starter content or remove the empty file from the generated package before approval.';
+    case 'large-content':
+      return 'Split the file into smaller reviewed files or confirm the large starter content is intentional before approval.';
+    case 'credential-material':
+      return 'Remove credential-like material entirely. Replace examples with obvious placeholders such as YOUR_TOKEN_HERE before re-review.';
+    case 'destructive-command':
+      return 'Remove destructive commands or rewrite them as non-executing documentation warnings before re-review.';
+    case 'remote-execution':
+      return 'Avoid pipe-to-shell instructions. Prefer documented manual install steps or a reviewed local script with explicit approval.';
+    case 'permission-risk':
+      return 'Replace broad permission commands with the narrowest required permission and explain why it is needed.';
+    case 'credential-reference':
+      return 'Confirm the text uses placeholders only and does not include real secrets, tokens, passwords, or live authorization headers.';
+    case 'security-disclosure':
+      return 'Review whether this belongs in a private security process before opening or publishing the issue.';
+    case 'privileged-operation':
+      return 'Clarify that privileged operations are examples only, remove dangerous commands, or keep the issue out of starter automation.';
+    case 'production-impact':
+      return 'Rewrite production/deployment language so it cannot be mistaken for live ops instructions, or hold it for a later reviewed release task.';
+    case 'auth-flow-risk':
+      return 'Keep OAuth/token language boundary-safe: no live tokens, no requested secrets, and no live-mode claims before auth gates exist.';
+    case 'empty-body':
+      return 'Add a clear issue body with safe acceptance criteria or remove the empty issue from the starter package.';
+    case 'large-body':
+      return 'Shorten or split the issue body so the starter issue remains reviewable before any future issue creation.';
+    case 'baseline':
+      return 'No cleanup needed. Continue with fresh review and approval gates.';
+    default:
+      return finding.severity === 'blocker'
+        ? 'Resolve this blocker and re-run the safety scan before approval.'
+        : 'Review this warning, document the decision, and keep approvals fresh.';
+  }
+};
+
+const withRemediation = (finding: SafetyFinding): SafetyFinding => ({
+  ...finding,
+  remediation: finding.remediation ?? remediationForFinding(finding),
+});
 
 const scanReviewedFileContent = (reviewedStarterFiles: StarterFilePreview[]) => {
   const findings: SafetyFinding[] = [];
@@ -435,9 +497,10 @@ export const scanRepoPlan = (
     });
   }
 
-  const warningCount = countSeverity(findings, 'warning');
-  const blockerCount = countSeverity(findings, 'blocker');
-  const status = mostSevereStatus(findings);
+  const findingsWithRemediation = findings.map(withRemediation);
+  const warningCount = countSeverity(findingsWithRemediation, 'warning');
+  const blockerCount = countSeverity(findingsWithRemediation, 'blocker');
+  const status = mostSevereStatus(findingsWithRemediation);
   const reviewedFileContentCharacters = reviewedStarterFiles.reduce((total, file) => total + file.content.length, 0);
   const reviewedIssueContentCharacters = reviewedStarterIssues.reduce((total, issue) => (
     total + issue.title.length + issue.body.length + issue.labels.join(' ').length
@@ -449,7 +512,7 @@ export const scanRepoPlan = (
   const issueRiskWarningCount = reviewedIssueFindings.filter((finding) => finding.severity === 'warning').length;
   const issueRiskCheckStatus: SafetyPolicyCheckStatus = issueRiskBlockerCount > 0 ? 'blocker' : issueRiskWarningCount > 0 ? 'warning' : 'pass';
   const issueCountCheckStatus: SafetyPolicyCheckStatus = reviewedStarterIssues.length > 10 ? 'warning' : 'pass';
-  const pathPolicyStatus: SafetyPolicyCheckStatus = findings.some((finding) => (
+  const pathPolicyStatus: SafetyPolicyCheckStatus = findingsWithRemediation.some((finding) => (
     finding.id.startsWith('secret-like-path') || finding.id.startsWith('unsafe-path')
   )) ? 'blocker' : 'pass';
 
@@ -479,7 +542,7 @@ export const scanRepoPlan = (
     buildCheck(
       'file-risk-policy',
       'File risk policy',
-      findings.some((finding) => finding.id.startsWith('high-risk-file')) ? 'warning' : 'pass',
+      findingsWithRemediation.some((finding) => finding.id.startsWith('high-risk-file')) ? 'warning' : 'pass',
       'Generated file risk levels were checked for high-risk artifacts requiring explicit review.',
     ),
     buildCheck(
@@ -519,7 +582,7 @@ export const scanRepoPlan = (
       visibility: plan.visibility,
     },
     checks,
-    findings,
+    findings: findingsWithRemediation,
     requiredGates,
     boundaryNotes,
   };
