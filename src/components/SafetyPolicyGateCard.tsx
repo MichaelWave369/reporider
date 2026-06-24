@@ -32,15 +32,23 @@ export const SafetyPolicyGateCard = ({ report }: SafetyPolicyGateCardProps) => (
       </View>
       <View style={styles.metricBox}>
         <Text style={styles.metricValue}>{report.reviewedScope.issueCount}</Text>
-        <Text style={styles.metricLabel}>Issues checked</Text>
+        <Text style={styles.metricLabel}>Plan issues</Text>
       </View>
       <View style={styles.metricBox}>
         <Text style={styles.metricValue}>{report.reviewedScope.reviewedFileContentCount}</Text>
-        <Text style={styles.metricLabel}>Content files</Text>
+        <Text style={styles.metricLabel}>File drafts</Text>
       </View>
       <View style={styles.metricBox}>
         <Text style={styles.metricValue}>{report.reviewedScope.reviewedFileContentCharacters}</Text>
-        <Text style={styles.metricLabel}>Content chars</Text>
+        <Text style={styles.metricLabel}>File chars</Text>
+      </View>
+      <View style={styles.metricBox}>
+        <Text style={styles.metricValue}>{report.reviewedScope.reviewedIssueContentCount}</Text>
+        <Text style={styles.metricLabel}>Issue drafts</Text>
+      </View>
+      <View style={styles.metricBox}>
+        <Text style={styles.metricValue}>{report.reviewedScope.reviewedIssueContentCharacters}</Text>
+        <Text style={styles.metricLabel}>Issue chars</Text>
       </View>
     </View>
 
@@ -59,6 +67,7 @@ export const SafetyPolicyGateCard = ({ report }: SafetyPolicyGateCardProps) => (
     {report.findings.slice(0, 8).map((finding) => (
       <View key={`${finding.id}:${finding.path ?? 'global'}`} style={styles.findingRow}>
         <Text style={styles.findingSeverity}>{finding.severity}</Text>
+        {finding.category ? <Text style={styles.findingCategory}>{finding.category}</Text> : null}
         <Text style={styles.findingMessage}>{finding.path ? `${finding.path}: ${finding.message}` : finding.message}</Text>
       </View>
     ))}
@@ -175,6 +184,12 @@ const styles = StyleSheet.create({
   },
   findingSeverity: {
     color: '#fde68a',
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  findingCategory: {
+    color: '#67e8f9',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
