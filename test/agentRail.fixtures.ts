@@ -50,6 +50,12 @@ alwaysNoAuthority(block);
 eq(block.disposition,'BLOCKED','unsafe command blocked');
 ok((block.data?.summary as {blockers:number}).blockers>0,'native safety scanner reported blocker');
 
+const unsafePreview=runAgentRail(base('preview',{edits:{files:[{path:'README.md',content:'rm -rf /;'}]}}));
+alwaysNoAuthority(unsafePreview);
+eq(unsafePreview.disposition,'BLOCKED','unsafe preview must fail closed');
+eq(unsafePreview.data?.files,undefined,'unsafe content not returned to caller');
+const unsafePlan=runAgentRail(base('plan',{edits:{files:[{path:'README.md',content:'rm -rf /;'}]}}));
+eq(unsafePlan.disposition,'BLOCKED','unsafe plan cannot look approvable');
 const dry=runAgentRail(base('dry_run'));
 alwaysNoAuthority(dry);
 eq(dry.data?.would_create_repository,false,'dry-run never writes');
