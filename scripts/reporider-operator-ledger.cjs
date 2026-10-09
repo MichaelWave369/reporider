@@ -3,14 +3,15 @@
 /**
  * RR-A06: operator-only, tamper-EVIDENT local evidence chain.
  * Never surfaced as an MCP method. Never authenticates anyone and never
- * approves/execut es GitHub writes. Local SHA-256 records can be rewritten by
+ * approves/executes GitHub writes. Local SHA-256 records can be rewritten by
  * an attacker with filesystem access; export HEAD separately to pin history.
  */
 const fs=require('node:fs');
 const path=require('node:path');
 const crypto=require('node:crypto');
 const {TextDecoder}=require('node:util');
-const {assertInbox,inspectPacket}=require('./reporider-operator-core.cjs');
+const {assertInbox,readPacket,PACKET}=require('./reporider-operator-core.cjs');
+const {inspectReviewImport}=require('../.agent-build/src/agent/reviewDesk.js');
 const NOTE_PATTERN=/^reporider-note-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.json$/;
 const ENTRY_PATTERN=/^entry-(\d{6})\.json$/;
 const SUBDIR='operator-ledger';
@@ -92,12 +93,25 @@ function readNote(notes,filename){
   typeof note.proposal_fingerprint!=='string')fail('NOTE_NOT_INFORMATIONAL');
  return{contents,note};
 }
+function verifyNoteAgainstPacket(note,verified){
+ const wanted=[
+  ...verified.files.map(f=>'file:'+f.path+':'+f.approval_fingerprint),
+  ...verified.issues.map(it=>'issue:'+it.index+':'+it.approval_fingerprint)
+ ];
+ if(note.required_artifacts!==wanted.length||
+   new Set(note.checked_artifacts).size!==note.checked_artifacts.length||
+   note.checked_artifacts.some(key=>typeof key!=='string'||!wanted.includes(key))||
+   (note.decision==='RECOMMEND_FOR_SEPARATE_AUTHORIZATION'&&
+    (note.checked_artifacts.length!==wanted.length||
+     wanted.some(key=>!note.checked_artifacts.includes(key)))))
+  fail('LEDGER_NOTE_REVIEW_MISMATCH');
+}
 function validRecordShape(e){
  return strictObject(e)&&e.schema===SCHEMA&&
    Number.isInteger(e.sequence)&&e.sequence>=1&&e.sequence<=MAX_ENTRIES&&
    hex64(e.previous_entry_sha256)&&hex64(e.packet_sha256)&&hex64(e.note_sha256)&&hex64(e.entry_sha256)&&
    typeof e.proposal_fingerprint==='string'&&typeof e.recorded_at==='string'&&
-   typeof e.packet_filename==='string'&&/^reporider-review-[a-f0-9-]+\.json$/.test(e.packet_filename)&&
+   typeof e.packet_filename==='string'&&PACKET.test(e.packet_filename)&&
    NOTE_PATTERN.test(e.note_filename)&&
    ['RECOMMEND_FOR_SEPARATE_AUTHORIZATION','REQUEST_CHANGES','DECLINE'].includes(e.decision)&&
    e.source_identity_authenticated===false&&e.reviewer_identity_authenticated===false&&
@@ -131,26 +145,17 @@ function verifyLedger(inbox){
  const loc=existing(inbox);
  const records=readEntries(loc.dir);
  for(const entry of records){
-  const packet=inspectPacket(loc.base,entry.packet_filename);
+  const rawPacket=readPacket(loc.base,entry.packet_filename);
+  const packet=inspectReviewImport(rawPacket);
   if(!packet.ok)fail('LEDGER_PACKET_MISSING_OR_CHANGED');
-  if(packet.verified.fingerprint!==entry.proposal_fingerprint)
+  if(packet.value.fingerprint!==entry.proposal_fingerprint)
    fail('LEDGER_PROPOSAL_CHANGED');
-  const rawPacket=fs.readFileSync(path.join(loc.base,entry.packet_filename));
-  if(sha256(rawPacket)!==entry.packet_sha256)fail('LEDGER_PACKET_HASH_MISMATCH');
+  if(sha256(Buffer.from(rawPacket,'utf8'))!==entry.packet_sha256)fail('LEDGER_PACKET_HASH_MISMATCH');
   const {contents,note}=readNote(loc.notes,entry.note_filename);
   if(sha256(contents)!==entry.note_sha256)fail('LEDGER_NOTE_HASH_MISMATCH');
   if(note.proposal_fingerprint!==entry.proposal_fingerprint||note.decision!==entry.decision)
    fail('LEDGER_NOTE_MISMATCH');
-  const validKeys=[
-   ...packet.verified.files.map(f=>'file:'+f.path+':'+f.approval_fingerprint),
-   ...packet.verified.issues.map(it=>'issue:'+it.index+':'+it.approval_fingerprint),
-  ];
-  if(note.required_artifacts!==validKeys.length||
-     note.checked_artifacts.some(key=>!validKeys.includes(key))||
-     (note.decision==='RECOMMEND_FOR_SEPARATE_AUTHORIZATION'&&
-      (note.checked_artifacts.length!==validKeys.length||
-       validKeys.some(key=>!note.checked_artifacts.includes(key)))))
-   fail('LEDGER_NOTE_REVIEW_MISMATCH');
+  verifyNoteAgainstPacket(note,packet.value);
  }
  return{
   schema:'reporider.local.ledger-verify.v0.1',
@@ -165,13 +170,15 @@ function verifyLedger(inbox){
 }
 function recordEvidence(inbox,packetFilename,noteFilename){
  const loc=existing(inbox);
- if(typeof packetFilename!=='string'||!/^reporider-review-[a-f0-9-]+\.json$/.test(packetFilename))
+ if(typeof packetFilename!=='string'||!PACKET.test(packetFilename))
   fail('INVALID_PACKET_NAME');
- const packet=inspectPacket(loc.base,packetFilename);
+ const packetSource=readPacket(loc.base,packetFilename);
+ const packet=inspectReviewImport(packetSource);
  if(!packet.ok)fail('INVALID_PACKET');
  const noteInfo=readNote(loc.notes,noteFilename);
- if(noteInfo.note.proposal_fingerprint!==packet.verified.fingerprint)
+ if(noteInfo.note.proposal_fingerprint!==packet.value.fingerprint)
   fail('PROPOSAL_FINGERPRINT_MISMATCH');
+ verifyNoteAgainstPacket(noteInfo.note,packet.value);
  // Fail-closed full current history verification before append.
  const lock=path.join(loc.dir,'.append.lock');
  let fd;
@@ -184,14 +191,18 @@ function recordEvidence(inbox,packetFilename,noteFilename){
   if(prior.entry_count>=MAX_ENTRIES)fail('LEDGER_CAPACITY_REACHED');
   const prev=readEntries(loc.dir);
   if(prev.some(x=>x.note_filename===noteFilename))fail('NOTE_ALREADY_RECORDED');
-  const packetBytes=fs.readFileSync(path.join(loc.base,packetFilename));
-  const noteBytes=Buffer.from(noteInfo.contents,'utf8');
+  // Recheck both pieces of evidence after obtaining the exclusive append lock.
+  const packetNow=readPacket(loc.base,packetFilename);
+  const noteNow=readNote(loc.notes,noteFilename);
+  if(packetNow!==packetSource||noteNow.contents!==noteInfo.contents)fail('EVIDENCE_CHANGED_DURING_APPEND');
+  const packetBytes=Buffer.from(packetNow,'utf8');
+  const noteBytes=Buffer.from(noteNow.contents,'utf8');
   const entry={
    schema:SCHEMA,sequence:prior.entry_count+1,
    previous_entry_sha256:prior.head_sha256,
    packet_filename:packetFilename,
    note_filename:noteFilename,
-   proposal_fingerprint:packet.verified.fingerprint,
+   proposal_fingerprint:packet.value.fingerprint,
    decision:noteInfo.note.decision,
    packet_sha256:sha256(packetBytes),note_sha256:sha256(noteBytes),
    recorded_at:new Date().toISOString(),
