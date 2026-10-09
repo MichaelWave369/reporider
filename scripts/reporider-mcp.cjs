@@ -13,12 +13,16 @@
  */
 const {runAgentRail, REQUEST_SCHEMA, MAX_REQUEST_BYTES} = require('../.agent-build/src/agent/rail.js');
 const {requestProperties} = require('./reporider-mcp-schema.cjs');
+const {createCourier} = require('./reporider-courier.cjs');
+// Fails startup if explicitly enabled with an unsafe or nonexistent inbox.
+// Default server never writes to disk.
+const courier=createCourier(process.env);
 
 const MODERN = '2026-07-28';
 const LEGACY = '2025-11-25';
 const MAX_LINE_BYTES = MAX_REQUEST_BYTES + 8192; // MCP wire envelope overhead
-const INFO = {name:'reporider-agent-rail',version:'0.2.0'};
-const INSTRUCTIONS = 'Local deterministic planning only. No authorization, GitHub writes, login, remote calls, notifications, or actual review submission. The review packet must be delivered separately by the host for human review.';
+const INFO = {name:'reporider-agent-rail',version:'0.4.0'};
+const INSTRUCTIONS = 'Local deterministic planning and review only. No GitHub writes, tokens, approvals, notification to humans, or external submission. A separately configured courier may save bounded packets to an owner-selected local folder but never authorize execution.';
 const ACTIONS = [
   ['plan','Plan a repository','Generate a private-first starter repo plan from an idea. Proposals are never permission to create a repo.'],
   ['preview','Preview starter files and issues','Generate/edit only planned draft files and issues, with content fingerprints. No execution or approval.'],
@@ -36,6 +40,14 @@ const TOOLS = ACTIONS.map(([action,title,description])=>({
   },
   annotations:{title,readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}
 }));
+
+if(courier) TOOLS.push({
+ name:'reporider_enqueue_review',
+ title:'Save review proposal in operator local inbox',
+ description:'OPTIONAL LOCAL WRITE: save a zero-blocker RR-A01 review packet into the operator pre-configured, bounded local directory. Does not notify, approve, execute, or write to GitHub. Requires explicit operator opt-in.',
+ inputSchema:{type:'object',additionalProperties:false,required:['idea'],properties:requestProperties},
+ annotations:{title:'Save review proposal in local inbox',readOnlyHint:false,destructiveHint:false,idempotentHint:false,openWorldHint:false}
+});
 
 const jsonrpc = (id,result)=>({jsonrpc:'2.0',id,result});
 const error = (id,code,message)=>({jsonrpc:'2.0',id,error:{code,message}});
@@ -181,12 +193,15 @@ function route(msg) {
       return error(id,-32602,'RESERVED_TOOL_ARGUMENT');
     const action=TOOLS.find(t=>t.name===p.name);
     if(!action)return error(id,-32602,'UNKNOWN_TOOL');
-    const input={...p.arguments,schema:REQUEST_SCHEMA,action:p.name.slice('reporider_'.length)};
+    const input={...p.arguments,schema:REQUEST_SCHEMA,action:p.name==='reporider_enqueue_review'?'submit_for_review':p.name.slice('reporider_'.length)};
     // Never mutate the caller's argument object or store a model request.
     let reply;
-    try{reply=runAgentRail(input);}
-    catch{reply={schema:'reporider.agent.response.v0.1',action:'invalid_request',mode:'mock_only',
-      disposition:'BLOCKED',error_code:'MCP_RAIL_FAILURE',reason:'Fail closed',authority_granted:false,
+    try{
+      reply=runAgentRail(input);
+      if(courier && p.name==='reporider_enqueue_review' && reply.disposition==='REVIEW_REQUIRED') reply=courier.enqueue(reply);
+    }
+    catch(e){reply={schema:'reporider.agent.response.v0.1',action:'invalid_request',mode:'mock_only',
+      disposition:'BLOCKED',error_code:(e&&e.code)||'MCP_RAIL_FAILURE',reason:'Fail closed. No approval or GitHub operation occurred.',authority_granted:false,
       action_executed:false,repository_created:false,notification_sent:false,memory_admitted:false,
       review_dispatched:false,source_identity_verified:false};}
     const body={
