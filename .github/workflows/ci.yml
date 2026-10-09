@@ -39,3 +39,5 @@ jobs:
         run: npm run operator:test
       - name: RR-A06 local evidence ledger tamper controls
         run: npm run ledger:test
+      - name: RR-A07 independent ledger checkpoint rollback controls
+        run: npm run checkpoint:test

@@ -236,4 +236,27 @@ function recordEvidence(inbox,packetFilename,noteFilename){
   try{fs.unlinkSync(lock);}catch{}
  }
 }
-module.exports={initLedger,verifyLedger,recordEvidence,SCHEMA,EMPTY_HEAD,MAX_ENTRIES};
+/**
+ * Check a previously witnessed head against the actual prefix of the current
+ * verified ledger. A newer suffix is accepted; truncation/rewrite is rejected.
+ * This does NOT verify that the expected hash came from an independent witness.
+ */
+function verifyLedgerAnchor(inbox,expectedSequence,expectedHead){
+ if(!Number.isInteger(expectedSequence)||expectedSequence<0||expectedSequence>MAX_ENTRIES||
+    !hex64(expectedHead))fail('INVALID_CHECKPOINT');
+ const current=verifyLedger(inbox);
+ if(expectedSequence>current.entry_count)
+  return{matches:false,error_code:'CHECKPOINT_AHEAD_OF_LEDGER',
+    current_sequence:current.entry_count,current_head_sha256:current.head_sha256};
+ const loc=existing(inbox);
+ const records=readEntries(loc.dir);
+ if(records.length!==current.entry_count||
+    (records.length&&records[records.length-1].entry_sha256!==current.head_sha256))
+  fail('LEDGER_CHANGED_DURING_CHECK');
+ const prefix=expectedSequence===0?EMPTY_HEAD:records[expectedSequence-1].entry_sha256;
+ return{matches:prefix===expectedHead,
+   error_code:prefix===expectedHead?null:'CHECKPOINT_HISTORY_DIVERGED',
+   current_sequence:current.entry_count,current_head_sha256:current.head_sha256,
+   prefix_sequence:expectedSequence,prefix_sha256:prefix};
+}
+module.exports={initLedger,verifyLedger,verifyLedgerAnchor,recordEvidence,SCHEMA,EMPTY_HEAD,MAX_ENTRIES};

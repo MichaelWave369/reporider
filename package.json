@@ -19,7 +19,8 @@
     "operator:console": "node scripts/reporider-operator.cjs",
     "operator:test": "npm run agent:build && node scripts/testOperatorConsole.cjs",
     "ledger:console": "node scripts/reporider-ledger.cjs",
-    "ledger:test": "npm run agent:build && node scripts/testOperatorLedger.cjs"
+    "ledger:test": "npm run agent:build && node scripts/testOperatorLedger.cjs",
+    "checkpoint:test": "npm run agent:build && node scripts/testLedgerCheckpoints.cjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",
