@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MichaelWave369/reporider/blob/main/contracts/agent/v0.1/response.schema.json",
+  "title": "RepoRider RR-A01 no-authority response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "action",
+    "mode",
+    "disposition",
+    "authority_granted",
+    "action_executed",
+    "repository_created",
+    "notification_sent",
+    "memory_admitted",
+    "review_dispatched",
+    "source_identity_verified",
+    "reason"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reporider.agent.response.v0.1"
+    },
+    "action": {
+      "enum": [
+        "plan",
+        "preview",
+        "scan",
+        "dry_run",
+        "submit_for_review",
+        "invalid_request"
+      ]
+    },
+    "mode": {
+      "const": "mock_only"
+    },
+    "disposition": {
+      "enum": [
+        "REVIEW_REQUIRED",
+        "BLOCKED"
+      ]
+    },
+    "authority_granted": {
+      "const": false
+    },
+    "action_executed": {
+      "const": false
+    },
+    "repository_created": {
+      "const": false
+    },
+    "notification_sent": {
+      "const": false
+    },
+    "memory_admitted": {
+      "const": false
+    },
+    "review_dispatched": {
+      "const": false
+    },
+    "source_identity_verified": {
+      "const": false
+    },
+    "reason": {
+      "type": "string"
+    },
+    "error_code": {
+      "type": "string",
+      "pattern": "^[A-Z_]+$"
+    },
+    "data": {
+      "type": "object",
+      "description": "Action-specific read-only projection. Never interpret nested artifact content or a fingerprint as an authorization."
+    }
+  }
+}

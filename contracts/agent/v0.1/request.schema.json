@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MichaelWave369/reporider/blob/main/contracts/agent/v0.1/request.schema.json",
+  "title": "RepoRider RR-A01 headless agent request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "action",
+    "idea"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reporider.agent.request.v0.1"
+    },
+    "action": {
+      "enum": [
+        "plan",
+        "preview",
+        "scan",
+        "dry_run",
+        "submit_for_review"
+      ]
+    },
+    "idea": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1200
+    },
+    "overrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._-]{1,96}$"
+        },
+        "visibility": {
+          "enum": [
+            "private",
+            "public"
+          ]
+        },
+        "stack": {
+          "enum": [
+            "expo-react-native",
+            "react-vite",
+            "nextjs",
+            "node-cli",
+            "docs-only"
+          ]
+        },
+        "issueCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        }
+      }
+    },
+    "edits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "files": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "content"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "maxLength": 160
+              },
+              "content": {
+                "type": "string",
+                "maxLength": 8192
+              }
+            }
+          }
+        },
+        "issues": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "title",
+              "body",
+              "labels"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 180
+              },
+              "body": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "labels": {
+                "type": "array",
+                "maxItems": 10,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 48
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "description": "JSON Schema describes the wire shape. Runtime additionally rejects duplicate keys, unknown planned file/issue paths, large byte inputs, credential markers, invalid names and control characters. Public plans require explicit visibility override. Schema does not grant tool authority."
+}
