@@ -62,3 +62,7 @@ Next planner upgrades should include:
 ## Boundary
 
 This planner does not create repositories by itself. It only prepares a `RepoPlan` and local preview artifacts. Repo creation remains behind the approval and GitHub write boundary.
+
+## Public/private education and confirmation (issue #23)
+
+RepoRider clearly explains the scope of public and private repositories in both the mobile UI and React GitPage. Private remains the default. Choosing public requires an additional independent checkbox in the mock-creation panel, and the shared mock writer refuses public plans without `publicVisibilityConfirmed: true`. This confirmation resets on plan/artifact changes and does not grant real GitHub write authority. See [visibility gate](REPO_VISIBILITY_ISSUE_23.md).

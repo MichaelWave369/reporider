@@ -1,4 +1,5 @@
 import { buildStarterFilePreviews, summarizeStarterFileDrafts } from '../starterFilePreview';
+import { canProceedWithVisibility } from '../visibilityGate';
 import { buildStarterIssuePreviews, summarizeStarterIssueDrafts } from '../starterIssuePreview';
 import {
   attachReceiptChain,
@@ -42,11 +43,16 @@ export const createMockGitHubRepository = async ({
   plan,
   safetyReport,
   approvedByUser,
+  publicVisibilityConfirmed = false,
   starterFiles,
   starterIssues,
 }: GithubCreateRepoRequest): Promise<GithubCreateRepoResult> => {
   if (!approvedByUser) {
     throw new Error('Every starter file and starter issue must be approved before RepoRider can create a repository.');
+  }
+
+  if (!canProceedWithVisibility(plan.visibility, publicVisibilityConfirmed)) {
+    throw new Error('Public visibility requires a separate explicit acknowledgement before even a mock ride.');
   }
 
   if (safetyReport.status === 'blocked') {
