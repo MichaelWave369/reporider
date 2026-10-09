@@ -177,6 +177,8 @@ function route(msg) {
     if(!isObject(p) || typeof p.name!=='string' || !own(p,'arguments') || !isObject(p.arguments) ||
        Object.keys(p).some(k=>k!=='name'&&k!=='arguments'&&k!=='_meta'))
       return error(id,-32602,'INVALID_TOOL_PARAMS');
+    if(own(p.arguments,'schema') || own(p.arguments,'action'))
+      return error(id,-32602,'RESERVED_TOOL_ARGUMENT');
     const action=TOOLS.find(t=>t.name===p.name);
     if(!action)return error(id,-32602,'UNKNOWN_TOOL');
     const input={...p.arguments,schema:REQUEST_SCHEMA,action:p.name.slice('reporider_'.length)};
