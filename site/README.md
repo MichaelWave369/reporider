@@ -72,3 +72,7 @@ The client validates structure and internal counts only. It **does not** recompu
 ## Issue #23: visibility education
 
 The Idea Garage shows public/private access consequences. Public mock rides require a separate explicit checkbox in the Ride Console and the shared mock writer refuses unconfirmed public plans. Idea/plan changes reset the checkbox. No OAuth, tokens or GitHub writes are enabled.
+
+## Accessibility baseline (issue #18)
+
+The public site supports a skip-to-main keyboard shortcut, visible focus on controls, reduced motion, accessible explorer state, and mobile-sized targets on primary controls. The Expo UI now labels its primary editors and selection controls. Automated contrast/semantics checks are in `site/tests/accessibility.test.mjs`; manual assistive-tech, screen-reader and zoom testing remains required. [Full QA checklist](../docs/ACCESSIBILITY_BASELINE_ISSUE_18.md).

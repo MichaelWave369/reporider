@@ -214,3 +214,7 @@ The public site validates the report's *internal structure*, **not** the underly
 ## Visibility education and confirmation (GitHub issue #23)
 
 RepoRider's native and GitPage interfaces explain public and private repo access. A separate checked confirmation is required to simulate any **public** repo, and the mock writer enforces that requirement even if the UI is bypassed. Private plans remain the default. This does not authorize or enable real GitHub writes. [Details](docs/REPO_VISIBILITY_ISSUE_23.md).
+
+## Issue #18: Accessibility baseline
+
+RepoRider's mobile controls and public GitPage now have more descriptive labels, accessible selection states, visible keyboard focus, reduced-motion support, a skip link, and explicit typed idea input. Selected WCAG AA contrast pairs are automatically checked in site tests. This is a **baseline**, not full WCAG certification. [Accessibility details and manual QA](docs/ACCESSIBILITY_BASELINE_ISSUE_18.md).

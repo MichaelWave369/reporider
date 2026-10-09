@@ -43,7 +43,7 @@ export const RepoPlanControls = ({
             RepoRider suggests the first shape. You can change the name, visibility, stack, and starter issue count before approval.
           </Text>
         </View>
-        <Pressable accessibilityRole="button" disabled={!hasOverrides} onPress={onReset} style={[styles.resetButton, !hasOverrides && styles.disabledButton]}>
+        <Pressable accessibilityLabel="Reset repository plan controls" accessibilityRole="button" disabled={!hasOverrides} onPress={onReset} style={[styles.resetButton, !hasOverrides && styles.disabledButton]}>
           <Text style={styles.resetText}>Reset</Text>
         </Pressable>
       </View>
@@ -51,11 +51,13 @@ export const RepoPlanControls = ({
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Repo name</Text>
         <TextInput
+          accessibilityLabel="Repository name"
+          accessibilityHint="Edit the suggested GitHub repository name"
           autoCapitalize="none"
           autoCorrect={false}
           onChangeText={(name) => updateOverrides({ name })}
           placeholder={suggestedPlan.name}
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#94a3b8"
           style={styles.input}
           value={repoNameValue}
         />
@@ -67,7 +69,9 @@ export const RepoPlanControls = ({
         <View style={styles.chipRow}>
           {visibilityOptions.map((visibility) => (
             <Pressable
-              accessibilityRole="button"
+              accessibilityRole="radio"
+              accessibilityLabel={`Repository visibility: ${visibility}`}
+              accessibilityState={{ selected: plan.visibility === visibility }}
               key={visibility}
               onPress={() => updateOverrides({ visibility })}
               style={[styles.chip, plan.visibility === visibility && styles.selectedChip]}
@@ -85,7 +89,9 @@ export const RepoPlanControls = ({
         <View style={styles.chipRow}>
           {starterStackOptions.map((stack: StarterStack) => (
             <Pressable
-              accessibilityRole="button"
+              accessibilityRole="radio"
+              accessibilityLabel={`Starter stack: ${starterStackLabels[stack]}`}
+              accessibilityState={{ selected: plan.stack === stack }}
               key={stack}
               onPress={() => updateOverrides({ stack })}
               style={[styles.chip, plan.stack === stack && styles.selectedChip]}
@@ -101,7 +107,9 @@ export const RepoPlanControls = ({
         <View style={styles.chipRow}>
           {issueCountOptions.map((issueCount) => (
             <Pressable
-              accessibilityRole="button"
+              accessibilityRole="radio"
+              accessibilityLabel={`Starter issue count: ${issueCount}`}
+              accessibilityState={{ selected: selectedIssueCount === issueCount }}
               key={issueCount}
               onPress={() => updateOverrides({ issueCount })}
               style={[styles.chip, selectedIssueCount === issueCount && styles.selectedChip]}

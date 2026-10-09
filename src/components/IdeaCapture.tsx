@@ -13,7 +13,8 @@ export const IdeaCapture = ({ idea, onIdeaChange }: IdeaCaptureProps) => {
         Type or dictate an idea. RepoRider updates the repo name, stack, starter files, safety scan, and receipts as the idea changes.
       </Text>
       <TextInput
-        accessibilityLabel="Repo idea"
+        accessibilityLabel="Repo idea, typed input or device dictation"
+        accessibilityHint="You can type an idea instead of using speech recognition"
         multiline
         onChangeText={onIdeaChange}
         placeholder="Tell RepoRider what you want to build..."
