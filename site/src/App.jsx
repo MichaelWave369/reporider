@@ -3,7 +3,7 @@ import {
  ArrowRight,ArrowUpRight,BookOpen,Check,CheckCircle2,ChevronRight,ClipboardCheck,
  Code2,Copy,Download,FileCode2,FileText,FolderGit2,GitBranch,Github,KeyRound,
  Layers3,LockKeyhole,Menu,NotebookPen,Play,Plus,RotateCcw,Route,Shield,
- ShieldAlert,ShieldCheck,Sparkles,Terminal,TicketCheck,Wheel,X,Zap
+ ShieldAlert,ShieldCheck,Sparkles,Terminal,TicketCheck,Bike,X,Zap
 } from 'lucide-react';
 
 import {buildRepoPlan,starterStackLabels,starterStackOptions} from '../../src/lib/repoPlanner.ts';
@@ -34,7 +34,7 @@ const sections=[
   {id:'about',name:'About RepoRider',hint:'Capabilities and boundaries',icon:BookOpen}
 ];
 function Badge({type='muted',children}){return <span className={'badge badge-'+type}>{children}</span>;}
-function Brand(){return <div className="brand"><span className="brand-symbol"><Wheel size={24}/><span className="brand-spark">✦</span></span><span><strong>REPO<span>RIDER</span></strong><small>IDEA → REPO → RECEIPTS</small></span></div>;}
+function Brand(){return <div className="brand"><span className="brand-symbol"><Bike size={24}/><span className="brand-spark">✦</span></span><span><strong>REPO<span>RIDER</span></strong><small>IDEA → REPO → RECEIPTS</small></span></div>;}
 function Kicker({children}){return <span className="kicker"><span className="kicker-dot"/>{children}</span>;}
 function StepHeading({number,title,caption,right}){return <div className="step-heading"><div className="step-heading-main"><span className="step-number">{number}</span><div><h2>{title}</h2><p>{caption}</p></div></div>{right}</div>;}
 function PromoVisual(){return <div className="promo-visual" aria-label="Stylized route from idea to reviewed repository" role="img"><div className="orb orb-one"/><div className="orb orb-two"/><div className="grid-art"/><div className="path-art"><svg viewBox="0 0 440 390" aria-hidden="true"><path d="M65 333c-23-49 3-113 62-111 54 2 79 42 138 7 37-22 18-73 78-83 34-6 56-35 42-74" fill="none" stroke="#536574" strokeWidth="8" strokeLinecap="round" strokeDasharray="4 16"/><path d="M65 333c-23-49 3-113 62-111 54 2 79 42 138 7 37-22 18-73 78-83 34-6 56-35 42-74" fill="none" stroke="#b8ed73" strokeWidth="3" strokeLinecap="round" strokeDasharray="5 15"/></svg></div><div className="path-label path-first"><Sparkles size={18}/><strong>01</strong><small>IDEA</small></div><div className="path-label path-middle"><ShieldCheck size={18}/><strong>02</strong><small>REVIEW</small></div><div className="path-label path-last"><FolderGit2 size={19}/><strong>03</strong><small>MOCK RIDE</small></div><div className="visual-sticker">NO REAL GITHUB WRITES <LockKeyhole size={13}/></div></div>;}
