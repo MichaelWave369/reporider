@@ -1,0 +1,10 @@
+{
+  "schema": "reporider.agent.request.v0.1",
+  "action": "submit_for_review",
+  "idea": "Build a private React Vite reading tracker with local notes and starter issues",
+  "overrides": {
+    "visibility": "private",
+    "stack": "react-vite",
+    "issueCount": 3
+  }
+}
