@@ -37,3 +37,5 @@ jobs:
         run: npm run mcp:test
       - name: RR-A05 local operator inbox and terminal negative controls
         run: npm run operator:test
+      - name: RR-A06 local evidence ledger tamper controls
+        run: npm run ledger:test
