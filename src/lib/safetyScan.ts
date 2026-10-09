@@ -759,10 +759,10 @@ export const scanRepoPlan = (
     buildCheck(
       'repo-name-hygiene',
       'Repository name hygiene',
-      repoNameLooksUnsafe ? 'blocker' : 'pass',
-      repoNameLooksUnsafe
+      !nameStatus.valid ? 'blocker' : 'pass',
+      !nameStatus.valid
         ? 'Repo name must be corrected before any write package can proceed.'
-        : 'Repo name is non-empty and path-safe.',
+        : 'Repo name uses a valid canonical lowercase slug. Availability is not verified.',
     ),
     buildCheck(
       'visibility-review',
