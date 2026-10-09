@@ -6,14 +6,17 @@
  * init/record make explicit local disk changes; verify/head are read-only.
  */
 const {initLedger,verifyLedger,recordEvidence}=require('./reporider-operator-ledger.cjs');
+const {makeCheckpoint,verifyCheckpointFile}=require('./reporider-operator-checkpoints.cjs');
 const HELP=[
- 'RepoRider RR-A06 · Operator Evidence Ledger (LOCAL, UNSIGNED, NOT APPROVAL)',
- 'Usage: node scripts/reporider-ledger.cjs --inbox ABSOLUTE_FOLDER init|verify|head|record PACKET_FILENAME NOTE_FILENAME',
+ 'RepoRider RR-A07 · Operator Evidence Ledger + Independent Checkpoints (LOCAL, UNSIGNED, NOT APPROVAL)',
+ 'Usage: node scripts/reporider-ledger.cjs --inbox ABSOLUTE_FOLDER <init|verify|head|record|checkpoint|verify-checkpoint>',
  '',
  'init                Explicitly create private local ledger directory',
  'verify              Read and verify full local chain and referenced packet/note digests',
  'head                Print current chain head SHA-256 to pin OUTSIDE this folder',
  'record PACKET NOTE  Explicitly append an entry linking a reviewed courier packet to an unsigned note',
+ 'checkpoint          Print a checkpoint JSON to stdout (redirect OUTSIDE inbox in your terminal)',
+ 'verify-checkpoint ABSOLUTE_FILE  Compare external checkpoint with verified local ledger prefix',
  '',
  'No GitHub writes or MCP inbox access. A local SHA-256 chain is not a digital signature.',
  ].join('\n');
@@ -29,9 +32,10 @@ function argsFrom(argv){
   else if(argv[i].startsWith('-'))throw Error('UNKNOWN_OPTION');
   else rest.push(argv[i]);
  }
- if(!['init','verify','head','record'].includes(rest[0]))throw Error('INVALID_COMMAND');
+ if(!['init','verify','head','record','checkpoint','verify-checkpoint'].includes(rest[0]))throw Error('INVALID_COMMAND');
  if(rest[0]==='record'&&rest.length!==3)throw Error('PACKET_AND_NOTE_REQUIRED');
- if(rest[0]!=='record'&&rest.length!==1)throw Error('INVALID_ARGUMENT_COUNT');
+ if(rest[0]==='verify-checkpoint'&&rest.length!==2)throw Error('CHECKPOINT_PATH_REQUIRED');
+ if(rest[0]!=='record'&&rest[0]!=='verify-checkpoint'&&rest.length!==1)throw Error('INVALID_ARGUMENT_COUNT');
  return{inbox,command:rest[0],packet:rest[1],note:rest[2]};
 }
 function output(record){
@@ -42,6 +46,8 @@ function main(){
  if(cfg.help){process.stdout.write(HELP+'\n');return;}
  if(cfg.command==='init'){output(initLedger(cfg.inbox));return;}
  if(cfg.command==='record'){output(recordEvidence(cfg.inbox,cfg.packet,cfg.note));return;}
+ if(cfg.command==='checkpoint'){output(makeCheckpoint(cfg.inbox));return;}
+ if(cfg.command==='verify-checkpoint'){output(verifyCheckpointFile(cfg.inbox,cfg.packet));return;}
  const state=verifyLedger(cfg.inbox);
  if(cfg.command==='head'){
   output({

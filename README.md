@@ -194,3 +194,9 @@ No server ports, OAuth, token storage, inbox-reading MCP methods, GitHub writes,
 The [RR-A06 local evidence ledger](docs/OPERATOR_EVIDENCE_LEDGER_RR_A06.md) can explicitly link reviewed courier packets to RR-A05 unsigned review notes in a private, SHA-256 hash-linked local history. Commands `init`, `record`, `verify`, and `head` run only on the operator computer. A saved head hash must be anchored separately to detect entire-history rewriting/truncation.
 
 No GitHub write authority, MCP ledger tools, cloud service, authentication, or trusted signatures. Run `npm run ledger:test` for negative and tamper controls.
+
+## RR-A07: Independent Ledger Checkpoints
+
+[RR-A07 Independent Checkpoints](docs/INDEPENDENT_LEDGER_CHECKPOINTS_RR_A07.md) let a human export the current operator-ledger sequence and SHA-256 head **outside the courier directory** and verify that a later local chain still contains the exact anchored prefix. This detects deletion/rewriting of previously anchored entries when the checkpoint really is preserved separately. A checksum is not a signature and does not verify checkpoint custody, identity, or approval.
+
+Run `npm run checkpoint:test` for rollback, tamper, and custody-boundary tests. CLI: `checkpoint` and `verify-checkpoint ABSOLUTE_FILE` via `node scripts/reporider-ledger.cjs --inbox ...`.
