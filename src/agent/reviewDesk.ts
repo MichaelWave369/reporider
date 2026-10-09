@@ -30,8 +30,8 @@ export type Decision='RECOMMEND_FOR_SEPARATE_AUTHORIZATION'|'REQUEST_CHANGES'|'D
 function fail(code:string,message:string):ReviewResult{return{ok:false,code,message};}
 function normalizedJson(value:unknown):string {
   if(Array.isArray(value))return '['+value.map(normalizedJson).join(',')+']';
-  if(isObj(value))return '{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+normalizedJson(value[k])).join(',')+'}';
-  return JSON.stringify(value);
+  if(isObj(value))return '{'+Object.keys(value).filter(k=>value[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+normalizedJson(value[k])).join(',')+'}';
+  return JSON.stringify(value) ?? 'null';
 }
 export const fileReviewKey=(file:{path:string;approval_fingerprint:string}) =>
   'file:'+file.path+':'+file.approval_fingerprint;
