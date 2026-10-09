@@ -62,3 +62,9 @@ Reviewers may check individual artifacts and export a **non-authoritative, unsig
 The **Agent Review Desk** now supports **Open local .json packet**, an explicit browser file picker. A human can select a JSON file from their privately configured local courier inbox and review it in the browser tab without uploading it.
 
 The public Pages app cannot run the local MCP server, access the filesystem directly or silently receive agent submissions. See [RR-A04 local courier manual](../docs/LOCAL_PROPOSAL_COURIER_RR_A04.md) for optional user-controlled MCP configuration and safety limits.
+
+## RR-A09 Audit Observatory
+
+The GitPage sidebar includes **Audit Observatory**. It accepts a user-selected local JSON export from the RR-A08 operator audit CLI, visualizes the imported ledger/notes/inbox metadata and reported checkpoint status, and supports filters plus a synthetic demo.
+
+The client validates structure and internal counts only. It **does not** recompute SHA-256 source hashes, independently inspect your offline ledger, verify checkpoint custody, authenticate humans/agents or grant any GitHub execution authority. All input stays in the tab, no uploads or persistent browser storage. See [RR-A09 documentation](../docs/AUDIT_OBSERVATORY_RR_A09.md).

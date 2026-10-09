@@ -182,3 +182,86 @@ footer p{font-size:10px;margin:0}footer a{display:flex;align-items:center;gap:7p
 .rr4-file-button:hover{background:#355246}.rr4-file-button:focus-within{outline:2px solid #c7f57e;outline-offset:3px}
 .rr4-file-button input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .rr4-file-caption{margin:14px 0 0;color:#91b4b0!important;font-size:11px!important}
+
+
+/* RR-A09: offline audit report visualization, never live ledger authority. */
+.ao9-root{display:flex;flex-direction:column;gap:18px;min-width:0}
+.ao9-root .page-heading{margin-bottom:0}
+.ao9-root h2{font-size:22px;line-height:1.25;letter-spacing:-.55px;margin:7px 0 9px}
+.ao9-root h3{font-size:13px;margin:0 0 18px;color:#eaf1e6}
+.ao9-root p{color:#abc0bf;line-height:1.7;font-size:12px}
+.ao9-root code{font-family:ui-monospace,Consolas,"SFMono-Regular",monospace}
+.ao9-meta{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#c1f38f}
+.ao9-badge{display:inline-flex;align-items:center;gap:5px;border:1px solid #587074;border-radius:7px;background:#263d45;padding:6px 9px;color:#b7d0d1;font-size:9px;font-weight:800;letter-spacing:.4px;line-height:1.2;white-space:nowrap}
+.ao9-badge.ao9-mint{color:#cdf2a6;background:#2b4434;border-color:#598354}
+.ao9-badge.ao9-gold{color:#f5d6a0;background:#463d2b;border-color:#766444}
+.ao9-badge.ao9-red{color:#f7a8a8;background:#462e35;border-color:#75515a}
+.ao9-boundary{display:flex;gap:13px;align-items:flex-start;padding:17px 20px;border:1px solid #54735b;background:#1d3c36;border-radius:13px}
+.ao9-boundary>svg{color:#c1ea9d;flex-shrink:0}.ao9-boundary strong{color:#d3f6bd;font-size:11px;letter-spacing:.7px}.ao9-boundary p{margin:5px 0 0}
+.ao9-section-top{display:flex;justify-content:space-between;align-items:start;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.ao9-section-top>div{flex:1;min-width:200px}.ao9-section-top p{margin:0}
+.ao9-section-top>svg{color:#c6eb9a}
+.ao9-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-bottom:16px}
+.ao9-file-picker{display:inline-flex;align-items:center;gap:9px;position:relative;background:#b8eb80;color:#17252b;border:1px solid #b5ec81;border-radius:9px;cursor:pointer;font-weight:800;font-size:12px;padding:11px 15px;overflow:hidden}
+.ao9-file-picker:hover{background:#d1f5ae}
+.ao9-file-picker input{opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
+.ao9-file-picker:focus-within{outline:2px solid #b8eb80;outline-offset:3px}
+.ao9-clear{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;color:#a5bec4;padding:10px;font-size:11px}
+.ao9-textarea{min-height:84px;max-height:240px}
+.ao9-input-foot{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:8px;color:#90aab4;font-size:10px}
+.ao9-error{display:flex;align-items:start;gap:10px;border:1px solid #8c5363;background:#452d35;color:#f0c4c7;border-radius:10px;padding:13px;margin-top:13px;font-size:11px;line-height:1.7;overflow-wrap:anywhere}
+.ao9-import-banner{display:flex;gap:12px;border:1px solid #43627b;border-radius:10px;padding:15px 18px;background:#1b333d}
+.ao9-import-banner>svg{flex-shrink:0;color:#a9d0e9}.ao9-import-banner strong{font-size:11px;color:#c4e2ed}
+.ao9-import-banner p{margin:6px 0 0;font-size:11px}
+.ao9-import-banner.ao9-demo{background:#463726;border-color:#8f7548}
+.ao9-import-banner.ao9-demo>svg{color:#f5d49d}
+.ao9-import-banner.ao9-demo strong{color:#ffe4af}
+.ao9-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.ao9-metric{display:flex;align-items:start;gap:11px;border:1px solid #344a55;background:#162b35;border-radius:12px;padding:17px 13px;min-width:0}
+.ao9-metric-icon{width:36px;height:36px;background:#2e4c41;color:#bde98d;border:1px solid #4f7766;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+.ao9-metric>div:last-child{display:flex;flex-direction:column;min-width:0}
+.ao9-metric strong{font-size:24px;color:#d9efb6;font-weight:900;line-height:1}
+.ao9-metric span{font-size:11px;color:#d4e3e1;font-weight:800;margin:8px 0 5px}
+.ao9-metric small{font-size:10px;color:#8caab5;line-height:1.45}
+.ao9-integrity-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(190px,.75fr);gap:14px}
+.ao9-chain,.ao9-checkpoint{border:1px solid #355760;background:#122932;border-radius:11px;padding:18px;min-width:0}
+.ao9-label-row{display:flex;gap:10px;align-items:center;color:#c4f49d}
+.ao9-label-row strong{font-size:13px}
+.ao9-chain p{font-size:11px;margin:11px 0 17px}
+.ao9-hash{background:#0a1b25;padding:12px;border:1px solid #274956;border-radius:8px;display:flex;flex-direction:column;gap:8px}
+.ao9-hash span{font-size:10px;color:#9cb1bb}.ao9-hash code{font-size:11px;color:#d9e8e7;word-break:break-all;line-height:1.7}
+.ao9-checkpoint{display:flex;flex-direction:column;gap:8px}
+.ao9-checkpoint svg{color:#c7eea0}.ao9-checkpoint strong{font-size:12px}
+.ao9-checkpoint span{font-size:11px;color:#bed2d2}.ao9-checkpoint small{color:#e9cba0;font-size:10px}
+.ao9-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px}
+.ao9-bar{margin:14px 0}.ao9-bar-label{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-size:11px;color:#c6d8d5}
+.ao9-bar-label strong{font-variant-numeric:tabular-nums;color:#e5f4e8}
+.ao9-bar-track{background:#283e47;border-radius:20px;height:10px;overflow:hidden;border:1px solid #39505a}
+.ao9-bar-fill{display:block;height:100%;border-radius:20px;background:#aedb87;min-width:0;transition:width .2s}
+.ao9-bar-fill.ao9-gold{background:#dfb46c}.ao9-bar-fill.ao9-red{background:#df8a91}
+.ao9-minor{font-size:11px!important;margin-top:19px}
+.ao9-tabs{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid #354d58}
+.ao9-tabs button{display:inline-flex;gap:8px;align-items:center;border:1px solid #425762;border-radius:8px;background:#1d313b;color:#b1c6ca;font-size:11px;font-weight:800;padding:11px 14px}
+.ao9-tabs button.active{background:#30483a;color:#c8ee9c;border-color:#719361}
+.ao9-filter{display:flex;align-items:center;gap:10px;margin:14px 0;flex-wrap:wrap}
+.ao9-filter label,.ao9-filter span{font-size:11px;color:#9eb3b5}
+.ao9-filter select{background:#122832;border:1px solid #4a616b;border-radius:8px;color:#dceadf;padding:10px 14px;max-width:100%}
+.ao9-filter span{margin-left:auto}
+.ao9-list{border:1px solid #3c525b;background:#102530;border-radius:12px;overflow:hidden}
+.ao9-row{width:100%;display:flex;align-items:center;gap:12px;background:transparent;border:0;border-bottom:1px solid #2d424d;text-align:left;color:#c8dddd;padding:13px 15px;min-width:0}
+.ao9-row:last-child{border-bottom:0}.ao9-row:hover,.ao9-row.active{background:#233d3b}
+.ao9-index{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;background:#2e4b46;border:1px solid #4b685d;border-radius:9px;color:#c5ec98;font-size:12px;font-weight:900}
+.ao9-row-body{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
+.ao9-row-body strong{font-size:12px;overflow-wrap:anywhere}
+.ao9-row-body small{font-size:10px;color:#91a9b2;overflow-wrap:anywhere}
+.ao9-selection{border:1px solid #4f675f;background:#193830;border-radius:11px;padding:16px;margin-top:14px}
+.ao9-selection>div:first-child{display:flex;gap:9px;align-items:center;color:#c9f2ae;font-size:12px}
+.ao9-selection dl{display:grid;grid-template-columns:170px minmax(0,1fr);gap:7px 17px;margin:15px 0}
+.ao9-selection dt{font-size:11px;color:#9cbaae;text-transform:capitalize}
+.ao9-selection dd{margin:0;font-size:11px;font-family:ui-monospace,Consolas,monospace;color:#e6eade;overflow-wrap:anywhere}
+.ao9-selection p{font-size:11px;margin:8px 0 0}
+.ao9-none{padding:24px;margin:0}
+.ao9-final-note{margin-top:3px}
+@media(max-width:1180px){.ao9-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.ao9-metrics{grid-template-columns:1fr 1fr}.ao9-integrity-grid,.ao9-chart-grid{grid-template-columns:1fr}.ao9-selection dl{grid-template-columns:1fr;gap:4px}.ao9-selection dd{margin-bottom:9px}}
+@media(max-width:490px){.ao9-metrics{grid-template-columns:1fr}.ao9-actions .btn,.ao9-file-picker{flex:1;justify-content:center}.ao9-row{flex-wrap:wrap}.ao9-row .ao9-badge{margin-left:46px}.ao9-metric{padding:14px}}
