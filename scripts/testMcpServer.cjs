@@ -69,6 +69,8 @@ assert.equal(unknown[0].error.message,'UNKNOWN_TOOL');
 const bypass=send(modern(1,'tools/call',{name:'reporider_plan',arguments:{...seed,authority_granted:true}}));
 assert.equal(bypass[0].result.structuredContent.disposition,'BLOCKED');
 assert.equal(bypass[0].result.structuredContent.error_code,'INVALID_ENVELOPE');
+const reserved=send(modern(1,'tools/call',{name:'reporider_plan',arguments:{...seed,action:'submit_for_review'}}));
+assert.equal(reserved[0].error.message,'RESERVED_TOOL_ARGUMENT');
 const wrongProtocol=send(req(1,'server/discover',{_meta:{...meta,['io.modelcontextprotocol/protocolVersion']:'2025-11-25'}}));
 assert.equal(wrongProtocol[0].error.message,'INVALID_PROTOCOL_METADATA');
 const duplicate=proto('{"jsonrpc":"2.0","id":1,"id":2,"method":"tools/list"}\n');
