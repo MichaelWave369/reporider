@@ -55,7 +55,7 @@ export const RepoPlanControls = ({
           autoCorrect={false}
           onChangeText={(name) => updateOverrides({ name })}
           placeholder={suggestedPlan.name}
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#94a3b8"
           style={styles.input}
           value={repoNameValue}
         />

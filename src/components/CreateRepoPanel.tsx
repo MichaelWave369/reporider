@@ -195,7 +195,7 @@ export const CreateRepoPanel = ({
         <Text style={styles.visibilityHeading}>{plan.visibility === 'public' ? 'PUBLIC REPOSITORY · EXTRA REVIEW' : 'PRIVATE REPOSITORY · RECOMMENDED'}</Text>
         <Text style={styles.visibilityCopy}>{visibilityEducation[plan.visibility]}</Text>
         {plan.visibility === 'public' ? (
-          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: publicConfirmed }}
+          <Pressable accessibilityLabel="I understand public repositories are readable by anyone" accessibilityRole="checkbox" accessibilityState={{ checked: publicConfirmed }}
             onPress={() => setPublicConfirmed((current) => !current)} style={styles.publicConfirmation}>
             <Text style={styles.publicCheck}>{publicConfirmed ? '☑' : '☐'}</Text>
             <Text style={styles.visibilityCopy}>I understand that anyone can see the code and history if I later create this repository publicly.</Text>
@@ -203,7 +203,7 @@ export const CreateRepoPanel = ({
         ) : null}
       </View>
 
-      <Pressable accessibilityRole="button" disabled={!canRide} onPress={rideMockCreateRepo} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, !canRide && styles.buttonDisabled]}>
+      <Pressable accessibilityLabel={canRide ? "Simulate repository creation with reviewed files and issues" : "Repository creation unavailable until required approvals are complete"} accessibilityRole="button" disabled={!canRide} onPress={rideMockCreateRepo} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, !canRide && styles.buttonDisabled]}>
         <Text style={styles.buttonText}>{phase === 'running' ? 'Riding...' : canRide ? 'Simulate Create Repo' : !visibilityReady ? 'Confirm Public Visibility' : 'Approve Files & Issues First'}</Text>
       </Pressable>
 

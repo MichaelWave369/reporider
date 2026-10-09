@@ -94,7 +94,8 @@ export const StarterFilePreviewCard = ({
 
           return (
             <Pressable
-              accessibilityLabel={`Preview ${preview.path}`}
+              accessibilityLabel={`Preview ${preview.path}, ${approved ? 'approved' : 'needs approval'}${changed ? ', edited' : ''}`}
+              accessibilityState={{ selected }}
               accessibilityRole="button"
               key={preview.path}
               onPress={() => setActivePath(preview.path)}
@@ -137,6 +138,7 @@ export const StarterFilePreviewCard = ({
       <View style={styles.modeRow}>
         <Pressable
           accessibilityRole="button"
+          accessibilityState={{ selected: previewMode === 'edit' }}
           onPress={() => setPreviewMode('edit')}
           style={({ pressed }) => [
             styles.modeButton,
@@ -151,7 +153,8 @@ export const StarterFilePreviewCard = ({
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => setPreviewMode('diff')}
+          accessibilityState={{ selected: previewMode === 'diff' }}
+          onPress={() => setPreviewMode('diff')
           style={({ pressed }) => [
             styles.modeButton,
             previewMode === 'diff' && styles.modeButtonActive,

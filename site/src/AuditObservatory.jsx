@@ -155,10 +155,10 @@ export default function AuditObservatory(){
    </section>
    <section className="panel ao9-explorer">
     <div className="ao9-section-top"><div><Meta>04 / INSPECT METADATA</Meta><h2>Evidence explorer</h2><p>Read-only summaries from the imported snapshot. No source code or raw review notes appear here.</p></div></div>
-    <div className="ao9-tabs">
-     <button className={view==='timeline'?'active':''} onClick={()=>{setView('timeline');setFilter('ALL');setSelected(null);}}><History size={16}/> Timeline ({report.timeline.length})</button>
-     <button className={view==='inbox'?'active':''} onClick={()=>{setView('inbox');setFilter('ALL');setSelected(null);}}><Database size={16}/> Inbox ({report.inbox.length})</button>
-     <button className={view==='notes'?'active':''} onClick={()=>{setView('notes');setFilter('ALL');setSelected(null);}}><FileText size={16}/> Notes ({report.notes.length})</button>
+    <div className="ao9-tabs" role="group" aria-label="Audit evidence explorer views">
+     <button aria-pressed={view==='timeline'} className={view==='timeline'?'active':''} onClick={()=>{setView('timeline');setFilter('ALL');setSelected(null);}}><History size={16}/> Timeline ({report.timeline.length})</button>
+     <button aria-pressed={view==='inbox'} className={view==='inbox'?'active':''} onClick={()=>{setView('inbox');setFilter('ALL');setSelected(null);}}><Database size={16}/> Inbox ({report.inbox.length})</button>
+     <button aria-pressed={view==='notes'} className={view==='notes'?'active':''} onClick={()=>{setView('notes');setFilter('ALL');setSelected(null);}}><FileText size={16}/> Notes ({report.notes.length})</button>
     </div>
     <div className="ao9-filter">
      <label htmlFor="ao9-filter">Show</label>
@@ -170,7 +170,7 @@ export default function AuditObservatory(){
     </div>
     <div className="ao9-list">
      {state[view].length===0?<p className="ao9-none">No entries match this view.</p>:state[view].map((item,i)=>
-      <button type="button" className={'ao9-row'+(selected===item?' active':'')} key={(item.entry_sha256||item.filename)+i} onClick={()=>detail(item)}>
+      <button type="button" aria-pressed={selected===item} className={'ao9-row'+(selected===item?' active':'')} key={(item.entry_sha256||item.filename)+i} onClick={()=>detail(item)}>
        <div className="ao9-index">{view==='timeline'?String(item.sequence).padStart(2,'0'):view==='inbox'?<Database size={17}/>:<FileText size={17}/>}</div>
        <div className="ao9-row-body">
         <strong>{view==='timeline'?(DECISIONS[item.decision]||item.decision):view==='inbox'?item.repo_name||item.filename:item.filename}</strong>

@@ -130,7 +130,7 @@ export const StarterIssuePreviewCard = ({
         <TextInput
           onChangeText={(title) => updateSelectedIssue({ title })}
           placeholder="Issue title"
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#94a3b8"
           style={styles.input}
           value={selectedIssue.title}
         />
@@ -142,7 +142,7 @@ export const StarterIssuePreviewCard = ({
           multiline
           onChangeText={(body) => updateSelectedIssue({ body })}
           placeholder="Issue body"
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#94a3b8"
           style={[styles.input, styles.bodyInput]}
           textAlignVertical="top"
           value={selectedIssue.body}
@@ -154,7 +154,7 @@ export const StarterIssuePreviewCard = ({
         <TextInput
           onChangeText={(labelsText) => updateSelectedIssue({ labels: parseStarterIssueLabels(labelsText) })}
           placeholder="mvp, product"
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#94a3b8"
           style={styles.input}
           value={labelsToText(selectedIssue.labels)}
         />

@@ -177,7 +177,7 @@ export const SavedDraftSlotsCard = ({
               resetImportState();
             }}
             placeholder="Paste # RepoRider Saved Draft Snapshot here..."
-            placeholderTextColor="#64748b"
+            placeholderTextColor="#94a3b8"
             style={styles.importInput}
             value={importMarkdown}
           />
@@ -286,7 +286,7 @@ export const SavedDraftSlotsCard = ({
               <TextInput
                 onChangeText={setRenameLabel}
                 placeholder="Example: Camping app v2"
-                placeholderTextColor="#64748b"
+                placeholderTextColor="#94a3b8"
                 style={styles.renameInput}
                 value={renameLabel}
               />

@@ -278,3 +278,11 @@ footer p{font-size:10px;margin:0}footer a{display:flex;align-items:center;gap:7p
 .public-consent{display:flex;align-items:center;gap:10px;margin-top:14px;cursor:pointer}
 .public-consent input{accent-color:#f5c67a;width:19px;height:19px;flex-shrink:0}
 .public-consent span{font-size:12px;font-weight:700;color:#fff5da;line-height:1.6}
+
+/* Issue #18: keyboard, focus and motion accessibility baseline. */
+.skip-link{position:fixed;top:12px;left:12px;z-index:1000;padding:12px 18px;background:#e3ffc4;color:#0b1b24;border:2px solid #b5e66f;border-radius:9px;font-weight:800;transform:translateY(-160%);transition:none}
+.skip-link:focus,.skip-link:focus-visible{transform:translateY(0)}
+#reporider-main:focus{outline:none}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,[role="button"]:focus-visible{outline:3px solid #e3ffc4;outline-offset:3px;box-shadow:0 0 0 2px #0a1b24}
+@media(max-width:700px){.nav-link,.ao9-tabs button,.ao9-row,.ao9-file-picker,.ao9-clear,.ao9-actions .btn,.ao9-filter select{min-height:44px}.ao9-root .ao9-row-body small,.ao9-root .ao9-minor,.ao9-root .ao9-checkpoint small{font-size:12px}.ao9-input-foot,.ao9-meta{font-size:12px}.ao9-root p{font-size:13px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}
