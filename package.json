@@ -17,7 +17,9 @@
     "mcp:test": "npm run agent:build && node scripts/testMcpServer.cjs && node scripts/testCourier.cjs",
     "courier:test": "npm run agent:build && node scripts/testCourier.cjs",
     "operator:console": "node scripts/reporider-operator.cjs",
-    "operator:test": "npm run agent:build && node scripts/testOperatorConsole.cjs"
+    "operator:test": "npm run agent:build && node scripts/testOperatorConsole.cjs",
+    "ledger:console": "node scripts/reporider-ledger.cjs",
+    "ledger:test": "npm run agent:build && node scripts/testOperatorLedger.cjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",

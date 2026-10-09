@@ -188,3 +188,9 @@ The GitPage's Agent Review Desk now has an **Open local .json packet** picker. N
 The new [RR-A05 Local Operator Console](docs/LOCAL_OPERATOR_CONSOLE_RR_A05.md) can list/inspect replay-verified packets in the explicitly configured RR-A04 courier folder. In a real interactive terminal it can walk through every file and issue, require typed review acknowledgments for recommendations, and export an **unsigned informational review note** under a separate private `operator-notes/` subfolder.
 
 No server ports, OAuth, token storage, inbox-reading MCP methods, GitHub writes, or agent self-approval. The operator console is **local-only** and does not replace the GitHub Pages Human Review Desk. Use `npm run operator:test` and `npm run operator:console -- --help`.
+
+## RR-A06: Operator Evidence Ledger
+
+The [RR-A06 local evidence ledger](docs/OPERATOR_EVIDENCE_LEDGER_RR_A06.md) can explicitly link reviewed courier packets to RR-A05 unsigned review notes in a private, SHA-256 hash-linked local history. Commands `init`, `record`, `verify`, and `head` run only on the operator computer. A saved head hash must be anchored separately to detect entire-history rewriting/truncation.
+
+No GitHub write authority, MCP ledger tools, cloud service, authentication, or trusted signatures. Run `npm run ledger:test` for negative and tamper controls.
