@@ -142,3 +142,10 @@ npm run test:safety
 ```
 
 CI runs both `npm run typecheck` and `npm run test:safety`.
+
+## Public React GitHub Pages preview
+
+The companion **RepoRider browser studio** lives in [site/](site/) and is published at
+[https://michaelwave369.github.io/reporider/](https://michaelwave369.github.io/reporider/) when GitHub Pages is configured to use Actions.
+
+Unlike a disconnected mockup, this standalone React/Vite site imports the actual RepoRider planner, safety scan, generated starter previews, approvals, mock GitHub creator, and receipt exporter. It remains **strictly mock-only**: no OAuth, tokens, real repositories, pushes, GitHub issues or persisted private data. See [site/README.md](site/README.md) for setup and the [Pages workflow](.github/workflows/pages.yml) for deployment.

@@ -1,0 +1,64 @@
+name: RepoRider React GitHub Pages
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reporider-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install shared Expo TypeScript configuration
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Install Pages dependencies
+        working-directory: site
+        run: npm install --no-audit --no-fund
+      - name: Test mock-only review gate
+        working-directory: site
+        run: npm test
+      - name: Build React/Vite GitHub Pages site
+        working-directory: site
+        run: npm run build
+      - name: Verify built Pages assets
+        run: |
+          test -f site/dist/index.html
+          test -f site/dist/helmet.svg
+      - name: Upload Pages site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
