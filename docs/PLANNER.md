@@ -66,3 +66,7 @@ This planner does not create repositories by itself. It only prepares a `RepoPla
 ## Public/private education and confirmation (issue #23)
 
 RepoRider clearly explains the scope of public and private repositories in both the mobile UI and React GitPage. Private remains the default. Choosing public requires an additional independent checkbox in the mock-creation panel, and the shared mock writer refuses public plans without `publicVisibilityConfirmed: true`. This confirmation resets on plan/artifact changes and does not grant real GitHub write authority. See [visibility gate](REPO_VISIBILITY_ISSUE_23.md).
+
+## Issue #22: deterministic naming safeguards
+
+Generated names use the shared canonical slug policy; manual names are displayed without silent normalization, and invalid names produce a blocking safety finding. Name conflict status remains UNVERIFIED in local-first mock mode; a real owner-authenticated prewrite existence check is required before future GitHub mutations. See [naming policy and remaining work](REPO_NAMING_ISSUE_22.md).

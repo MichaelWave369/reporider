@@ -76,3 +76,7 @@ The Idea Garage shows public/private access consequences. Public mock rides requ
 ## Accessibility baseline (issue #18)
 
 The public site supports a skip-to-main keyboard shortcut, visible focus on controls, reduced motion, accessible explorer state, and mobile-sized targets on primary controls. The Expo UI now labels its primary editors and selection controls. Automated contrast/semantics checks are in `site/tests/accessibility.test.mjs`; manual assistive-tech, screen-reader and zoom testing remains required. [Full QA checklist](../docs/ACCESSIBILITY_BASELINE_ISSUE_18.md).
+
+## Issue #22: repository naming
+
+The Idea Garage validates generated and user-edited repository names with the shared canonical slug rules (96 characters maximum, lowercase alphanumeric plus single hyphens), preserving invalid manual edits for correction and showing collision status as **UNVERIFIED** until a future authenticated owner lookup. See [naming policy](../docs/REPO_NAMING_ISSUE_22.md).

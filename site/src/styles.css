@@ -286,3 +286,9 @@ footer p{font-size:10px;margin:0}footer a{display:flex;align-items:center;gap:7p
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,[role="button"]:focus-visible{outline:3px solid #e3ffc4;outline-offset:3px;box-shadow:0 0 0 2px #0a1b24}
 @media(max-width:700px){.nav-link,.ao9-tabs button,.ao9-row,.ao9-file-picker,.ao9-clear,.ao9-actions .btn,.ao9-filter select{min-height:44px}.ao9-root .ao9-row-body small,.ao9-root .ao9-minor,.ao9-root .ao9-checkpoint small{font-size:12px}.ao9-input-foot,.ao9-meta{font-size:12px}.ao9-root p{font-size:13px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}
+
+/* Issue #22: clear, non-color-only repository naming feedback. */
+.repo-name-guidance{display:flex;flex-direction:column;gap:6px;border:1px solid #46735e;background:#1b3b34;padding:11px 13px;border-radius:10px;font-size:11px;line-height:1.5;color:#c0dbce}
+.repo-name-guidance strong{font-size:12px;color:#def7ba}
+.repo-name-guidance.invalid{background:#492d35;border-color:#ad6978;color:#f0cbd1}
+.repo-name-guidance.invalid strong{color:#ffe1e7}

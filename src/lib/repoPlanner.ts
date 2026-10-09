@@ -1,3 +1,4 @@
+import {suggestedRepositoryName} from './repoNaming';
 import type {
   RepoFilePlan,
   RepoIssuePlan,
@@ -58,16 +59,6 @@ const tokenizeIdea = (idea: string) =>
     .map((word) => word.replace(/^-+|-+$/g, ''))
     .filter(Boolean);
 
-const normalizeRepoSlug = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z0-9-_\s]/g, '')
-    .trim()
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 96);
-
 const normalizeRepoName = (idea: string) => {
   const meaningfulWords = tokenizeIdea(idea)
     .filter((word) => !fillerWords.has(word))
@@ -79,15 +70,13 @@ const normalizeRepoName = (idea: string) => {
     return 'new-idea-repo';
   }
 
-  return normalizeRepoSlug(words.join('-')) || 'new-idea-repo';
+  return suggestedRepositoryName(words.join('-'));
 };
 
 const normalizeManualRepoName = (name: string | undefined, fallbackName: string) => {
-  if (!name) {
-    return fallbackName;
-  }
-
-  return normalizeRepoSlug(name) || fallbackName;
+  // Preserve exactly what the rider typed. Validation occurs at the safety
+  // gate; silently rewriting manual names can conceal a mistake.
+  return name === undefined ? fallbackName : name;
 };
 
 const clampIssueCount = (issueCount: number | undefined) => {

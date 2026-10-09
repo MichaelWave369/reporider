@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { starterStackLabels, starterStackOptions } from '../lib/repoPlanner';
 import { visibilityEducation } from '../lib/visibilityGate';
+import {validateRepositoryName,MAX_REPO_NAME_LENGTH,getRepositoryNamePrewriteGate} from '../lib/repoNaming';
 import type { RepoPlan, RepoPlanOverrides, RepoVisibility, StarterStack } from '../types';
 
 type RepoPlanControlsProps = {
@@ -32,6 +33,8 @@ export const RepoPlanControls = ({
   const selectedIssueCount = plan.issues.length;
   const repoNameValue = overrides.name ?? plan.name;
   const hasOverrides = Object.keys(overrides).length > 0;
+  const nameStatus=validateRepositoryName(repoNameValue);
+  const prewrite=getRepositoryNamePrewriteGate(repoNameValue);
 
   return (
     <View style={styles.card}>
@@ -55,13 +58,20 @@ export const RepoPlanControls = ({
           accessibilityHint="Edit the suggested GitHub repository name"
           autoCapitalize="none"
           autoCorrect={false}
+          maxLength={MAX_REPO_NAME_LENGTH}
           onChangeText={(name) => updateOverrides({ name })}
           placeholder={suggestedPlan.name}
           placeholderTextColor="#94a3b8"
           style={styles.input}
           value={repoNameValue}
         />
-        <Text style={styles.microcopy}>Suggestion: {suggestedPlan.name}</Text>
+        <Text accessibilityRole="text" style={[styles.microcopy,!nameStatus.valid && styles.nameError]}>
+          {nameStatus.valid ? 'Valid slug format.' : 'Name blocked: '+nameStatus.message}
+        </Text>
+        <Text style={styles.microcopy}>Suggestion: {suggestedPlan.name} · Max 96 lowercase letters, numbers and hyphens.</Text>
+        <Text style={styles.microcopy}>GitHub collision check: {prewrite.name_collision_unverified ? 'UNVERIFIED' : 'VERIFIED'}.
+          Requires owner-specific authenticated prewrite verification when live mode is built.
+        </Text>
       </View>
 
       <View style={styles.fieldGroup}>
@@ -194,6 +204,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
+  nameError: { color: '#fecaca', fontWeight: '800' },
   microcopy: {
     color: '#94a3b8',
     fontSize: 12,
