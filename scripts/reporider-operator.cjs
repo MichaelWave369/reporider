@@ -97,6 +97,13 @@ async function interact(inbox,entry){
   print('This is an unsigned, non-authoritative review note. It will NOT approve or execute anything.');
   const consent=(await rl.question('Type SAVE to write a local informational note, or Enter to cancel: ')).trim();
   if(consent!=='SAVE'){print('No note saved.');return;}
+  // Re-read/replay the inbox file right before exporting. The operator might
+  // have reviewed a packet that another local process replaced in the meantime.
+  const current=inspectPacket(inbox,entry.filename);
+  if(!current.ok||JSON.stringify(current.verified.proposal)!==JSON.stringify(v.proposal)){
+   print('PACKET_CHANGED: local packet differs from what you inspected. No note saved.');
+   return;
+  }
   const result=saveReviewNote(inbox,v,inspected,options[value],reason);
   print('LOCAL NOTE WRITTEN: '+escaped(result.relativePath));
   print('Approval granted: false. Identity authenticated: false. GitHub write executed: false.');
