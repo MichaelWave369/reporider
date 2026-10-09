@@ -63,7 +63,7 @@ function Garage({idea,updateIdea,overrides,updateOverrides,plan,safety,go}){
  <strong>{plan.visibility==='public'?'PUBLIC · Anyone can view the code and history':'PRIVATE · Recommended for early ideas'}</strong>
  <p>{visibilityEducation[plan.visibility]}</p>
  {plan.visibility==='public'&&<small>A separate confirmation is required in the Ride Console. The live GitHub writer is still disabled.</small>}
- </div><div className="setting-footer"><Badge type={safety.blockerCount?'red':safety.warningCount?'amber':'lime'}{safety.status.toUpperCase()}</Badge><span>{plan.files.length} files · {plan.issues.length} issues</span></div><button className="btn primary full" onClick={()=>go('review')}>Review starter artifacts <ArrowRight size={17}/></button><button className="reset-action" onClick={()=>updateOverrides({},true)}><RotateCcw size={14}/> Reset to planner suggestions</button></section></div>
+ </div><div className="setting-footer"><Badge type={safety.blockerCount?'red':safety.warningCount?'amber':'lime'}>{safety.status.toUpperCase()}</Badge><span>{plan.files.length} files · {plan.issues.length} issues</span></div><button className="btn primary full" onClick={()=>go('review')}>Review starter artifacts <ArrowRight size={17}/></button><button className="reset-action" onClick={()=>updateOverrides({},true)}><RotateCcw size={14}/> Reset to planner suggestions</button></section></div>
  <div className="wide-note"><ShieldAlert size={19}/><div><strong>Private-first. Approval always required.</strong><p>Generated files are drafts, not executed code. Every change needs fresh approval. Public visibility and detected risks should be inspected before even a future write mode is considered.</p></div></div>
  </>;
 }
