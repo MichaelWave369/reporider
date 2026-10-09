@@ -107,7 +107,7 @@ export type LocalReviewNote={
   required_artifacts:number;
   generated_at:string;
   rationale:string;
-  review_location:'LOCAL_BROWSER_ONLY';
+  review_location:'LOCAL_BROWSER_ONLY'|'LOCAL_OPERATOR_CONSOLE';
   content_replayed:true;
   source_identity_authenticated:false;
   reviewer_identity_authenticated:false;
@@ -121,6 +121,7 @@ export type LocalReviewNote={
 export function makeLocalReviewNote(
   verified:VerifiedReview, checked:string[], choice:Decision,rationale:string,
   now:string=new Date().toISOString(),
+  location:'LOCAL_BROWSER_ONLY'|'LOCAL_OPERATOR_CONSOLE'='LOCAL_BROWSER_ONLY',
 ):LocalReviewNote{
   if(!['RECOMMEND_FOR_SEPARATE_AUTHORIZATION','REQUEST_CHANGES','DECLINE'].includes(choice))
     throw new Error('INVALID_REVIEW_DECISION');
@@ -144,7 +145,7 @@ export function makeLocalReviewNote(
     required_artifacts:wanted.length,
     generated_at:now,
     rationale,
-    review_location:'LOCAL_BROWSER_ONLY',
+    review_location:location,
     content_replayed:true,
     source_identity_authenticated:false,
     reviewer_identity_authenticated:false,

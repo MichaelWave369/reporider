@@ -42,6 +42,7 @@ eq(recommend.live_write_authorized,false,'no live write');
 eq(recommend.reviewer_identity_authenticated,false,'no identity proof');
 eq(recommend.signature_verified,false,'no signature');
 eq(recommend.delivered,false,'no dispatch');
+eq(recommend.review_location,'LOCAL_BROWSER_ONLY','browser default remains correctly labeled');
 const decline=makeLocalReviewNote(a.value,[],'DECLINE','Not appropriate');
 eq(decline.decision,'DECLINE','decline without item reviews');
 const change=makeLocalReviewNote(a.value,[],'REQUEST_CHANGES','Needs more work');

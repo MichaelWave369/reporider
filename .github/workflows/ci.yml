@@ -35,3 +35,5 @@ jobs:
         run: npm run agent:test
       - name: RR-A02 MCP stdio discovery and deny smoke
         run: npm run mcp:test
+      - name: RR-A05 local operator inbox and terminal negative controls
+        run: npm run operator:test
