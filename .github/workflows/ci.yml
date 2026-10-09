@@ -33,3 +33,5 @@ jobs:
         run: npm run test:safety
       - name: RR-A01 agent rail negative controls and CLI smoke
         run: npm run agent:test
+      - name: RR-A02 MCP stdio discovery and deny smoke
+        run: npm run mcp:test
