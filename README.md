@@ -161,3 +161,9 @@ node scripts/reporider-agent.cjs < examples/agent-request.json
 ```
 
 **All rail output is review-only or blocked.** No credentials, GitHub writes, human notifications, external review submission, memory admission or agent self-approval. This separate interface does not change the Expo mobile app or the browser Pages mock-only boundary.
+
+## RR-A02: Local MCP agent bridge
+
+[RR-A02 MCP Bridge](docs/REPORIDER_MCP_RR_A02.md) exposes RR-A01's real TypeScript planning/safety/review-packet functions to compatible MCP clients through **local stdio**, with a fixed five-tool catalog. Supports modern 2026-07-28 discovery and legacy 2025-11-25 clients. Nothing connects automatically or inherits GitHub write authority.
+
+Run `npm run agent:build` once, then configure your MCP client to launch `node scripts/reporider-mcp.cjs`. Test with `npm run mcp:test`. This remains completely **mock-only**: no git writes, token storage, external notifications, agents approving their own work, or execution rights.
