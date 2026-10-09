@@ -31,3 +31,5 @@ jobs:
 
       - name: Run safety fixtures
         run: npm run test:safety
+      - name: RR-A01 agent rail negative controls and CLI smoke
+        run: npm run agent:test

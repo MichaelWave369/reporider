@@ -1,0 +1,10 @@
+{
+  "schema": "reporider.agent.request.v0.1",
+  "action": "preview",
+  "idea": "Create a private React Vite checklist app for local camping supply tracking",
+  "overrides": {
+    "visibility": "private",
+    "stack": "react-vite",
+    "issueCount": 3
+  }
+}

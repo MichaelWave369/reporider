@@ -149,3 +149,15 @@ The companion **RepoRider browser studio** lives in [site/](site/) and is publis
 [https://michaelwave369.github.io/reporider/](https://michaelwave369.github.io/reporider/) when GitHub Pages is configured to use Actions.
 
 Unlike a disconnected mockup, this standalone React/Vite site imports the actual RepoRider planner, safety scan, generated starter previews, approvals, mock GitHub creator, and receipt exporter. It remains **strictly mock-only**: no OAuth, tokens, real repositories, pushes, GitHub issues or persisted private data. See [site/README.md](site/README.md) for setup and the [Pages workflow](.github/workflows/pages.yml) for deployment.
+
+## RR-A01: Agent-Native Headless Planner
+
+The [RR-A01 agent rail](docs/AGENT_RAIL_RR_A01.md) reuses the actual RepoRider planner, generated starter previews and safety scanner through a **strict, versioned, one-shot JSON CLI**. Agents can propose a plan, preview/edit only planned artifacts, inspect policy findings, dry-run the approval requirements and **prepare** an in-band review packet.
+
+Run `npm run agent:test` and `npm run agent:build`, then:
+
+```sh
+node scripts/reporider-agent.cjs < examples/agent-request.json
+```
+
+**All rail output is review-only or blocked.** No credentials, GitHub writes, human notifications, external review submission, memory admission or agent self-approval. This separate interface does not change the Expo mobile app or the browser Pages mock-only boundary.
