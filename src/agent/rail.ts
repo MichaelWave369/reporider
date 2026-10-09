@@ -231,6 +231,12 @@ export function runAgentRail(untrusted: unknown): RailResponse {
       id:f.id,severity:f.severity,category:f.category??null,
       path:f.path??null,message:f.message,remediation:f.remediation??null,
     }));
+    // A failing native safety gate blocks ALL operations, including preview and
+    // in-band review preparation. Never echo unsafe draft content in a response.
+    if (safety.blockerCount > 0) {
+      return response(action,'BLOCKED','Native safety policy blocked this proposed package.',
+        {summary,findings,checks:safety.checks});
+    }
     if (request.action === 'plan') {
       return response(action,'REVIEW_REQUIRED','A plan has been prepared; an agent cannot approve or publish it.',
         {summary,plan});
