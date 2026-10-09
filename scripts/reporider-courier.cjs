@@ -84,7 +84,9 @@ function createCourier(options=process.env){
       authority_granted:false,
       approval_granted:false,
       live_write_authorized:false,
-      action_executed:false,
+      action_executed:true, // The local inbox file-write DID occur.
+      local_file_write_executed:true,
+      github_write_executed:false,
       repository_created:false,
       agent_identity_verified:false,
       operator_identity_verified:false,
