@@ -59,7 +59,7 @@ const packet=runAgentRail(base('submit_for_review'));
 alwaysNoAuthority(packet);
 const data=packet.data?.review_packet as {delivery:string;human_approval_recorded:boolean;requested_effect:string}|undefined;
 if(packet.disposition==='REVIEW_REQUIRED') {
-  ok(data,'review packet emitted');
+  if(!data) throw new Error('review packet missing');
   eq(data.delivery,'CALLER_HANDOFF_REQUIRED','no dispatch to humans');
   eq(data.human_approval_recorded,false,'never self-approves');
   eq(data.requested_effect,'NONE','no requested external effects');
