@@ -87,7 +87,7 @@ function listPackets(inbox){
 }
 function saveReviewNote(inbox,verified,checked,decision,rationale){
  const dir=assertInbox(inbox);
- const note=makeLocalReviewNote(verified,checked,decision,rationale);
+ const note=makeLocalReviewNote(verified,checked,decision,rationale,new Date().toISOString(),'LOCAL_OPERATOR_CONSOLE');
  const sub=path.join(dir,NOTES_DIR);
  // Directory creation occurs ONLY after an explicit operator action.
  try{fs.mkdirSync(sub,{mode:0o700});}
