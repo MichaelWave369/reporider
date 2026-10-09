@@ -181,3 +181,10 @@ No identity authentication, server-side queue, real approvals, external dispatch
 [RR-A04 Courier](docs/LOCAL_PROPOSAL_COURIER_RR_A04.md) optionally adds an owner-controlled local inbox for agent review packets. The existing five read-only MCP tools are unchanged **unless** you explicitly enable the local file courier. When enabled, a sixth MCP tool, `reporider_enqueue_review`, can save only bounded, replayable, zero-blocker proposals into a pre-created directory of your choice.
 
 The GitPage's Agent Review Desk now has an **Open local .json packet** picker. No browser-to-local-network connection or automatic queue sync exists. An agent still cannot approve or execute a repository write. Run `npm run mcp:test` for all RR-A02/RR-A04 smoke cases.
+
+
+## RR-A05: Local Operator Console
+
+The new [RR-A05 Local Operator Console](docs/LOCAL_OPERATOR_CONSOLE_RR_A05.md) can list/inspect replay-verified packets in the explicitly configured RR-A04 courier folder. In a real interactive terminal it can walk through every file and issue, require typed review acknowledgments for recommendations, and export an **unsigned informational review note** under a separate private `operator-notes/` subfolder.
+
+No server ports, OAuth, token storage, inbox-reading MCP methods, GitHub writes, or agent self-approval. The operator console is **local-only** and does not replace the GitHub Pages Human Review Desk. Use `npm run operator:test` and `npm run operator:console -- --help`.
