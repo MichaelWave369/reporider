@@ -167,3 +167,10 @@ node scripts/reporider-agent.cjs < examples/agent-request.json
 [RR-A02 MCP Bridge](docs/REPORIDER_MCP_RR_A02.md) exposes RR-A01's real TypeScript planning/safety/review-packet functions to compatible MCP clients through **local stdio**, with a fixed five-tool catalog. Supports modern 2026-07-28 discovery and legacy 2025-11-25 clients. Nothing connects automatically or inherits GitHub write authority.
 
 Run `npm run agent:build` once, then configure your MCP client to launch `node scripts/reporider-mcp.cjs`. Test with `npm run mcp:test`. This remains completely **mock-only**: no git writes, token storage, external notifications, agents approving their own work, or execution rights.
+
+
+## RR-A03: Agent Human Review Desk
+
+The public GitPage now has a dedicated [Agent Review Desk](docs/REVIEW_DESK_RR_A03.md) for deliberate import and replay of agent-created review packets. It uses the original TypeScript planner/scanner in the browser, compares imported results to a fresh local replay, displays each file/issue as inert text, and offers per-artifact examination plus an **unsigned informational review note**.
+
+No identity authentication, server-side queue, real approvals, external dispatch, GitHub writes, tokens or persistent browser data. Older packets lacking replayable input must be regenerated. Run the existing agent:test command for RR-A01/RR-A03 fixtures.

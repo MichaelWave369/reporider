@@ -274,6 +274,10 @@ export function runAgentRail(untrusted: unknown): RailResponse {
         fingerprint_is_cryptographic_signature:false,
         files:exposedFiles,issues:exposedIssues,
         findings,required_gates:safety.requiredGates,
+        // Carries replayable, bounded planner inputs so a human-facing host
+        // can recompute the packet instead of trusting model-supplied metadata.
+        // This is not source authentication or an approval signature.
+        proposal_request:request,
         requested_effect:'NONE',
       }});
   } catch (e) {

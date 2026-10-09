@@ -48,3 +48,10 @@ Pull requests run the website's smoke tests and build, without deploying. The ex
 - No private or sensitive information should be entered in a public demo, even though this static UI never intentionally transmits form content.
 
 This app does not install, compile or run generated starter files. Root `README.md` and the project's `docs/GITHUB_WRITE_BOUNDARY.md` govern later design for real GitHub writes.
+
+
+## Agent Review Desk (RR-A03)
+
+The Pages site includes an **Agent Review Desk**. Visitors can load a local synthetic sample or paste a RR-A01 review request/result or RR-A02 MCP response. The browser replays the original request through the native TypeScript planner/policy, rejects tampering and blocker findings, and shows file/issue drafts as untrusted inert text.
+
+Reviewers may check individual artifacts and export a **non-authoritative, unsigned informational review note**. Nothing is uploaded or dispatched. A recommendation is not execution approval. See [RR-A03 docs](../docs/REVIEW_DESK_RR_A03.md).

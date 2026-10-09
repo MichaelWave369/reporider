@@ -13,6 +13,7 @@
   },
   "include": [
     "src/agent/**/*.ts",
-    "test/agentRail.fixtures.ts"
+    "test/agentRail.fixtures.ts",
+    "test/reviewDesk.fixtures.ts"
   ]
 }
