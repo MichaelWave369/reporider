@@ -1,5 +1,6 @@
 import { buildStarterFilePreviews, summarizeStarterFileDrafts } from '../starterFilePreview';
 import { canProceedWithVisibility } from '../visibilityGate';
+import {validateRepositoryName,getRepositoryNamePrewriteGate} from '../repoNaming';
 import { buildStarterIssuePreviews, summarizeStarterIssueDrafts } from '../starterIssuePreview';
 import {
   attachReceiptChain,
@@ -53,6 +54,15 @@ export const createMockGitHubRepository = async ({
 
   if (!canProceedWithVisibility(plan.visibility, publicVisibilityConfirmed)) {
     throw new Error('Public visibility requires a separate explicit acknowledgement before even a mock ride.');
+  }
+
+  const nameStatus=validateRepositoryName(plan.name);
+  if (!nameStatus.valid) {
+    throw new Error('Invalid repository name: '+nameStatus.message);
+  }
+  const prewrite=getRepositoryNamePrewriteGate(plan.name);
+  if (prewrite.may_create_repository||!prewrite.name_collision_unverified) {
+    throw new Error('Unexpected name authority escalation in mock mode.');
   }
 
   if (safetyReport.status === 'blocked') {

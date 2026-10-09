@@ -7,6 +7,7 @@
  * itself permission to create a repository.
  */
 import { buildRepoPlan, starterStackOptions } from '../lib/repoPlanner';
+import {validateRepositoryName} from '../lib/repoNaming';
 import { applyStarterFileDrafts, buildStarterFilePreviews } from '../lib/starterFilePreview';
 import {
   applyStarterIssueDrafts,
@@ -70,9 +71,6 @@ const hasToken = (value: string) => tokenPattern.test(value);
 const safeText = (value: unknown, limit: number): value is string =>
   typeof value === 'string' && value.length <= limit && !hasToken(value) &&
   !/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(value);
-const validName = (value: string) => /^[a-zA-Z0-9._-]{1,96}$/.test(value)
-  && value !== '.' && value !== '..';
-
 export class RailInputError extends Error {
   constructor(readonly code: string) {
     super(code);
@@ -97,7 +95,7 @@ export function parseRailRequest(input: unknown): RailRequest {
     const source = input.overrides;
     overrides = {};
     if (source.name !== undefined) {
-      check(typeof source.name === 'string' && validName(source.name) && !hasToken(source.name), 'INVALID_REPO_NAME');
+      check(typeof source.name === 'string' && validateRepositoryName(source.name).valid && !hasToken(source.name), 'INVALID_REPO_NAME');
       overrides.name = source.name;
     }
     if (source.visibility !== undefined) {

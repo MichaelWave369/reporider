@@ -10,7 +10,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test:safety": "tsc --project tsconfig.safety-tests.json && node .safety-test-build/test/safetyScan.fixtures.js && node .safety-test-build/test/safetyAbsolutePath.fixtures.js && node .safety-test-build/test/safetyPackageManifest.fixtures.js && node .safety-test-build/test/receiptPolicy.fixtures.js && node .safety-test-build/test/rideReceiptVerify.fixtures.js && node .safety-test-build/test/rideReceiptVerificationReport.fixtures.js && node .safety-test-build/test/visibilityGate.fixtures.js && node .safety-test-build/test/visibilityMock.fixtures.js && rm -rf .safety-test-build",
+    "test:safety": "tsc --project tsconfig.safety-tests.json && node .safety-test-build/test/safetyScan.fixtures.js && node .safety-test-build/test/safetyAbsolutePath.fixtures.js && node .safety-test-build/test/safetyPackageManifest.fixtures.js && node .safety-test-build/test/receiptPolicy.fixtures.js && node .safety-test-build/test/rideReceiptVerify.fixtures.js && node .safety-test-build/test/rideReceiptVerificationReport.fixtures.js && node .safety-test-build/test/visibilityGate.fixtures.js && node .safety-test-build/test/visibilityMock.fixtures.js && node .safety-test-build/test/repoNaming.fixtures.js && rm -rf .safety-test-build",
     "agent:build": "tsc --project tsconfig.agent.json",
     "agent:test": "npm run agent:build && node .agent-build/test/agentRail.fixtures.js && node scripts/testAgentCli.cjs && node .agent-build/test/reviewDesk.fixtures.js",
     "mcp:serve": "node scripts/reporider-mcp.cjs",

@@ -218,3 +218,7 @@ RepoRider's native and GitPage interfaces explain public and private repo access
 ## Issue #18: Accessibility baseline
 
 RepoRider's mobile controls and public GitPage now have more descriptive labels, accessible selection states, visible keyboard focus, reduced-motion support, a skip link, and explicit typed idea input. Selected WCAG AA contrast pairs are automatically checked in site tests. This is a **baseline**, not full WCAG certification. [Accessibility details and manual QA](docs/ACCESSIBILITY_BASELINE_ISSUE_18.md).
+
+## Repository naming safeguards (issue #22)
+
+A shared [naming policy](docs/REPO_NAMING_ISSUE_22.md) now governs generated and manually edited repo names across the Expo UI, React GitPage, local safety scan, agent-input gate and mock writer. Invalid manual names remain visible and block the simulated ride; they are never silently rewritten. Collision availability stays **UNVERIFIED** until owner-authenticated GitHub prewrite lookup exists. Issue #22 stays open for that final dependency.

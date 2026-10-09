@@ -1,3 +1,4 @@
+import {validateRepositoryName} from './repoNaming';
 import type {
   RepoIssuePlan,
   RepoPlan,
@@ -314,7 +315,7 @@ const remediationForFinding = (finding: SafetyFinding) => {
   }
 
   if (finding.id === 'unsafe-repo-name') {
-    return 'Rename the repo to a simple slug with no slashes or traversal, then regenerate/review the package.';
+    return 'Rename the repository using lowercase a-z, 0-9, single hyphens, at most 96 characters, and avoid reserved names. Re-review the generated package.';
   }
 
   switch (finding.category) {
@@ -652,12 +653,13 @@ export const scanRepoPlan = (
 ): SafetyReport => {
   const findings: SafetyFinding[] = [];
 
-  const repoNameLooksUnsafe = !plan.name.trim() || plan.name.includes('/') || plan.name.includes('..');
-  if (repoNameLooksUnsafe) {
+  const nameStatus=validateRepositoryName(plan.name);
+  if (!nameStatus.valid) {
     findings.push({
       id: 'unsafe-repo-name',
       severity: 'blocker',
-      message: 'Repository name must be non-empty and must not contain path traversal or slash characters.',
+      category: 'repo-name',
+      message: nameStatus.message,
     });
   }
 
