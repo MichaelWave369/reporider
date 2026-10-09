@@ -68,3 +68,7 @@ The public Pages app cannot run the local MCP server, access the filesystem dire
 The GitPage sidebar includes **Audit Observatory**. It accepts a user-selected local JSON export from the RR-A08 operator audit CLI, visualizes the imported ledger/notes/inbox metadata and reported checkpoint status, and supports filters plus a synthetic demo.
 
 The client validates structure and internal counts only. It **does not** recompute SHA-256 source hashes, independently inspect your offline ledger, verify checkpoint custody, authenticate humans/agents or grant any GitHub execution authority. All input stays in the tab, no uploads or persistent browser storage. See [RR-A09 documentation](../docs/AUDIT_OBSERVATORY_RR_A09.md).
+
+## Issue #23: visibility education
+
+The Idea Garage shows public/private access consequences. Public mock rides require a separate explicit checkbox in the Ride Console and the shared mock writer refuses unconfirmed public plans. Idea/plan changes reset the checkbox. No OAuth, tokens or GitHub writes are enabled.

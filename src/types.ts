@@ -183,6 +183,8 @@ export type GithubCreateRepoRequest = {
   plan: RepoPlan;
   safetyReport: SafetyReport;
   approvedByUser: boolean;
+  /** Explicit, additional acknowledgement when the plan is public; never implied by file approvals. */
+  publicVisibilityConfirmed?: boolean;
   starterFiles?: StarterFilePreview[];
   starterIssues?: RepoIssuePlan[];
 };

@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { starterStackLabels, starterStackOptions } from '../lib/repoPlanner';
+import { visibilityEducation } from '../lib/visibilityGate';
 import type { RepoPlan, RepoPlanOverrides, RepoVisibility, StarterStack } from '../types';
 
 type RepoPlanControlsProps = {
@@ -75,7 +76,8 @@ export const RepoPlanControls = ({
             </Pressable>
           ))}
         </View>
-        <Text style={styles.microcopy}>Private stays the default unless you choose otherwise.</Text>
+        <Text style={styles.microcopy}>{visibilityEducation[plan.visibility]}</Text>
+        {plan.visibility === 'public' ? <Text style={styles.microcopy}>Public requires a separate confirmation before mock creation.</Text> : null}
       </View>
 
       <View style={styles.fieldGroup}>

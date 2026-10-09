@@ -265,3 +265,16 @@ footer p{font-size:10px;margin:0}footer a{display:flex;align-items:center;gap:7p
 @media(max-width:1180px){.ao9-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.ao9-metrics{grid-template-columns:1fr 1fr}.ao9-integrity-grid,.ao9-chart-grid{grid-template-columns:1fr}.ao9-selection dl{grid-template-columns:1fr;gap:4px}.ao9-selection dd{margin-bottom:9px}}
 @media(max-width:490px){.ao9-metrics{grid-template-columns:1fr}.ao9-actions .btn,.ao9-file-picker{flex:1;justify-content:center}.ao9-row{flex-wrap:wrap}.ao9-row .ao9-badge{margin-left:46px}.ao9-metric{padding:14px}}
+
+
+/* Issue #23: explicit public/private education and separate public consent */
+.visibility-guide{padding:14px 16px;margin:14px 0;border:1px solid #3d6f61;border-radius:12px;background:#1b3535}
+.visibility-guide strong{font-size:12px;color:#d3f6ad;letter-spacing:.25px;line-height:1.45}
+.visibility-guide p{font-size:11px;line-height:1.65;color:#b3d4d0;margin:7px 0 0}
+.visibility-guide.public{background:#493523;border-color:#a4804b}
+.visibility-guide.public strong{color:#ffe2a7}
+.visibility-guide.public p,.visibility-guide.public small{color:#f2d2aa}
+.visibility-guide small{display:block;margin-top:8px;font-size:11px;line-height:1.6}
+.public-consent{display:flex;align-items:center;gap:10px;margin-top:14px;cursor:pointer}
+.public-consent input{accent-color:#f5c67a;width:19px;height:19px;flex-shrink:0}
+.public-consent span{font-size:12px;font-weight:700;color:#fff5da;line-height:1.6}

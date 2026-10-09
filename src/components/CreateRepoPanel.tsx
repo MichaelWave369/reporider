@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RideCompleteSummaryCard } from './RideCompleteSummaryCard';
 import { createMockGitHubRepository } from '../lib/github/mockGitHubClient';
+import { canProceedWithVisibility, visibilityEducation } from '../lib/visibilityGate';
 import { mockGitHubWriteBoundary } from '../lib/github/types';
 import type { GithubCreateRepoResult, RepoIssuePlan, RepoPlan, SafetyReport, StarterFilePreview } from '../types';
 
@@ -100,6 +101,7 @@ export const CreateRepoPanel = ({
   starterFiles,
   starterIssues,
 }: CreateRepoPanelProps) => {
+  const [publicConfirmed, setPublicConfirmed] = useState(false);
   const [phase, setPhase] = useState<RidePhase>('idle');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GithubCreateRepoResult | null>(null);
@@ -107,6 +109,7 @@ export const CreateRepoPanel = ({
   const starterIssuesKey = useMemo(() => buildStarterIssuesKey(starterIssues), [starterIssues]);
 
   useEffect(() => {
+    setPublicConfirmed(false);
     setPhase('idle');
     setError(null);
     setResult(null);
@@ -141,14 +144,18 @@ export const CreateRepoPanel = ({
     ),
     [allStarterFilesApproved, allStarterIssuesApproved, approvedStarterFileCount, approvedStarterIssueCount, phase, result, safetyReport, starterFiles.length, starterIssues.length],
   );
-  const canRide = phase !== 'running' && safetyReport.status !== 'blocked' && allStarterFilesApproved && allStarterIssuesApproved;
+  const visibilityReady = canProceedWithVisibility(plan.visibility, publicConfirmed);
+  const canRide = phase !== 'running' && safetyReport.status !== 'blocked' && allStarterFilesApproved && allStarterIssuesApproved && visibilityReady;
   const remainingFileApprovals = starterFiles.length - approvedStarterFileCount;
   const remainingIssueApprovals = starterIssues.length - approvedStarterIssueCount;
-  const approvalHelper = canRide
+  const approvalHelper = !visibilityReady
+    ? 'Public visibility requires a separate confirmation below before a mock ride.'
+    : canRide
     ? `All reviewed starter files and starter issues are approved for ${safetyReport.policyVersion} / ${safetyReport.status}.`
     : `Approve ${remainingFileApprovals} more files and ${remainingIssueApprovals} more issues to unlock repo creation.`;
 
   const rideMockCreateRepo = async () => {
+    if (!canRide) return;
     setError(null);
     setResult(null);
     setPhase('running');
@@ -158,6 +165,7 @@ export const CreateRepoPanel = ({
         plan,
         safetyReport,
         approvedByUser: allStarterFilesApproved && allStarterIssuesApproved,
+        publicVisibilityConfirmed: plan.visibility === 'public' && publicConfirmed,
         starterFiles,
         starterIssues,
       });
@@ -183,8 +191,20 @@ export const CreateRepoPanel = ({
         <View style={styles.modeBadge}><Text style={styles.modeText}>{mockGitHubWriteBoundary.mode}</Text></View>
       </View>
 
+      <View style={[styles.visibilityNotice, plan.visibility === 'public' && styles.publicNotice]}>
+        <Text style={styles.visibilityHeading}>{plan.visibility === 'public' ? 'PUBLIC REPOSITORY · EXTRA REVIEW' : 'PRIVATE REPOSITORY · RECOMMENDED'}</Text>
+        <Text style={styles.visibilityCopy}>{visibilityEducation[plan.visibility]}</Text>
+        {plan.visibility === 'public' ? (
+          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: publicConfirmed }}
+            onPress={() => setPublicConfirmed((current) => !current)} style={styles.publicConfirmation}>
+            <Text style={styles.publicCheck}>{publicConfirmed ? '☑' : '☐'}</Text>
+            <Text style={styles.visibilityCopy}>I understand that anyone can see the code and history if I later create this repository publicly.</Text>
+          </Pressable>
+        ) : null}
+      </View>
+
       <Pressable accessibilityRole="button" disabled={!canRide} onPress={rideMockCreateRepo} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, !canRide && styles.buttonDisabled]}>
-        <Text style={styles.buttonText}>{phase === 'running' ? 'Riding...' : canRide ? 'Simulate Create Repo' : 'Approve Files & Issues First'}</Text>
+        <Text style={styles.buttonText}>{phase === 'running' ? 'Riding...' : canRide ? 'Simulate Create Repo' : !visibilityReady ? 'Confirm Public Visibility' : 'Approve Files & Issues First'}</Text>
       </Pressable>
 
       {stages.map((stage) => (
@@ -209,6 +229,12 @@ const styles = StyleSheet.create({
   helper: { color: '#cbd5e1', fontSize: 14, lineHeight: 20 },
   approvalHelper: { color: '#fef3c7', fontSize: 13, fontWeight: '800', lineHeight: 18 },
   approvalHelperReady: { color: '#bbf7d0' },
+  visibilityNotice: { backgroundColor: '#0e2f32', borderColor: '#30575a', borderWidth: 1, borderRadius: 14, padding: 14, gap: 7 },
+  publicNotice: { backgroundColor: '#473121', borderColor: '#d2a56d' },
+  visibilityHeading: { color: '#fef3c7', fontSize: 12, letterSpacing: 0.7, fontWeight: '900' },
+  visibilityCopy: { color: '#f1f5f9', fontSize: 13, lineHeight: 20, flexShrink: 1 },
+  publicConfirmation: { alignItems: 'center', flexDirection: 'row', gap: 10, marginTop: 8, paddingVertical: 10, minHeight: 48 },
+  publicCheck: { color: '#fef08a', fontSize: 23 },
   modeBadge: { alignSelf: 'flex-start', backgroundColor: '#164e63', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   modeText: { color: '#ecfeff', fontSize: 12, fontWeight: '900', textTransform: 'uppercase' },
   button: { alignItems: 'center', backgroundColor: '#06b6d4', borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14 },

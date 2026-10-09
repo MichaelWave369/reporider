@@ -210,3 +210,7 @@ The [RR-A08 Operator Audit](docs/LOCAL_OPERATOR_AUDIT_RR_A08.md) adds an offline
 The [RR-A09 Audit Observatory](docs/AUDIT_OBSERVATORY_RR_A09.md) adds a visual, filterable *read-only* dashboard to the public React GitPage. The operator explicitly imports an RR-A08 audit JSON snapshot to see ledger history, checkpoint status, decision counts, inbox and unrecorded notes. A synthetic local demo is included.
 
 The public site validates the report's *internal structure*, **not** the underlying local ledger, external witness custody, identity, or code safety. No private filesystem access, network handoff, local persistence, agent permissions or GitHub writes. Run `cd site && npm test && npm run build`.
+
+## Visibility education and confirmation (GitHub issue #23)
+
+RepoRider's native and GitPage interfaces explain public and private repo access. A separate checked confirmation is required to simulate any **public** repo, and the mock writer enforces that requirement even if the UI is bypassed. Private plans remain the default. This does not authorize or enable real GitHub writes. [Details](docs/REPO_VISIBILITY_ISSUE_23.md).
