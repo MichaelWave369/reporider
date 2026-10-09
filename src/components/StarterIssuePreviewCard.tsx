@@ -86,7 +86,7 @@ export const StarterIssuePreviewCard = ({
             {approvedCount}/{draftIssues.length} starter issues approved.
           </Text>
         </View>
-        <Pressable accessibilityRole="button" onPress={onApproveAllIssues} style={styles.approveAllButton}>
+        <Pressable accessibilityLabel="Approve all current starter issues" accessibilityRole="button" onPress={onApproveAllIssues} style={styles.approveAllButton}>
           <Text style={styles.approveAllText}>Approve All</Text>
         </Pressable>
       </View>
@@ -99,6 +99,8 @@ export const StarterIssuePreviewCard = ({
           return (
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={`Review issue ${index + 1}: ${issue.title}; ${approved ? 'approved' : 'needs approval'}; ${edited ? 'edited' : 'generated'}`}
+              accessibilityState={{ selected: selectedIndex === index }}
               key={starterIssueKeyForIndex(index)}
               onPress={() => setSelectedIndex(index)}
               style={[
@@ -128,6 +130,7 @@ export const StarterIssuePreviewCard = ({
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Issue title</Text>
         <TextInput
+          accessibilityLabel="Starter issue title"
           onChangeText={(title) => updateSelectedIssue({ title })}
           placeholder="Issue title"
           placeholderTextColor="#94a3b8"
@@ -139,6 +142,7 @@ export const StarterIssuePreviewCard = ({
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Issue body</Text>
         <TextInput
+          accessibilityLabel="Starter issue body"
           multiline
           onChangeText={(body) => updateSelectedIssue({ body })}
           placeholder="Issue body"
@@ -152,6 +156,7 @@ export const StarterIssuePreviewCard = ({
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Labels</Text>
         <TextInput
+          accessibilityLabel="Starter issue labels, comma separated"
           onChangeText={(labelsText) => updateSelectedIssue({ labels: parseStarterIssueLabels(labelsText) })}
           placeholder="mvp, product"
           placeholderTextColor="#94a3b8"
@@ -161,7 +166,7 @@ export const StarterIssuePreviewCard = ({
       </View>
 
       <View style={styles.actionRow}>
-        <Pressable accessibilityRole="button" onPress={() => onApproveIssue(selectedIndex)} style={styles.approveButton}>
+        <Pressable accessibilityLabel={`Approve current issue ${selectedIndex + 1}`} accessibilityRole="button" onPress={() => onApproveIssue(selectedIndex)} style={styles.approveButton}>
           <Text style={styles.approveButtonText}>Approve This Issue</Text>
         </Pressable>
         <Pressable accessibilityRole="button" onPress={() => onResetIssue(selectedIndex)} style={styles.secondaryButton}>

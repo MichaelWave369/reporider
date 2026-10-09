@@ -154,7 +154,7 @@ export const StarterFilePreviewCard = ({
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ selected: previewMode === 'diff' }}
-          onPress={() => setPreviewMode('diff')
+          onPress={() => setPreviewMode('diff')}
           style={({ pressed }) => [
             styles.modeButton,
             previewMode === 'diff' && styles.modeButtonActive,

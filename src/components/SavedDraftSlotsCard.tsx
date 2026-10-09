@@ -171,6 +171,7 @@ export const SavedDraftSlotsCard = ({
             Paste a RepoRider saved draft export, preview the extracted idea and controls, then save that preview as a slot or restore it after review.
           </Text>
           <TextInput
+            accessibilityLabel="Import saved draft Markdown"
             multiline
             onChangeText={(value) => {
               setImportMarkdown(value);
@@ -284,6 +285,7 @@ export const SavedDraftSlotsCard = ({
               <Text style={styles.previewKicker}>Slot Label</Text>
               <Text style={styles.helperSmall}>Add a short session label. Renaming changes only slot metadata.</Text>
               <TextInput
+                accessibilityLabel="Saved draft slot name"
                 onChangeText={setRenameLabel}
                 placeholder="Example: Camping app v2"
                 placeholderTextColor="#94a3b8"
@@ -331,7 +333,7 @@ export const SavedDraftSlotsCard = ({
                 <Text style={styles.secondaryButtonText}>{exportExpanded ? 'Hide Saved Draft Markdown' : 'Show Saved Draft Markdown'}</Text>
               </Pressable>
               {exportExpanded ? (
-                <TextInput editable={false} multiline selectTextOnFocus style={styles.markdownInput} value={markdownSnapshot} />
+                <TextInput accessibilityLabel="Export saved draft Markdown, read only" editable={false} multiline selectTextOnFocus style={styles.markdownInput} value={markdownSnapshot} />
               ) : null}
             </View>
 
