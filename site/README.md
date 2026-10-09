@@ -55,3 +55,10 @@ This app does not install, compile or run generated starter files. Root `README.
 The Pages site includes an **Agent Review Desk**. Visitors can load a local synthetic sample or paste a RR-A01 review request/result or RR-A02 MCP response. The browser replays the original request through the native TypeScript planner/policy, rejects tampering and blocker findings, and shows file/issue drafts as untrusted inert text.
 
 Reviewers may check individual artifacts and export a **non-authoritative, unsigned informational review note**. Nothing is uploaded or dispatched. A recommendation is not execution approval. See [RR-A03 docs](../docs/REVIEW_DESK_RR_A03.md).
+
+
+## RR-A04 courier handoff
+
+The **Agent Review Desk** now supports **Open local .json packet**, an explicit browser file picker. A human can select a JSON file from their privately configured local courier inbox and review it in the browser tab without uploading it.
+
+The public Pages app cannot run the local MCP server, access the filesystem directly or silently receive agent submissions. See [RR-A04 local courier manual](../docs/LOCAL_PROPOSAL_COURIER_RR_A04.md) for optional user-controlled MCP configuration and safety limits.

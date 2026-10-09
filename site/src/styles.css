@@ -175,3 +175,10 @@ footer p{font-size:10px;margin:0}footer a{display:flex;align-items:center;gap:7p
 .rr3-note p{overflow-wrap:anywhere}.rr3-footer{margin-top:5px}
 @media(max-width:950px){.rr3-inspector{grid-template-columns:1fr}.rr3-item-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.rr3-choices{grid-template-columns:1fr}}
 @media(max-width:680px){.rr3-overview{grid-template-columns:1fr}.rr3-item-nav{grid-template-columns:1fr}.rr3-import-actions>div{width:100%}.rr3-import-actions .btn{flex:1}.rr3-heading{align-items:start}.rr3-tabs button{font-size:10px;padding:9px}.rr3-notice{padding:15px}}
+
+
+/* RR-A04: local courier file picker, explicit operator gesture only */
+.rr4-file-button{display:inline-flex;align-items:center;gap:8px;position:relative;border:1px solid #527768;border-radius:9px;padding:11px 14px;color:#c8eca9;background:#28413b;font-size:11px;font-weight:800;cursor:pointer;overflow:hidden}
+.rr4-file-button:hover{background:#355246}.rr4-file-button:focus-within{outline:2px solid #c7f57e;outline-offset:3px}
+.rr4-file-button input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.rr4-file-caption{margin:14px 0 0;color:#91b4b0!important;font-size:11px!important}

@@ -14,7 +14,8 @@
     "agent:build": "tsc --project tsconfig.agent.json",
     "agent:test": "npm run agent:build && node .agent-build/test/agentRail.fixtures.js && node scripts/testAgentCli.cjs && node .agent-build/test/reviewDesk.fixtures.js",
     "mcp:serve": "node scripts/reporider-mcp.cjs",
-    "mcp:test": "npm run agent:build && node scripts/testMcpServer.cjs"
+    "mcp:test": "npm run agent:build && node scripts/testMcpServer.cjs && node scripts/testCourier.cjs",
+    "courier:test": "npm run agent:build && node scripts/testCourier.cjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",

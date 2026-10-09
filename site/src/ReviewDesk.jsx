@@ -27,6 +27,26 @@ export default function ReviewDesk(){
   else{setBundle(null);setError(result);}
  }
  function sample(){const value=JSON.stringify(runAgentRail(EXAMPLE),null,2);setRaw(value);load(value);}
+ async function loadLocalFile(event){
+  const file=event.target.files?.[0];
+  event.target.value='';
+  if(!file)return;
+  if(file.size>250000){
+    setBundle(null);setError({code:'FILE_TOO_LARGE',message:'Review packets must be 250000 bytes or less.'});
+    setNote(null);setChecked([]);return;
+  }
+  try{
+    const value=await file.text();
+    if(value.length>MAX_REVIEW_IMPORT_CHARS){
+      setBundle(null);setError({code:'FILE_TOO_LARGE',message:'The file exceeds the review desk JSON limit.'});
+      setNote(null);setChecked([]);return;
+    }
+    setRaw(value);load(value);
+  }catch{
+    setBundle(null);setError({code:'FILE_READ_FAILED',message:'The selected local JSON file could not be read.'});
+    setNote(null);setChecked([]);
+  }
+ }
  function clear(){setRaw('');setBundle(null);setError(null);setChecked([]);setNote(null);setFeedback('');}
  const file=bundle?.files[fileIndex],issue=bundle?.issues[issueIndex];
  const keys=bundle?requiredReviewKeys(bundle):[];
@@ -65,8 +85,12 @@ export default function ReviewDesk(){
    <div className="rr3-import-actions"><div>
     <button className="btn primary" disabled={!raw.trim()} onClick={()=>load(raw)}><FolderOpen size={16}/> Inspect proposal</button>
     <button className="btn outline" onClick={sample}><FileText size={16}/> Sample packet</button>
+    <label className="rr4-file-button"><FolderOpen size={16}/> Open local .json packet
+     <input type="file" accept=".json,application/json" aria-label="Open courier packet JSON file" onChange={loadLocalFile}/>
+    </label>
     <button className="rr3-clear" onClick={clear}><RotateCcw size={14}/> Clear</button></div>
     <small>{raw.length.toLocaleString()} / {MAX_REVIEW_IMPORT_CHARS.toLocaleString()} chars</small></div>
+   <p className="rr4-file-caption">RR-A04 Courier packets can be opened here by the human operator. Files are read in this browser tab only, never uploaded or auto-approved.</p>
    {error&&<div className="rr3-error" role="alert"><ShieldAlert size={18}/><span><strong>{error.code}:</strong> {error.message}</span></div>}
   </section>
   {bundle&&<>

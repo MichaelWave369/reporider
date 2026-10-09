@@ -174,3 +174,10 @@ Run `npm run agent:build` once, then configure your MCP client to launch `node s
 The public GitPage now has a dedicated [Agent Review Desk](docs/REVIEW_DESK_RR_A03.md) for deliberate import and replay of agent-created review packets. It uses the original TypeScript planner/scanner in the browser, compares imported results to a fresh local replay, displays each file/issue as inert text, and offers per-artifact examination plus an **unsigned informational review note**.
 
 No identity authentication, server-side queue, real approvals, external dispatch, GitHub writes, tokens or persistent browser data. Older packets lacking replayable input must be regenerated. Run the existing agent:test command for RR-A01/RR-A03 fixtures.
+
+
+## RR-A04: Local Proposal Courier
+
+[RR-A04 Courier](docs/LOCAL_PROPOSAL_COURIER_RR_A04.md) optionally adds an owner-controlled local inbox for agent review packets. The existing five read-only MCP tools are unchanged **unless** you explicitly enable the local file courier. When enabled, a sixth MCP tool, `reporider_enqueue_review`, can save only bounded, replayable, zero-blocker proposals into a pre-created directory of your choice.
+
+The GitPage's Agent Review Desk now has an **Open local .json packet** picker. No browser-to-local-network connection or automatic queue sync exists. An agent still cannot approve or execute a repository write. Run `npm run mcp:test` for all RR-A02/RR-A04 smoke cases.
