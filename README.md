@@ -204,3 +204,9 @@ Run `npm run checkpoint:test` for rollback, tamper, and custody-boundary tests. 
 ## RR-A08: Local Operator Audit Reports
 
 The [RR-A08 Operator Audit](docs/LOCAL_OPERATOR_AUDIT_RR_A08.md) adds an offline, **read-only** text/JSON audit report summarizing recorded review history, orphan notes, pending/rejected courier packets, and optional verification against your separately held RR-A07 checkpoint. No GitHub writes, authentication, approvals, remote transport or MCP tools. Run `npm run audit:test` for fixtures and `npm run audit:console -- --inbox ABSOLUTE_DIR --format text` to view a report.
+
+## RR-A09: Audit Observatory
+
+The [RR-A09 Audit Observatory](docs/AUDIT_OBSERVATORY_RR_A09.md) adds a visual, filterable *read-only* dashboard to the public React GitPage. The operator explicitly imports an RR-A08 audit JSON snapshot to see ledger history, checkpoint status, decision counts, inbox and unrecorded notes. A synthetic local demo is included.
+
+The public site validates the report's *internal structure*, **not** the underlying local ledger, external witness custody, identity, or code safety. No private filesystem access, network handoff, local persistence, agent permissions or GitHub writes. Run `cd site && npm test && npm run build`.

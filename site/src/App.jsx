@@ -3,7 +3,7 @@ import {
  ArrowRight,ArrowUpRight,BookOpen,Check,CheckCircle2,ChevronRight,ClipboardCheck,
  Code2,Copy,Download,FileCode2,FileText,FolderGit2,GitBranch,Github,KeyRound,
  Layers3,LockKeyhole,Menu,NotebookPen,Play,Plus,RotateCcw,Route,Shield,
- ShieldAlert,ShieldCheck,Sparkles,Terminal,TicketCheck,Bike,UserRoundCheck,X,Zap
+ ShieldAlert,ShieldCheck,Sparkles,Terminal,TicketCheck,Bike,UserRoundCheck,ChartNoAxesCombined,X,Zap
 } from 'lucide-react';
 
 import {buildRepoPlan,starterStackLabels,starterStackOptions} from '../../src/lib/repoPlanner.ts';
@@ -19,6 +19,7 @@ import {nullTokenStorageAdapter} from '../../src/lib/tokenStorage.ts';
 import {dryRunWriterAdapter} from '../../src/lib/dryRunWriter.ts';
 import {approvalCount,canCompleteMock,resetReviewState,isMockOnlyResult} from './review.js';
 import ReviewDesk from './ReviewDesk.jsx';
+import AuditObservatory from './AuditObservatory.jsx';
 
 const REPO='https://github.com/MichaelWave369/reporider';
 const IDEAS=[
@@ -33,6 +34,7 @@ const sections=[
   {id:'review',name:'Review Pit',hint:'Inspect every artifact',icon:FileCode2},
   {id:'launch',name:'Ride Console',hint:'Safety and receipts',icon:ShieldCheck},
   {id:'review-desk',name:'Agent Review Desk',hint:'RR-A03 · Human review',icon:UserRoundCheck},
+  {id:'audit-observatory',name:'Audit Observatory',hint:'RR-A09 · Visual audit',icon:ChartNoAxesCombined},
   {id:'about',name:'About RepoRider',hint:'Capabilities and boundaries',icon:BookOpen}
 ];
 function Badge({type='muted',children}){return <span className={'badge badge-'+type}>{children}</span>;}
@@ -149,6 +151,7 @@ export default function App(){
  {page==='review'&&<Review {...{plan,files,issues,selectedFile,setSelectedFile,selectedIssue,setSelectedIssue,fileApprovals:fa,issueApprovals:ia,onFileChange,onIssueChange,approveFile,approveIssue,go}}/>}
  {page==='launch'&&<Launch {...{plan,safety,files,issues,approvedFiles:approvedFileCount,approvedIssues:approvedIssueCount,checked:reviewed,setChecked:setReviewed,receipts:seedReceipts,dryRun,doMock,creating,result,copyJson,downloadJson,go}}/>}
  {page==='review-desk'&&<ReviewDesk/>}
+ {page==='audit-observatory'&&<AuditObservatory/>}
  {page==='about'&&<About go={go}/>}
  <footer><div><Brand/><span>Catch the idea. Forge the repo. Ride the build.</span></div><p>Static preview · In-memory inputs · Real planning engine · No GitHub writes</p><a href={REPO} target="_blank" rel="noreferrer">Source <ArrowUpRight size={15}/></a></footer>
  </main></div>
