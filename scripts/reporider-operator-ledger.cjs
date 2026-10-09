@@ -259,4 +259,30 @@ function verifyLedgerAnchor(inbox,expectedSequence,expectedHead){
    current_sequence:current.entry_count,current_head_sha256:current.head_sha256,
    prefix_sequence:expectedSequence,prefix_sha256:prefix};
 }
-module.exports={initLedger,verifyLedger,verifyLedgerAnchor,recordEvidence,SCHEMA,EMPTY_HEAD,MAX_ENTRIES};
+/**
+ * Read an already-verified local sequence as audit metadata. No change to the
+ * ledger or MCP tools. Rechecking the head limits benign concurrent-append
+ * races; this is NOT a filesystem snapshot protected against a hostile owner.
+ */
+function getVerifiedLedgerTimeline(inbox){
+ const verified=verifyLedger(inbox);
+ const loc=existing(inbox);
+ const entries=readEntries(loc.dir);
+ const head=entries.length?entries[entries.length-1].entry_sha256:EMPTY_HEAD;
+ if(entries.length!==verified.entry_count||head!==verified.head_sha256)
+  fail('LEDGER_CHANGED_DURING_AUDIT');
+ return{
+  verification:verified,
+  entries:entries.map(e=>({
+   sequence:e.sequence,recorded_at:e.recorded_at,
+   proposal_fingerprint:e.proposal_fingerprint,
+   decision:e.decision,packet_filename:e.packet_filename,
+   note_filename:e.note_filename,packet_sha256:e.packet_sha256,
+   note_sha256:e.note_sha256,previous_entry_sha256:e.previous_entry_sha256,
+   entry_sha256:e.entry_sha256,
+   approval_granted:false,live_write_authorized:false,
+   github_write_executed:false
+  }))
+ };
+}
+module.exports={initLedger,verifyLedger,verifyLedgerAnchor,getVerifiedLedgerTimeline,recordEvidence,SCHEMA,EMPTY_HEAD,MAX_ENTRIES};

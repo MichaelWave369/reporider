@@ -200,3 +200,7 @@ No GitHub write authority, MCP ledger tools, cloud service, authentication, or t
 [RR-A07 Independent Checkpoints](docs/INDEPENDENT_LEDGER_CHECKPOINTS_RR_A07.md) let a human export the current operator-ledger sequence and SHA-256 head **outside the courier directory** and verify that a later local chain still contains the exact anchored prefix. This detects deletion/rewriting of previously anchored entries when the checkpoint really is preserved separately. A checksum is not a signature and does not verify checkpoint custody, identity, or approval.
 
 Run `npm run checkpoint:test` for rollback, tamper, and custody-boundary tests. CLI: `checkpoint` and `verify-checkpoint ABSOLUTE_FILE` via `node scripts/reporider-ledger.cjs --inbox ...`.
+
+## RR-A08: Local Operator Audit Reports
+
+The [RR-A08 Operator Audit](docs/LOCAL_OPERATOR_AUDIT_RR_A08.md) adds an offline, **read-only** text/JSON audit report summarizing recorded review history, orphan notes, pending/rejected courier packets, and optional verification against your separately held RR-A07 checkpoint. No GitHub writes, authentication, approvals, remote transport or MCP tools. Run `npm run audit:test` for fixtures and `npm run audit:console -- --inbox ABSOLUTE_DIR --format text` to view a report.
