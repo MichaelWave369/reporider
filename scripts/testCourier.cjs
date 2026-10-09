@@ -43,7 +43,9 @@ try{
  assert.equal(tool.annotations.readOnlyHint,false,'tool write effect must be advertised');
  const receipt=live[2].result.structuredContent;
  assert.equal(receipt.disposition,'LOCAL_INBOX_SAVED');
- assert.equal(receipt.action_executed,false,'no execution');
+ assert.equal(receipt.action_executed,true,'local inbox file write actually occurred');
+ assert.equal(receipt.local_file_write_executed,true,'local file effect recorded');
+ assert.equal(receipt.github_write_executed,false,'no GitHub write execution');
  assert.equal(receipt.approval_granted,false,'no grant');
  assert.equal(receipt.live_write_authorized,false,'no GitHub authority');
  assert.equal(receipt.human_notified,false,'not sent');
