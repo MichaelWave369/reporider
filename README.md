@@ -8,6 +8,12 @@ The goal is simple:
 
 > Speak an idea on your phone, review the repo plan, steer the final settings, save/label/duplicate/reorder/pin/archive/export/import in-progress drafts when useful, preview, edit, diff, approve every starter file and starter issue, inspect the unified approval ledger, then publish a safe starter repository with receipts.
 
+## Local Package Bay: PhiTar × Drop Zone
+
+The Pages site includes a **Package Bay** that exports a user's **current approved starter files** as a standard local ZIP after a successful mock ride. It puts source files at the archive root and informational issue drafts and mock receipts in a reserved `__reporider_handoff__/` folder. The interface computes a SHA-256 checksum for the exported ZIP.
+
+The rider downloads the ZIP manually, then opens it in [PhiTar](https://michaelwave369.github.io/DropZone/phitar.html) for inspection or [Drop Zone](https://michaelwave369.github.io/DropZone/) for a build-kit proposal. **Nothing is transferred between sites automatically**, and no GitHub repository or issue is created. Current safety review and artifact approval cannot be skipped. See [Package Bay design and limits](docs/PHITAR_DROPZONE_PACKAGE_BAY.md).
+
 ## What this skeleton includes
 
 - Expo + React Native + TypeScript starter app
