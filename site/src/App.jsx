@@ -3,7 +3,7 @@ import {
  ArrowRight,ArrowUpRight,BookOpen,Check,CheckCircle2,ChevronRight,ClipboardCheck,
  Code2,Copy,Download,FileCode2,FileText,FolderGit2,GitBranch,Github,KeyRound,
  Layers3,LockKeyhole,Menu,NotebookPen,Play,Plus,RotateCcw,Route,Shield,
- ShieldAlert,ShieldCheck,Sparkles,Terminal,TicketCheck,Bike,UserRoundCheck,ChartNoAxesCombined,X,Zap
+ ShieldAlert,ShieldCheck,Sparkles,Terminal,TicketCheck,Bike,UserRoundCheck,ChartNoAxesCombined,Package,X,Zap
 } from 'lucide-react';
 
 import {buildRepoPlan,starterStackLabels,starterStackOptions} from '../../src/lib/repoPlanner.ts';
@@ -22,6 +22,7 @@ import {dryRunWriterAdapter} from '../../src/lib/dryRunWriter.ts';
 import {approvalCount,canCompleteMock,resetReviewState,isMockOnlyResult} from './review.js';
 import ReviewDesk from './ReviewDesk.jsx';
 import AuditObservatory from './AuditObservatory.jsx';
+import PackageBay from './PackageBay.jsx';
 
 const REPO='https://github.com/MichaelWave369/reporider';
 const IDEAS=[
@@ -37,6 +38,7 @@ const sections=[
   {id:'launch',name:'Ride Console',hint:'Safety and receipts',icon:ShieldCheck},
   {id:'review-desk',name:'Agent Review Desk',hint:'RR-A03 · Human review',icon:UserRoundCheck},
   {id:'audit-observatory',name:'Audit Observatory',hint:'RR-A09 · Visual audit',icon:ChartNoAxesCombined},
+  {id:'package-bay',name:'Package Bay',hint:'PhiTar + Drop Zone handoff',icon:Package},
   {id:'about',name:'About RepoRider',hint:'Capabilities and boundaries',icon:BookOpen}
 ];
 function Badge({type='muted',children}){return <span className={'badge badge-'+type}>{children}</span>;}
@@ -106,7 +108,7 @@ function Launch({plan,safety,files,issues,approvedFiles,approvedIssues,checked,s
   </label>}
  </div>
  <label className="accept-line"><input type="checkbox" checked={checked} onChange={e=>setChecked(e.target.checked)}/> <span>I reviewed the current starter package and understand this is a mock creation only.</span></label>{safety.warningCount>0&&<p className="warning-note"><ShieldAlert size={15}/> {safety.warningCount} warning(s) still require attention before any future real deployment.</p>}</div><div className="mock-cta"><button className="btn primary" disabled={!canMock||creating} onClick={doMock}><Play size={17}/>{creating?'Simulating...':'Run mock ride'} <ArrowRight size={16}/></button><small>{safety.blockerCount>0?'Safety blockers must be fixed first.':!allApproved?'Approve every file and issue first.':!visibilityReady?'Confirm public visibility separately.':!checked?'Confirm review to enable.':'No network calls or GitHub mutations.'}</small></div></section>
- {result&&isMockOnlyResult(result)&&<section className="panel complete-card"><div className="complete-icon"><CheckCircle2 size={35}/></div><div className="complete-body"><Kicker>MOCK RIDE COMPLETE</Kicker><h2>That was a simulated launch.</h2><p>The creator generated a demonstration receipt for <strong>{result.createdFiles.length} files</strong> and <strong>{result.openedIssues.length} issues</strong>. No real repository exists at the example URL.</p><div className="fake-url"><LockKeyhole size={16}/><span>{result.repositoryUrl} (fictional)</span></div><div className="result-meta"><span>{result.receipts.length} receipts</span><span>{result.summary.receiptChainHash}</span></div><div className="result-buttons"><button className="btn outline" onClick={copyJson}><Copy size={16}/> Copy JSON receipt</button><button className="btn primary" onClick={downloadJson}><Download size={16}/> Export JSON</button></div></div></section>}
+ {result&&isMockOnlyResult(result)&&<section className="panel complete-card"><div className="complete-icon"><CheckCircle2 size={35}/></div><div className="complete-body"><Kicker>MOCK RIDE COMPLETE</Kicker><h2>That was a simulated launch.</h2><p>The creator generated a demonstration receipt for <strong>{result.createdFiles.length} files</strong> and <strong>{result.openedIssues.length} issues</strong>. No real repository exists at the example URL.</p><div className="fake-url"><LockKeyhole size={16}/><span>{result.repositoryUrl} (fictional)</span></div><div className="result-meta"><span>{result.receipts.length} receipts</span><span>{result.summary.receiptChainHash}</span></div><div className="result-buttons"><button className="btn outline" onClick={copyJson}><Copy size={16}/> Copy JSON receipt</button><button className="btn primary" onClick={downloadJson}><Download size={16}/> Export JSON</button><button className="btn outline" onClick={()=>go('package-bay')}><Package size={16}/> Package starter ZIP</button></div></div></section>}
  <div className="wide-note"><ShieldAlert size={19}/><div><strong>A green local scan is not a security guarantee.</strong><p>These are deterministic checks and local example receipts. No token, OAuth consent, hosted vault, API key, or real repository is involved. Hash-like fingerprints are not digital signatures.</p></div></div>
  </>;
 }
@@ -174,6 +176,7 @@ export default function App(){
  {page==='launch'&&<Launch {...{plan,safety,files,issues,approvedFiles:approvedFileCount,approvedIssues:approvedIssueCount,checked:reviewed,setChecked:setReviewed,publicConfirmed,setPublicConfirmed,receipts:seedReceipts,dryRun,doMock,creating,result,copyJson,downloadJson,go}}/>}
  {page==='review-desk'&&<ReviewDesk/>}
  {page==='audit-observatory'&&<AuditObservatory/>}
+ {page==='package-bay'&&<PackageBay {...{plan,files,issues,safety,result,approvedFiles:approvedFileCount,approvedIssues:approvedIssueCount,go}}/>}
  {page==='about'&&<About go={go}/>}
  <footer><div><Brand/><span>Catch the idea. Forge the repo. Ride the build.</span></div><p>Static preview · In-memory inputs · Real planning engine · No GitHub writes</p><a href={REPO} target="_blank" rel="noreferrer">Source <ArrowUpRight size={15}/></a></footer>
  </main></div>
