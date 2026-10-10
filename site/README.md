@@ -2,6 +2,12 @@
 
 The public site in this directory is a **mobile-friendly browser frontend** using RepoRider's **existing** planning, file generation, issue generation, safety scanner, content-sensitive approval fingerprints, mock writer, and receipt JSON modules. The source mobile application in the repository root is **Expo / React Native**, not replaced by this site.
 
+## Local Package Bay: PhiTar × Drop Zone
+
+The Pages site includes a **Package Bay** that exports a user's **current approved starter files** as a standard local ZIP after a successful mock ride. It puts source files at the archive root and informational issue drafts and mock receipts in a reserved `__reporider_handoff__/` folder. The interface computes a SHA-256 checksum for the exported ZIP.
+
+The rider downloads the ZIP manually, then opens it in [PhiTar](https://michaelwave369.github.io/DropZone/phitar.html) for inspection or [Drop Zone](https://michaelwave369.github.io/DropZone/) for a build-kit proposal. **Nothing is transferred between sites automatically**, and no GitHub repository or issue is created. Current safety review and artifact approval cannot be skipped. See [Package Bay design and limits](../docs/PHITAR_DROPZONE_PACKAGE_BAY.md).
+
 ## Public GitHub Pages address
 
 https://michaelwave369.github.io/reporider/
